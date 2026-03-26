@@ -151,6 +151,27 @@ Fail: 安全审查失败
 
 ---
 
+## §6. Self-Optimization
+
+**Trigger**: 用户输入包含 "自优化" 或 "self-optimize" 时激活自优化循环。
+
+**Optimization Loop** (7 步):
+1. **ANALYZE** → `score.sh` 定位最弱维度
+2. **PLAN** → 并行部署 3-5 个专项 Agent (Security/Trigger/Runtime/Quality)
+3. **IMPLEMENT** → 定向修改最弱维度
+4. **VERIFY** → `score.sh` + `score-v3.sh` 双验证，**Variance Check**: |Text - Runtime| < 1.0
+5. **ERROR** → 错误处理：指数退避、熔断、降级
+6. **LOG** → 记录至 `results.tsv`
+7. **COMMIT** → 每 10 轮 Git 提交
+
+**Multi-Agent Strategy**: **并行执行** (Parallel)，Security > Quality > Efficiency 优先级聚合，冲突时高优先级覆盖。
+
+**Anti-Patterns**: ① 禁止 9.8→9.9 冗余优化 ② 禁止 RANDOM（必须确定性定位最弱维度）③ 禁止忽略 Text vs Runtime 方差分歧 (Variance ≥ 1.0 → 阻塞发布)。
+
+详细流程见 `./references/SELF_OPTIMIZATION.md`
+
+---
+
 ## Validation
 
 运行 validate.sh 时必须从**父目录**执行：

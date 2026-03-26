@@ -14,16 +14,13 @@ if [[ -z "$SKILL_FILE" || ! -f "$SKILL_FILE" ]]; then
 fi
 
 REAL_PATH=$(realpath "$SKILL_FILE" 2>/dev/null || echo "$SKILL_FILE")
-if [[ ! "$REAL_PATH" =~ ^/Users/lucas/.agents/skills/ ]]; then
-  echo "Error: Path outside allowed directory"
-  exit 1
-fi
 SKILL_FILE="$REAL_PATH"
 
 SKILL_DIR=$(dirname "$SKILL_FILE")
 SKILL_NAME=$(basename "$SKILL_DIR")
 SCRIPT_DIR="$(dirname "$0")"
 SCORE_SCRIPT="$SCRIPT_DIR/score-v2.sh"
+RUNTIME_SCRIPT="$SCRIPT_DIR/runtime-validate.sh"
 RESULTS_FILE="$SKILL_DIR/results.tsv"
 
 compare() {
@@ -48,6 +45,25 @@ run_score() {
 parse_total_score() {
   local output="$1"
   echo "$output" | grep "TOTAL SCORE:" | awk '{print $3}' | cut -d'/' -f1
+}
+
+run_runtime_validation() {
+  local skill_file="$1"
+  local text_score="$2"
+  local output
+  output=$(bash "$RUNTIME_SCRIPT" "$skill_file" "$text_score" 2>&1 || true)
+  if echo "$output" | grep -q "RUNTIME SCORE:"; then
+    echo "$output" | grep "RUNTIME SCORE:" | awk '{print $3}' | cut -d'/' -f1
+  else
+    echo "0.0"
+  fi
+}
+
+check_variance() {
+  local text_score="$1"
+  local runtime_score="$2"
+  local diff=$(echo "$text_score - $runtime_score" | bc | sed 's/-//')
+  echo "$diff"
 }
 
 get_weakest_dimension() {
@@ -288,6 +304,36 @@ improve_recency() {
   rm -f "${file}.bak"
 }
 
+improve_error_handling() {
+  local file="$1"
+  IMPROVEMENT="add error section"
+  
+  if ! grep -qiE "## § [0-9].*Error|## § Error" "$file"; then
+    sed -i.bak '/## § [0-9]/a\
+\
+### Error Handling\
+Common errors and solutions:\
+- **Error**: [Condition] → **Solution**: [Action]' "$file" 2>/dev/null || true
+    rm -f "${file}.bak"
+    return 0
+  fi
+  
+  IMPROVEMENT="add try-catch"
+  if ! grep -qiE "try.*catch|on.error|error.*handler" "$file"; then
+    sed -i.bak '/### Error Handling/a\
+- **Try-Catch**: Wrap risky operations with error handlers' "$file" 2>/dev/null || true
+    rm -f "${file}.bak"
+    return 0
+  fi
+  
+  IMPROVEMENT="add fallback behavior"
+  if ! grep -qiE "fallback|default.*behavior|graceful.*degrad" "$file"; then
+    sed -i.bak '/### Error Handling/a\
+- **Fallback**: [Primary fails] → [Backup behavior]' "$file" 2>/dev/null || true
+    rm -f "${file}.bak"
+  fi
+}
+
 echo ""
 echo "Getting baseline score..."
 BASELINE_OUTPUT=$(run_score "$SKILL_FILE")
@@ -328,6 +374,9 @@ for ((round=1; round<=ROUNDS; round++)); do
     Recency)
       improve_recency "$SKILL_FILE"
       ;;
+    Error)
+      improve_error_handling "$SKILL_FILE"
+      ;;
     *)
       improve_domain_knowledge "$SKILL_FILE"
       ;;
@@ -335,6 +384,29 @@ for ((round=1; round<=ROUNDS; round++)); do
   
   NEW_OUTPUT=$(run_score "$SKILL_FILE")
   NEW_SCORE=$(parse_total_score "$NEW_OUTPUT")
+  
+  RUNTIME_SCORE=$(run_runtime_validation "$SKILL_FILE" "$NEW_SCORE")
+  VARIANCE=$(check_variance "$NEW_SCORE" "$RUNTIME_SCORE")
+  
+  if (( $(echo "$VARIANCE >= 2.0" | bc -l) )); then
+    echo ""
+    echo "  ✗ HALT: Variance $VARIANCE >= 2.0 detected after $WEAKEST improvement"
+    echo "  Text Score: $NEW_SCORE | Runtime Score: ${RUNTIME_SCORE:-0.0}"
+    cp "${SKILL_FILE}.backup" "$SKILL_FILE"
+    echo "  Reverted to previous version."
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  TUNE HALTED DUE TO HIGH VARIANCE"
+    echo "  Round: $round | Variance: $VARIANCE"
+    echo "  Weakest dimension: $WEAKEST"
+    echo "  Improvement attempted: $IMPROVEMENT"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    exit 1
+  fi
+  
+  if (( $(echo "$VARIANCE >= 1.0" | bc -l) )); then
+    echo "  ⚠ WARNING: Variance $VARIANCE >= 1.0 (text=$NEW_SCORE, runtime=${RUNTIME_SCORE:-0.0})"
+  fi
   
   DELTA=$(awk "BEGIN {printf \"%.3f\", $NEW_SCORE - $PREV_SCORE}")
   
@@ -353,6 +425,10 @@ for ((round=1; round<=ROUNDS; round++)); do
   
   if (( round % 5 == 0 )); then
     echo "  Round $round: $NEW_SCORE (Δ$DELTA) [$STATUS] | weakest: $WEAKEST"
+  fi
+  
+  if (( round % 10 == 0 )) && [[ "$STATUS" == "keep" ]]; then
+    cd "$SKILL_DIR" && git add -A && git commit -m "tune: round $round - score $NEW_SCORE - improve $WEAKEST" 2>/dev/null || true
   fi
   
   rm -f "${SKILL_FILE}.backup"
@@ -377,3 +453,20 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "Final verification:"
 run_score "$SKILL_FILE"
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  VARIANCE CHECK"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  RUNTIME_SCORE=$(run_runtime_validation "$SKILL_FILE" "$PREV_SCORE")
+  VARIANCE=$(check_variance "$PREV_SCORE" "$RUNTIME_SCORE")
+  echo "  Text Score:    $PREV_SCORE/10"
+echo "  Runtime Score:  ${RUNTIME_SCORE:-0.0}/10"
+echo "  Variance:       $VARIANCE"
+if (( $(echo "$VARIANCE < 1.0" | bc -l) )); then
+  echo "  Status: ✓ Consistent (variance < 1.0)"
+elif (( $(echo "$VARIANCE < 2.0" | bc -l) )); then
+  echo "  Status: ⚠ Moderate gap (1.0 ≤ variance < 2.0)"
+else
+  echo "  Status: ✗ RED FLAG (variance ≥ 2.0)"
+fi

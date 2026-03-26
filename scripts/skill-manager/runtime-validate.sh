@@ -9,7 +9,8 @@
 set -euo pipefail
 
 SKILL_FILE="${1:-}"
-OUTPUT_MODE="${2:-summary}"
+TEXT_SCORE_PARAM="${2:-}"
+OUTPUT_MODE="${3:-summary}"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 
@@ -33,18 +34,18 @@ CREATE_TRIGGERS=""; EVALUATE_TRIGGERS=""; RESTORE_TRIGGERS=""; TUNE_TRIGGERS=""
 parse_triggers() {
     local file="$1"
     
-    CREATE_TRIGGERS=$(sed -n '/\*\*CREATE Mode\*\*/,/EVALUATE Mode/p' "$file" | grep -E '^\s*[-*]|"' | sed 's/^[[:space:]]*[-*"]//' | sed 's/["*,]//g' | xargs | tr ' ' '\n' | grep -v '^$' | head -20 | tr '\n' '|')
+    CREATE_TRIGGERS=$(sed -n '/\*\*CREATE Mode\*\*/,/EVALUATE Mode/p' "$file" | grep -E '^\s*[-*]|"' || true | sed 's/^[[:space:]]*[-*"]//' | sed 's/["*,]//g' | xargs | tr ' ' '\n' | grep -v '^$' || true | head -20 | tr '\n' '|')
     
-    EVALUATE_TRIGGERS=$(sed -n '/\*\*EVALUATE Mode\*\*/,/RESTORE Mode/p' "$file" | grep -E '^\s*[-*]|"' | sed 's/^[[:space:]]*[-*"]//' | sed 's/["*,]//g' | xargs | tr ' ' '\n' | grep -v '^$' | head -20 | tr '\n' '|')
+    EVALUATE_TRIGGERS=$(sed -n '/\*\*EVALUATE Mode\*\*/,/RESTORE Mode/p' "$file" | grep -E '^\s*[-*]|"' || true | sed 's/^[[:space:]]*[-*"]//' | sed 's/["*,]//g' | xargs | tr ' ' '\n' | grep -v '^$' || true | head -20 | tr '\n' '|')
     
-    RESTORE_TRIGGERS=$(sed -n '/\*\*RESTORE Mode\*\*/,/TUNE Mode/p' "$file" | grep -E '^\s*[-*]|"' | sed 's/^[[:space:]]*[-*"]//' | sed 's/["*,]//g' | xargs | tr ' ' '\n' | grep -v '^$' | head -20 | tr '\n' '|')
+    RESTORE_TRIGGERS=$(sed -n '/\*\*RESTORE Mode\*\*/,/TUNE Mode/p' "$file" | grep -E '^\s*[-*]|"' || true | sed 's/^[[:space:]]*[-*"]//' | sed 's/["*,]//g' | xargs | tr ' ' '\n' | grep -v '^$' || true | head -20 | tr '\n' '|')
     
-    TUNE_TRIGGERS=$(sed -n '/\*\*TUNE Mode\*\*/,/Security Red Lines/p' "$file" | grep -E '^\s*[-*]|"' | sed 's/^[[:space:]]*[-*"]//' | sed 's/["*,]//g' | xargs | tr ' ' '\n' | grep -v '^$' | head -20 | tr '\n' '|')
+    TUNE_TRIGGERS=$(sed -n '/\*\*TUNE Mode\*\*/,/Security Red Lines/p' "$file" | grep -E '^\s*[-*]|"' || true | sed 's/^[[:space:]]*[-*"]//' | sed 's/["*,]//g' | xargs | tr ' ' '\n' | grep -v '^$' || true | head -20 | tr '\n' '|')
 }
 
 count_triggers() {
     local triggers="$1"
-    echo "$triggers" | tr '|' '\n' | grep -v '^$' | wc -l | tr -d ' '
+    echo "$triggers" | tr '|' '\n' | grep -v '^$' || true | wc -l | tr -d ' '
 }
 
 test_trigger_match() {
@@ -402,9 +403,12 @@ main() {
     echo "  VARIANCE CHECK (Text vs Runtime)"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     
-    TEXT_SCORE=7.8
-    if [[ -x "$(dirname "$SKILL_FILE")/scripts/score.sh" ]]; then
+    if [[ -n "$TEXT_SCORE_PARAM" ]]; then
+        TEXT_SCORE="$TEXT_SCORE_PARAM"
+    elif [[ -x "$(dirname "$SKILL_FILE")/scripts/score.sh" ]]; then
         TEXT_SCORE=$(bash "$(dirname "$SKILL_FILE")/scripts/score.sh" "$SKILL_FILE" 2>/dev/null | grep "Text Score" | awk '{print $4}' | tr -d '/10')
+    else
+        TEXT_SCORE=7.8
     fi
     
     VARIANCE=$(echo "scale=2; $TEXT_SCORE - $RUNTIME_SCORE" | bc | sed 's/^-//')
