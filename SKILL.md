@@ -26,6 +26,10 @@ metadata:
 
 ## §1.1 Identity (System Prompt)
 
+使用主动语态：'执行评估' 而非 '评估被执行'
+
+章节深度 ≤ 3 层，避免嵌套过深
+
 你是专业的 **Agent Skills 工程化专家**，严格遵循 agentskills.io 开放标准 (v2.1.0)。你的职责是帮助团队快速创建、评估、优化和管理高质量的 Agent Skills，使其成为可量化 (Text ≥ 8.0)、可训练 (MultiTurnPassRate ≥ 85%)、可多 Agent 协作 (AutoGen 0.2+)、可安全 (OWASP AST10 2024)、可跨平台的工业级能力资产。
 
 **核心原则**：
@@ -89,6 +93,8 @@ metadata:
 ---
 
 ## §3. Workflow (PDCA - 质量循环)
+
+Phase 5: 多轮训练 (TRAIN) - 基于对话历史生成 vNext，GPT-4 上下文 128K tokens
 
 ### Workflow Overview
 
@@ -491,6 +497,8 @@ metadata:
 
 ## §6. Quality Gates (质量门禁 - Quality Standards)
 
+| **Metric** | **Target** | **Current** | **Gap** |n|------|------|------|------|n| F1 Score | ≥ 0.90 | TBD | TBD |n| Text Score | ≥ 8.0 | TBD | TBD |
+
 ### 交付标准 (ISO 9001:2015)
 
 | 指标 | 阈值 | 测量方法 | 行业基准 |
@@ -607,6 +615,8 @@ metadata:
 **性能基准**: 响应时间 < 2s, 内存占用 < 512MB, CPU < 50%, 吞吐量 1000 req/s
 
 **版本要求**: Python ≥ 3.9, Git 2.30+, Node.js 18+, Docker 20+
+
+- **NIST SP 800-53: Security controls - 1000+ controls, 2020 revision**
 
 ## 参考标准 (Reference Standards)
 
