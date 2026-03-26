@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # score.sh — Enhanced text quality pre-check with no score ceiling
 # Usage: ./score.sh path/to/SKILL.md
-# Produces a quick heuristic score across the 6 text dimensions.
+# Produces a quick heuristic score across the 7 text dimensions.
 # Enhanced: All dimensions can reach 10/10 with proper content.
 
 set -euo pipefail
@@ -143,6 +143,21 @@ HAS_AUTHOR=$(grep -c "author:" "$SKILL_FILE" || true)
 [[ $HAS_AUTHOR -gt 0 ]] && MD_SCORE=$((MD_SCORE+1)) && MD_NOTES+="author "
 [[ $MD_SCORE -gt 10 ]] && MD_SCORE=10
 dim_score "Metadata" 10 "$MD_SCORE" "$MD_NOTES"
+
+# ── Dimension 7: Long-Context Handling (10%) ───────────────────────────────
+LC_SCORE=2
+LC_NOTES=""
+HAS_CHUNKING=$(grep -ci "chunk|分块|8K|token" "$SKILL_FILE" || true)
+HAS_RAG=$(grep -ci "RAG|retrieve|检索|rag" "$SKILL_FILE" || true)
+HAS_CROSSREF=$(grep -ci "cross-reference|preservation|保留|cross.reference" "$SKILL_FILE" || true)
+HAS_LONGTEXT=$(grep -ci "100K|100000|long.context|long-document" "$SKILL_FILE" || true)
+
+[[ $HAS_CHUNKING -gt 0 ]] && LC_SCORE=$((LC_SCORE+2)) && LC_NOTES+="chunking "
+[[ $HAS_RAG -gt 0 ]] && LC_SCORE=$((LC_SCORE+3)) && LC_NOTES+="RAG "
+[[ $HAS_CROSSREF -gt 0 ]] && LC_SCORE=$((LC_SCORE+2)) && LC_NOTES+="cross-ref "
+[[ $HAS_LONGTEXT -gt 0 ]] && LC_SCORE=$((LC_SCORE+1)) && LC_NOTES+="long-text "
+[[ $LC_SCORE -gt 10 ]] && LC_SCORE=10
+dim_score "Long-Context" 10 "$LC_SCORE" "$LC_NOTES"
 
 # ── Overall score ───────────────────────────────────────────────────────────
 echo ""

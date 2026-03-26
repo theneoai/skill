@@ -9,25 +9,25 @@ This document defines how agent-skills-creator implements self-optimization, inc
 ### 1.1 Loop Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      SELF-OPTIMIZATION LOOP                      │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌──────────┐    ┌──────────────┐    ┌────────────────────┐    │
-│  │  READ    │───▶│  IDENTIFY    │───▶│  MAKE IMPROVEMENT  │    │
-│  │  State   │    │  Weakest     │    │  Targeted Fix      │    │
-│  └──────────┘    │  Dimension   │    └─────────┬──────────┘    │
-│                  └──────────────┘              │                 │
-│                                                ▼                 │
-│  ┌──────────┐    ┌──────────────┐    ┌────────────────────┐    │
-│  │  LOG &   │◀───│  VERIFY      │◀───│  APPLY & TEST     │    │
-│  │  REPEAT  │    │  Improvement │    │  Change            │    │
-│  └──────────┘    └──────────────┘    └────────────────────┘    │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         SELF-OPTIMIZATION LOOP (9 STEPS)                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌──────────┐    ┌──────────────┐    ┌──────────────┐    ┌────────────┐  │
+│  │  1 READ  │───▶│  2 ANALYZE  │───▶│  3 CURATION │───▶│  4 PLAN   │  │
+│  │  State   │    │  Weakest     │    │  Consolidate │    │  Select    │  │
+│  └──────────┘    │  Dimension   │    │  Knowledge   │    │  Strategy  │  │
+│                  └──────────────┘    └──────────────┘    └─────┬──────┘  │
+│                                                              │            │
+│  ┌──────────┐    ┌──────────────┐    ┌──────────────┐    ┌──▼─────────┐ │
+│  │  9 COMMIT│◀───│  8 LOG      │◀───│  7 HUMAN_   │◀───│  5 IMPLEMENT│ │
+│  │  Git     │    │  Record     │    │  REVIEW     │    │  Apply Fix │ │
+│  └──────────┘    └──────────────┘    └──────────────┘    └────────────┘ │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1.2 Six-Dimension Scoring System
+### 1.2 Seven-Dimension Scoring System
 
 Inherited from skill-manager's scoring system:
 
@@ -39,6 +39,7 @@ Inherited from skill-manager's scoring system:
 | Error Handling | 15% | 0-10 | Error scenarios, anti-patterns, recovery strategies, edge cases |
 | Examples | 15% | 0-10 | Example count, Input/Output, verification steps |
 | Metadata | 10% | 0-10 | name, description, license, version, author |
+| Long-Context Handling | 10% | 0-10 | Chunking strategy, RAG accuracy, context preservation |
 
 ### 1.3 Loop Execution Flow
 
@@ -55,11 +56,12 @@ Inherited from skill-manager's scoring system:
 #   Error Handling      5/10  (×0.15)  ⚠no-recovery
 #   Examples            4/10  (×0.15)  ⚠no-examples
 #   Metadata           10/10  (×0.10)
+#   Long-Context        2/10  (×0.10)  ⚠no-chunking
 #
 #   Text Score (heuristic):  6.5/10
 ```
 
-#### Step 2: IDENTIFY — Identify Weakest Dimension
+#### Step 2: ANALYZE — Identify Weakest Dimension
 
 ```bash
 # Identify dimensions below threshold
@@ -72,7 +74,32 @@ Priority rules:
 2. High-weight dimensions are prioritized (System Prompt > Domain > Workflow)
 3. When multiple dimensions tie, rotate by loop round
 
-#### Step 3: MAKE IMPROVEMENT — Targeted Fix
+#### Step 3: CURATION — Consolidate Knowledge (every 10 rounds)
+
+```bash
+# Periodically review and consolidate optimization knowledge
+# Addresses "context collapse" problem (ACE Framework)
+# - Remove redundant improvements
+# - Preserve essential insights
+# - Maintain clean semantic foundation
+```
+
+#### Step 4: PLAN — Select Improvement Strategy
+
+```bash
+# Deterministic mapping from weakness type to remediation approach
+case "$WEAKEST" in
+  "System")      improve_system_prompt ;;
+  "Domain")       improve_domain_knowledge ;;
+  "Workflow")     improve_workflow ;;
+  "Error")        improve_error_handling ;;
+  "Examples")     improve_examples ;;
+  "Metadata")     improve_metadata ;;
+  "LongContext")  improve_long_context ;;
+esac
+```
+
+#### Step 5: IMPLEMENT — Apply Targeted Fix
 
 Call corresponding improvement function based on weakest dimension:
 
@@ -97,6 +124,9 @@ improve_dimension() {
       ;;
     "Metadata")
       improve_metadata
+      ;;
+    "LongContext")
+      improve_long_context
       ;;
   esac
 }
@@ -134,20 +164,46 @@ Specific improvement strategies:
 - Normalize version format
 - Clean up placeholders
 
-#### Step 4: VERIFY — Verify Improvement
+**Long-Context Improvement:**
+- Add chunking strategy (8K tokens)
+- Add RAG retrieval mechanism
+- Add cross-reference preservation
+
+#### Step 6: VERIFY — Verify Improvement
 
 ```bash
 # Verify improvement effect
 NEW_SCORE=$(./scripts/skill-manager/score.sh SKILL.md | grep "Text Score" | awk '{print $4}')
+
+# Check variance
+RUNTIME_SCORE=$(./scripts/skill-manager/runtime-validate.sh SKILL.md)
+VARIANCE=|Text - Runtime|
 
 if compare "$NEW_SCORE" ">" "$OLD_SCORE"; then
   STATUS="keep"
 else
   STATUS="discard"  # rollback
 fi
+
+# Halt if Variance >= 2.0
+if (( $(echo "$VARIANCE >= 2.0" | bc -l) )); then
+  echo "HALT: High variance detected"
+  exit 1
+fi
 ```
 
-#### Step 5: LOG & REPEAT — Log and Repeat
+#### Step 7: HUMAN_REVIEW — Expert Review (if needed after 10 rounds)
+
+```bash
+# Optional expert review when autonomous optimization plateaus
+# Triggered when: score < 8.0 after 10 rounds
+if (( round >= 10 )) && (( $(echo "$score < 8.0" | bc -l) )); then
+  echo "[HUMAN_REVIEW] Expert review recommended"
+  # Human feedback integrated as additional validation track
+fi
+```
+
+#### Step 8: LOG — Record Results
 
 ```bash
 # Log to results.tsv
@@ -157,6 +213,15 @@ echo -e "$round\t$NEW_SCORE\t$DELTA\t$STATUS\t$WEAKEST\t$IMPROVEMENT" >> results
 if compare "$NEW_SCORE" ">=" "9.5"; then
   echo "★★★ EXEMPLARY standard reached"
   break
+fi
+```
+
+#### Step 9: COMMIT — Git Commit (every 10 rounds)
+
+```bash
+# Commit every 10 rounds
+if (( round % 10 == 0 )) && [[ "$STATUS" == "keep" ]]; then
+  git add -A && git commit -m "tune: round $round - score $NEW_SCORE"
 fi
 ```
 
@@ -422,10 +487,11 @@ resolve_conflict() {
 
 | Script Path | Function | Usage in Self-Optimization |
 |-------------|----------|----------------------------|
-| `scripts/skill-manager/score.sh` | Six-dimension text scoring | Loop steps 1, 4: read/verify state |
+| `scripts/skill-manager/score.sh` | Seven-dimension text scoring | Loop steps 1, 6: read/verify state |
 | `scripts/skill-manager/score-v2.sh` | Improved scoring | Backup scoring engine |
+| `scripts/skill-manager/score-v3.sh` | Runtime + Trace Compliance scoring | 6-phase evaluation with TraceCompliance |
 | `scripts/skill-manager/validate.sh` | Format validation | Ensure improvements don't break format |
-| `scripts/skill-manager/tune.sh` | AI-driven optimization | Directly execute optimization loop |
+| `scripts/skill-manager/tune.sh` | AI-driven optimization (9-step) | Directly execute optimization loop |
 | `scripts/skill-manager/feedback.sh` | Production feedback collection | Collect real usage data |
 | `scripts/skill-manager/runtime-validate.sh` | Runtime verification | Runtime Agent implementation |
 | `scripts/skill-manager/edge-case-check.sh` | Edge case testing | EdgeCase Agent implementation |
@@ -579,8 +645,15 @@ agent-skills-creator/
 ### 5.2 Certification Conditions
 
 ```
-CERTIFIED = Text ≥ 8.0 AND Runtime ≥ 8.0 AND Variance < 1.0
+CERTIFIED = (Text ≥ 8.0) AND (Runtime ≥ 8.0) AND (Variance < 1.0) 
+            AND (TraceCompliance ≥ 0.90) AND (LongContextScore ≥ 8.0)
+            AND (HumanScore ≥ 7.0 OR Rounds > 10)
 ```
+
+Where:
+- **TraceCompliance**: Proportion of trace evaluations where skill behavior matches extracted behavioral rules (AgentPex methodology)
+- **LongContextScore**: Score for long-document processing capability (chunking, RAG, cross-reference preservation)
+- **HumanScore**: Human expert review score (optional, required only when autonomous optimization plateaus)
 
 ### 5.3 Optimization Goals
 
@@ -598,3 +671,4 @@ CERTIFIED = Text ≥ 8.0 AND Runtime ≥ 8.0 AND Variance < 1.0
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-03-27 | Initial version |
+| 1.1.0 | 2026-03-27 | Updated to 9-step loop (added CURATION, HUMAN_REVIEW), 7 dimensions (added Long-Context), new certification formula with TraceCompliance |

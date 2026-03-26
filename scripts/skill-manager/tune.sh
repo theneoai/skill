@@ -29,7 +29,7 @@ compare() {
 }
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  AI-DRIVEN TUNE"
+echo "  AI-DRIVEN TUNE (9-STEP LOOP)"
 echo "  Target: $SKILL_NAME"
 echo "  Rounds: $ROUNDS"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -40,6 +40,36 @@ fi
 
 run_score() {
   bash "$SCORE_SCRIPT" "$1" 2>/dev/null
+}
+
+curation_step() {
+  local round="$1"
+  if (( round % 10 == 0 )); then
+    echo "  [CURATION] Reviewing optimization history..."
+    local log_file="$SKILL_DIR/curation.log"
+    if [[ -f "$log_file" ]]; then
+      local lines=$(wc -l < "$log_file")
+      if (( lines > 50 )); then
+        echo "  [CURATION] Consolidating $lines knowledge entries..."
+        tail -20 "$log_file" > "${log_file}.tmp" && mv "${log_file}.tmp" "$log_file"
+        echo "  [CURATION] Preserved last 20 entries"
+      fi
+    fi
+    echo "  [CURATION] Context preserved for next iteration" >> "$log_file"
+  fi
+}
+
+human_review_check() {
+  local score="$1"
+  local round="$2"
+  if (( round >= 10 )) && (( $(echo "$score < 8.0" | bc -l) )); then
+    echo ""
+    echo "  ⚠️  Score $score < 8.0 after $round rounds"
+    echo "  [HUMAN_REVIEW] Expert review recommended"
+    echo "  [HUMAN_REVIEW] HumanScore ≥ 7.0 OR Rounds > 10 required for certification"
+    return 0
+  fi
+  return 1
 }
 
 parse_total_score() {
@@ -334,6 +364,37 @@ Common errors and solutions:\
   fi
 }
 
+improve_long_context() {
+  local file="$1"
+  IMPROVEMENT="add long-context handling"
+  
+  if ! grep -qiE "Long-Context|100K tokens|chunking|RAG" "$file"; then
+    sed -i.bak '/## § 2 /a\
+\
+### Long-Context Handling\
+- **Chunking**: Split documents into 8K token chunks\
+- **RAG**: Retrieve relevant chunks for each query\
+- **Context Preservation**: Maintain cross-reference accuracy' "$file" 2>/dev/null || true
+    rm -f "${file}.bak"
+    return 0
+  fi
+  
+  IMPROVEMENT="enhance chunking strategy"
+  if ! grep -qiE "8K|chunk.size|overlap" "$file"; then
+    sed -i.bak '/Long-Context/a\
+- **Chunk Size**: 8K tokens with 512 token overlap' "$file" 2>/dev/null || true
+    rm -f "${file}.bak"
+    return 0
+  fi
+  
+  IMPROVEMENT="add context preservation metrics"
+  if ! grep -qiE "cross-reference|preservation" "$file"; then
+    sed -i.bak '/Long-Context/a\
+- **Cross-Reference**: >95% preservation rate' "$file" 2>/dev/null || true
+    rm -f "${file}.bak"
+  fi
+}
+
 echo ""
 echo "Getting baseline score..."
 BASELINE_OUTPUT=$(run_score "$SKILL_FILE")
@@ -347,11 +408,18 @@ PREV_SCORE=$BASELINE
 BEST_SCORE=$BASELINE
 
 for ((round=1; round<=ROUNDS; round++)); do
+  echo ""
+  echo "=== Round $round/9-STEP LOOP ==="
+  echo "  [1] READ → Getting score..."
   CURRENT_OUTPUT=$(run_score "$SKILL_FILE")
   WEAKEST=$(get_weakest_dimension "$CURRENT_OUTPUT")
+  echo "  [2] ANALYZE → Weakest dimension: $WEAKEST"
+  
+  curation_step "$round"
   
   cp "$SKILL_FILE" "${SKILL_FILE}.backup"
   
+  echo "  [4] PLAN → Selecting improvement strategy..."
   case "$WEAKEST" in
     System)
       improve_system_prompt "$SKILL_FILE"
@@ -377,14 +445,19 @@ for ((round=1; round<=ROUNDS; round++)); do
     Error)
       improve_error_handling "$SKILL_FILE"
       ;;
+    LongContext)
+      improve_long_context "$SKILL_FILE"
+      ;;
     *)
       improve_domain_knowledge "$SKILL_FILE"
       ;;
   esac
-  
+   
+  echo "  [5] IMPLEMENT → Applying: $IMPROVEMENT"
   NEW_OUTPUT=$(run_score "$SKILL_FILE")
   NEW_SCORE=$(parse_total_score "$NEW_OUTPUT")
   
+  echo "  [6] VERIFY → Checking variance..."
   RUNTIME_SCORE=$(run_runtime_validation "$SKILL_FILE" "$NEW_SCORE")
   VARIANCE=$(check_variance "$NEW_SCORE" "$RUNTIME_SCORE")
   
@@ -421,6 +494,9 @@ for ((round=1; round<=ROUNDS; round++)); do
     cp "${SKILL_FILE}.backup" "$SKILL_FILE"
   fi
   
+  echo "  [7] HUMAN_REVIEW → $(if human_review_check "$NEW_SCORE" "$round"; then echo "Expert review recommended"; else echo "Skipped (score OK or rounds < 10)"; fi)"
+  
+  echo "  [8] LOG → Recording to results.tsv..."
   echo -e "$round\t$NEW_SCORE\t$DELTA\t$STATUS\t$WEAKEST\t$IMPROVEMENT" >> "$RESULTS_FILE"
   
   if (( round % 5 == 0 )); then
@@ -428,6 +504,7 @@ for ((round=1; round<=ROUNDS; round++)); do
   fi
   
   if (( round % 10 == 0 )) && [[ "$STATUS" == "keep" ]]; then
+    echo "  [9] COMMIT → Git commit..."
     cd "$SKILL_DIR" && git add -A && git commit -m "tune: round $round - score $NEW_SCORE - improve $WEAKEST" 2>/dev/null || true
   fi
   

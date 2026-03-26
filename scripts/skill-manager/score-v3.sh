@@ -229,19 +229,106 @@ else
     echo "  ❌ 缺乏 Red Lines (0/10)"
 fi
 
+# ═══════════════════════════════════════════════════════
+# PHASE 5: 长上下文处理 (10分)
+# 评估技能处理长文档的能力
+# ═══════════════════════════════════════════════════════
+echo ""
+echo "【Phase 5/5】 长上下文处理 (10分)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+PHASE5_SCORE=0
+
+# 5.1 Chunking策略 (4分)
+if grep -qiE "chunk|分块|8K|token" "$SKILL_FILE"; then
+    echo "  ✅ 包含chunking策略 (4/4)"
+    PHASE5_SCORE=$((PHASE5_SCORE + 4))
+elif grep -qiE "context|上下文|long" "$SKILL_FILE"; then
+    echo "  ⚠️  提及上下文但无具体策略 (2/4)"
+    PHASE5_SCORE=$((PHASE5_SCORE + 2))
+else
+    echo "  ❌ 缺乏长上下文处理 (0/4)"
+fi
+
+# 5.2 RAG准确性 (3分)
+if grep -qiE "RAG|retrieve|检索" "$SKILL_FILE"; then
+    echo "  ✅ 包含RAG策略 (3/3)"
+    PHASE5_SCORE=$((PHASE5_SCORE + 3))
+else
+    echo "  ⚠️  缺乏RAG策略 (1/3)"
+    PHASE5_SCORE=$((PHASE5_SCORE + 1))
+fi
+
+# 5.3 跨引用保留 (3分)
+if grep -qiE "cross-reference|preservation|保留|cross.reference" "$SKILL_FILE"; then
+    echo "  ✅ 包含跨引用保留机制 (3/3)"
+    PHASE5_SCORE=$((PHASE5_SCORE + 3))
+else
+    echo "  ⚠️  缺乏跨引用保留机制 (1/3)"
+    PHASE5_SCORE=$((PHASE5_SCORE + 1))
+fi
+
+# ═══════════════════════════════════════════════════════
+# PHASE 6: Trace合规性 (10分)
+# 行为规则提取与轨迹合规检测 (AgentPex方法论)
+# ═══════════════════════════════════════════════════════
+echo ""
+echo "【Phase 6/6】 Trace合规性 (10分)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+PHASE6_SCORE=0
+
+# 6.1 行为规则提取能力 (4分)
+BEHAVIOR_RULES=$(grep -cE "behavior|规则|constraint|约束|workflow.*routing|tool.*invocation" "$SKILL_FILE" || true)
+if [[ $BEHAVIOR_RULES -ge 3 ]]; then
+    echo "  ✅ 包含行为规则定义 (${BEHAVIOR_RULES}处) (4/4)"
+    PHASE6_SCORE=$((PHASE6_SCORE + 4))
+elif [[ $BEHAVIOR_RULES -ge 1 ]]; then
+    echo "  ⚠️  部分行为规则 (${BEHAVIOR_RULES}处) (2/4)"
+    PHASE6_SCORE=$((PHASE6_SCORE + 2))
+else
+    echo "  ❌ 缺乏行为规则 (0/4)"
+fi
+
+# 6.2 轨迹合规检测 (3分)
+TRACE_CHECKS=$(grep -cE "trace|compliance|合规|验证.*行为" "$SKILL_FILE" || true)
+if [[ $TRACE_CHECKS -ge 2 ]]; then
+    echo "  ✅ 包含轨迹合规检测 (${TRACE_CHECKS}处) (3/3)"
+    PHASE6_SCORE=$((PHASE6_SCORE + 3))
+elif [[ $TRACE_CHECKS -ge 1 ]]; then
+    echo "  ⚠️  部分轨迹检测 (${TRACE_CHECKS}处) (1/3)"
+    PHASE6_SCORE=$((PHASE6_SCORE + 1))
+else
+    echo "  ❌ 缺乏轨迹合规检测 (0/3)"
+fi
+
+# 6.3 流程失败检测 (3分)
+FAILURE_DETECTION=$(grep -cE "routing.*error|unsafe.*tool|workflow.*fail|prompt.*violation" "$SKILL_FILE" || true)
+if [[ $FAILURE_DETECTION -ge 2 ]]; then
+    echo "  ✅ 包含流程失败检测 (${FAILURE_DETECTION}处) (3/3)"
+    PHASE6_SCORE=$((PHASE6_SCORE + 3))
+elif [[ $FAILURE_DETECTION -ge 1 ]]; then
+    echo "  ⚠️  部分失败检测 (${FAILURE_DETECTION}处) (1/3)"
+    PHASE6_SCORE=$((PHASE6_SCORE + 1))
+else
+    echo "  ❌ 缺乏失败检测机制 (0/3)"
+fi
+
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # ═══════════════════════════════════════════════════════
 # 计算总分
 # ═══════════════════════════════════════════════════════
-TOTAL_SCORE=$((PHASE1_SCORE + PHASE2_SCORE + PHASE3_SCORE + PHASE4_SCORE))
+TOTAL_SCORE=$((PHASE1_SCORE + PHASE2_SCORE + PHASE3_SCORE + PHASE4_SCORE + PHASE5_SCORE + PHASE6_SCORE))
 
 echo "  【得分汇总】"
 echo "  Phase 1 (静态文本): ${PHASE1_SCORE}/20"
 echo "  Phase 2 (运行时执行): ${PHASE2_SCORE}/30"
 echo "  Phase 3 (效果验证): ${PHASE3_SCORE}/30"
 echo "  Phase 4 (价值产出): ${PHASE4_SCORE}/20"
+echo "  Phase 5 (长上下文): ${PHASE5_SCORE}/10"
+echo "  Phase 6 (Trace合规): ${PHASE6_SCORE}/10"
 echo ""
 echo "  ═════════════════════════════════════════"
 echo "  总分: ${TOTAL_SCORE}/100"
@@ -250,6 +337,7 @@ echo "  ════════════════════════
 # 评级
 if [[ $TOTAL_SCORE -ge 90 ]]; then
     echo "  评级: ★★★ EXEMPLARY (实际效果优秀)"
+    echo "  Trace合规: ${PHASE6_SCORE}/10 (需≥9.0达到TraceCompliance≥0.90)"
 elif [[ $TOTAL_SCORE -ge 75 ]]; then
     echo "  评级: ★★  GOOD (实际效果良好)"
 elif [[ $TOTAL_SCORE -ge 60 ]]; then
@@ -257,6 +345,12 @@ elif [[ $TOTAL_SCORE -ge 60 ]]; then
 else
     echo "  评级: ❌ NEEDS WORK (实际效果不足)"
 fi
+
+echo ""
+echo "【认证条件】"
+echo "  CERTIFIED = Text≥8.0 AND Runtime≥8.0 AND Variance<1.0"
+echo "            AND TraceCompliance≥0.90 AND LongContextScore≥8.0"
+echo "            AND HumanScore≥7.0 OR Rounds>10"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

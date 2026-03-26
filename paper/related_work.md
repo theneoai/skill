@@ -81,7 +81,7 @@ Recent work has explored the capacity of language models to improve their own pe
 
 Self-reflection approaches typically operate at the instance level—a model reflects on a specific output and generates an improved version. However, these approaches do not address skill-level optimization where improvements must generalize across instances and persist over time. A skill optimized through self-reflection must maintain quality across the diverse contexts in which it will be invoked, not merely improve performance on a single example.
 
-Our autonomous optimization methodology builds upon self-improvement insights while addressing the generalization challenge. The multi-agent architecture enables systematic weakness identification that spans multiple evaluation dimensions, and the seven-step loop ensures that improvements are verified, logged, and committed in a manner that supports reproducibility. The deterministic improvement selection protocol further ensures that optimization trajectories are reproducible and auditable.
+Our autonomous optimization methodology builds upon self-improvement insights while addressing the generalization challenge. The multi-agent architecture enables systematic weakness identification that spans multiple evaluation dimensions, and the eight-step loop ensures that improvements are verified, logged, and committed in a manner that supports reproducibility. The deterministic improvement selection protocol further ensures that optimization trajectories are reproducible and auditable.
 
 ### 3.2 Automated Prompt Engineering
 
