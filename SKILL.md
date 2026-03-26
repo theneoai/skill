@@ -1,18 +1,17 @@
 ---
 name: agent-skills-creator
+title: "Agent Skills Engineering: Lifecycle Manager"
 description: >
-  Agent Skills full-lifecycle engineering manager. Strictly follows agentskills.io open standard.
-  Core capabilities: Create standardized Skills, Multi-turn Evaluation & Training, Iterative Optimization,
-  Multi-Agent Collaboration (parallel/hierarchical/debate/Crew), Quality System Building, CI/CD Pipeline,
-  OWASP AST10 Security Review.
-  Triggers: "Create/Evaluate/Optimize Skill" "Multi-turn Training" "Multi-Agent Collaboration"
-  "Establish Quality Standards" "Generate CI/CD" "Security Review".
+  Agent Skills full-lifecycle engineering manager for LLM-based agents.
+  Implements 9-step autonomous optimization loop with dual-track validation.
+  Triggers: Create/Evaluate/Optimize Skill, Multi-turn Training, Multi-Agent Collaboration.
+  Standard: agentskills.io v2.1.0
 license: MIT
 compatibility: "python>=3.9, git, agentskills.io, mcp, opencode"
 metadata:
   author: neo.ai <lucas_hsueh@hotmail.com>
   version: "1.6.0"
-  tags: [meta, creator, lifecycle, quality, evaluation, training, multi-agent, ci-cd, security]
+  tags: [meta, agent, lifecycle, quality, autonomous-optimization, multi-agent]
   preferred_agents: ["opencode", "claude-code"]
   training_mode: "multi-turn"
   multi_agent_mode: "parallel + hierarchical + debate + crew"
