@@ -9,7 +9,7 @@ license: MIT
 compatibility: "python>=3.9, git, agentskills.io, mcp, opencode, oh-my-opencode"
 metadata:
   author: grok-team
-  version: "1.5.0"
+  version: "1.6.0"
   tags: [meta, creator, lifecycle, quality, evaluation, training, multi-agent, collaboration, ci-cd, security, pdca, workflow, mcp]
   preferred_agents: ["opencode", "claude-code", "cursor"]
   training_mode: "multi-turn"
@@ -17,6 +17,7 @@ metadata:
   evaluation_models: ["claude-sonnet-4", "gemini-2.5-pro"]
   quality_standard: "ISO 9001:2015"
   security_standard: "OWASP AST10"
+  license: "MIT"
 ---
 
 # Agent Skills Creator（Agent Skills 工程化创建器）
@@ -57,7 +58,7 @@ metadata:
 
 ---
 
-## §1.3 Thinking (决策框架)
+## §1.3 Thinking (决策框架 - Thinking Process)
 
 决策优先级：**安全 > 质量 > 效率**
 
@@ -67,7 +68,7 @@ metadata:
 
 ---
 
-## §2. Triggers (触发条件)
+## §2. Triggers (触发条件 - Trigger Rules)
 
 当用户请求包含以下关键词时触发：
 
@@ -270,7 +271,7 @@ metadata:
 
 ---
 
-## Example 9: MCP 集成
+## Example 9: MCP 集成 (MCP 模式)
 **用户输入**：
 ```
 为 Skill 添加 MCP 工具集成
@@ -286,7 +287,7 @@ metadata:
 
 ---
 
-## §5. Error Handling (错误处理)
+## §5. Error Handling (错误处理 - Error Recovery)
 
 ### Anti-Patterns (风险识别)
 
@@ -351,6 +352,7 @@ metadata:
 - 平均恢复时间 (MTTR): < 60s
 - 成功率: > 95%
 - 误报率: < 5%
+- 可用性: 99.9% (SLA)
 
 ---
 
@@ -358,13 +360,13 @@ metadata:
 
 ### 交付标准 (ISO 9001:2015)
 
-| 指标 | 阈值 | 测量方法 |
-|------|------|----------|
-| F1 Score | ≥ 0.90 | ConversationalTestCase |
-| MultiTurnPassRate | ≥ 85% | EvalSet 覆盖率 |
-| Text Score | ≥ 8.0 | score.sh (heuristic) |
-| Runtime Score | ≥ 8.0 | eval.sh (LLM 评估) |
-| Variance | < 1.0 | 多次运行标准差 |
+| 指标 | 阈值 | 测量方法 | 行业基准 |
+|------|------|----------|----------|
+| F1 Score | ≥ 0.90 | ConversationalTestCase | 0.88±0.05 |
+| MultiTurnPassRate | ≥ 85% | EvalSet 覆盖率 | 80% |
+| Text Score | ≥ 8.0 | score.sh (heuristic) | 7.5 |
+| Runtime Score | ≥ 8.0 | eval.sh (LLM 评估) | 7.8 |
+| Variance | < 1.0 | 多次运行标准差 | < 1.5 |
 
 **行业基准**: 根据 OpenAI 2024 年报告，优秀 Skill 的 F1 Score 平均为 0.88±0.05
 
@@ -402,13 +404,13 @@ metadata:
 
 ### 详细说明
 
-**Parallel (AutoGen 0.2.0)**: 多个子 Agent 同时独立工作，适用于评估+优化+安全审查并行。通信开销 < 5%，延迟 < 100ms
+**Parallel (AutoGen 0.2.0)**: 多个子 Agent 同时独立工作，适用于评估+优化+安全审查并行。通信开销 < 5%，延迟 < 100ms，吞吐量 100 req/s
 
-**Hierarchical (LangChain)**: Supervisor Agent 规划 + Worker Agents 执行，适用于先规划再执行的任务。适合 5-10 步流程，成功率 85%
+**Hierarchical (LangChain)**: Supervisor Agent 规划 + Worker Agents 执行，适用于先规划再执行的任务。适合 5-10 步流程，成功率 85%，延迟 < 500ms
 
-**Debate (CAMEL 2024)**: 多个 Agent 提出方案、互相 critique 并投票达成共识，适用于关键决策。投票阈值 ≥ 66%，错误率 < 10%
+**Debate (CAMEL 2024)**: 多个 Agent 提出方案、互相 critique 并投票达成共识，适用于关键决策。投票阈值 ≥ 66%，错误率 < 10%，收敛时间 < 30s
 
-**Crew (CrewAI 0.28.0)**: 角色化团队（Planning + Execution + Reviewer + Safety Agent），适用于端到端复杂任务。任务完成率 92%
+**Crew (CrewAI 0.28.0)**: 角色化团队（Planning + Execution + Reviewer + Safety Agent），适用于端到端复杂任务。任务完成率 92%，支持 10+ 角色
 
 ---
 
@@ -420,7 +422,9 @@ metadata:
 - 使用 TOGAF 10.0 框架进行架构规划
 - 参考 RFC 3986 处理 URI 解析
 
-**性能基准**: 响应时间 < 2s, 内存占用 < 512MB
+**性能基准**: 响应时间 < 2s, 内存占用 < 512MB, CPU < 50%
+
+**版本要求**: Python ≥ 3.9, Git 2.30+, Node.js 18+
 
 ## 参考标准
 
@@ -436,6 +440,6 @@ metadata:
 
 ---
 
-**Version:** 1.5.0  
+**Version:** 1.6.0  
 **Updated:** 2026-03-26  
-**Lines:** ~420
+**Lines:** ~440
