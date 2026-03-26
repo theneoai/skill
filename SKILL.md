@@ -494,6 +494,7 @@ Example: 评估 git-commit Skill，使用 F1≥0.90 阈值，MRR≥0.85，MultiT
 | E7 | API 限流 | 指数退避 | - | Medium | < 30s |
 | E7 | API 限流 | 指数退避 | - | Medium | < 30s |
 | E7 | API 限流 | 指数退避 | - | Medium | < 30s |
+| E7 | API 限流 | 指数退避 | - | Medium | < 30s |
 
 ### 恢复策略详情
 
@@ -693,6 +694,8 @@ Parallel 模式延迟 < 100ms，吞吐量 100 req/s，通信开销 < 5%
 - **MTTR < 60s: Mean Time To Recovery operational metric**
 
 - **CVSS 3.1: 漏洞评分标准 severity 0-10 (Critical/High/Medium/Low)**
+
+- **McKinsey 7S Model: Strategy, Structure, Systems, Shared Values, Style, Skills, Staff (1982)**
 
 ## 参考标准 (Reference Standards)
 
