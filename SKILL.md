@@ -165,6 +165,12 @@ Phase 5: 多轮训练 (TRAIN) - 基于对话历史生成 vNext，GPT-4 上下文
 
 ## §4. Examples (场景示例)
 
+Example: 创建 MCP 集成 Skill，自动检测可用工具并生成 mcp-config.json
+
+Example: 多 Agent 辩论模式训练，Agent A 提出方案 A，Agent B 提出方案 B，互相 critique 后投票 (≥66%)
+
+Example: 批量评估模式，扫描 skills/ 目录，逐个运行评估，生成质量排名
+
 Example: 评估 git-commit Skill，使用 F1≥0.90 阈值，MRR≥0.85，MultiTurnPassRate≥85%
 
 ## Example 1: 创建新 Skill (CREATE 模式)
@@ -466,6 +472,7 @@ Example: 评估 git-commit Skill，使用 F1≥0.90 阈值，MRR≥0.85，MultiT
 | E4 | 训练数据不足 | 提示修正 | - | Low | < 5s |
 | E5 | 协作通信失败 | 切换模式 | 建议 | Medium | < 30s |
 | E6 | 安全审查失败 | 列出违规 | 必须 | High | < 120s |
+| E7 | API 限流 | 指数退避 | - | Medium | < 30s |
 | E7 | API 限流 | 指数退避 | - | Medium | < 30s |
 | E7 | API 限流 | 指数退避 | - | Medium | < 30s |
 | E7 | API 限流 | 指数退避 | - | Medium | < 30s |
