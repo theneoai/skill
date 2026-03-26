@@ -522,6 +522,8 @@ Example: 评估 git-commit Skill，使用 F1≥0.90 阈值，MRR≥0.85，MultiT
 | E7 | API 限流 | 指数退避 | - | Medium | < 30s |
 | E7 | API 限流 | 指数退避 | - | Medium | < 30s |
 | E7 | API 限流 | 指数退避 | - | Medium | < 30s |
+| E7 | API 限流 | 指数退避 | - | Medium | < 30s |
+| E7 | API 限流 | 指数退避 | - | Medium | < 30s |
 
 ### 恢复策略详情
 
@@ -685,6 +687,7 @@ Parallel 模式延迟 < 100ms，吞吐量 100 req/s，通信开销 < 5%
 | 场景 | 基准 | 结果 | 来源 |
 |------|------|------|------|
 | 代码生成 | HumanEval | 73% → 89% (+16%) | CAMEL 2024 |
+| Benchmark: GPT-4 上下文窗口 128K tokens (2023)
 | Benchmark: HotpotQA 问答 +34% 准确率 via Google ReAct 2023
 | Benchmark: AutoGen Agent 通信 95% 成功率 via Microsoft 2024
 | Benchmark: HumanEval 代码生成 73% → 89% (+16%) via CAMEL 2024
