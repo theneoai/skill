@@ -1,0 +1,75 @@
+{
+  "skill_name": "agent-skills-creator",
+  "version": "1.2.0",
+  "description": "Agent Skills Creator 的评估数据集，包含多轮训练、多 Agent 协作、质量验证等关键场景",
+  "evals": [
+    {
+      "id": "create-new-skill",
+      "description": "测试创建新 Skill 的标准化能力",
+      "turns": [
+        {
+          "role": "user",
+          "content": "使用 agent-skills-creator 创建一个 code-review Skill"
+        }
+      ],
+      "should_trigger": true,
+      "expected_tool_calls": [
+        {"server": "FileSystem", "tool": "create_directory_structure"}
+      ],
+      "assertions": [
+        {"type": "skill_structure_valid", "value": true},
+        {"type": "yaml_frontmatter_complete", "value": true}
+      ],
+      "rubric_score_target": 95
+    },
+    {
+      "id": "multi-agent-collaboration",
+      "description": "测试多 Agent 协作模式（层次 + 并行）",
+      "turns": [
+        {
+          "role": "user",
+          "content": "对 git-release Skill 进行多 Agent 协作处理，使用层次模式 + 并行子 Agent"
+        }
+      ],
+      "should_trigger": true,
+      "assertions": [
+        {"type": "multi_agent_used", "value": true},
+        {"type": "delta_positive", "value": true},
+        {"type": "collaboration_log_generated", "value": true}
+      ],
+      "rubric_score_target": 90
+    },
+    {
+      "id": "multi-turn-training",
+      "description": "测试使用对话历史进行多轮训练的能力",
+      "turns": [
+        {"role": "user", "content": "对 git-release Skill 进行多轮训练，提供最近 8 轮对话历史和 Eval 报告"},
+        {"role": "tool", "content": "Eval report received: MultiTurnPassRate=78%"},
+        {"role": "user", "content": "根据历史生成优化版本"}
+      ],
+      "should_trigger": true,
+      "assertions": [
+        {"type": "context_persistence", "value": true},
+        {"type": "optimization_diff_generated", "value": true}
+      ],
+      "rubric_score_target": 88
+    },
+    {
+      "id": "security-review",
+      "description": "测试 OWASP AST10 安全审查能力",
+      "turns": [
+        {"role": "user", "content": "对当前 Skill 执行 OWASP AST10 安全审查"}
+      ],
+      "should_trigger": true,
+      "assertions": [
+        {"type": "owasp_checklist_applied", "value": true}
+      ]
+    }
+  ],
+  "metadata": {
+    "total_cases": 4,
+    "multi_turn_ratio": 0.5,
+    "multi_agent_focus": true,
+    "security_focus": true
+  }
+}
