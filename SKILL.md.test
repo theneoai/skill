@@ -70,12 +70,6 @@ Decision Priority: **Security > Quality > Efficiency**
 
 ## §2. Triggers
 
-### Long-Context Handling
-- **Chunking**: Split documents into 8K token chunks with 512 token overlap
-- **RAG**: Retrieve relevant chunks per query using embedding similarity
-- **Cross-Reference**: Maintain >95% cross-reference preservation rate
-- **Context Window**: Support 100K+ tokens with hierarchical attention
-
 | Keywords | Mode | Description |
 |----------|------|-------------|
 | "Create Skill" | CREATE | Generate standard SKILL.md + directory structure |
