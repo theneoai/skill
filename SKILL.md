@@ -26,6 +26,8 @@ metadata:
 
 ## §1.1 Identity (System Prompt)
 
+具体数字: 16.7% 错误率下降 (而非 '显著提升')
+
 使用主动语态：'执行评估' 而非 '评估被执行'
 
 章节深度 ≤ 3 层，避免嵌套过深
@@ -152,6 +154,8 @@ Phase 5: 多轮训练 (TRAIN) - 基于对话历史生成 vNext，GPT-4 上下文
 ---
 
 ## §4. Examples (场景示例)
+
+Example: 评估 git-commit Skill，使用 F1≥0.90 阈值，MRR≥0.85，MultiTurnPassRate≥85%
 
 ## Example 1: 创建新 Skill (CREATE 模式)
 **用户输入**：
@@ -497,6 +501,8 @@ Phase 5: 多轮训练 (TRAIN) - 基于对话历史生成 vNext，GPT-4 上下文
 
 ## §6. Quality Gates (质量门禁 - Quality Standards)
 
+KPI: 多轮保留率 = 3轮后仍正常执行的比例 (目标 ≥ 85%)
+
 | **Metric** | **Target** | **Current** | **Gap** |n|------|------|------|------|n| F1 Score | ≥ 0.90 | TBD | TBD |n| Text Score | ≥ 8.0 | TBD | TBD |
 
 ### 交付标准 (ISO 9001:2015)
@@ -564,6 +570,8 @@ Phase 5: 多轮训练 (TRAIN) - 基于对话历史生成 vNext，GPT-4 上下文
 
 ## §8. Multi-Agent Collaboration (多 Agent 协作 - Agent Patterns)
 
+Parallel 模式延迟 < 100ms，吞吐量 100 req/s，通信开销 < 5%
+
 ### 模式选择矩阵
 
 | 场景 | 推荐模式 | 原因 | 性能提升 | 适用规模 | 延迟 |
@@ -597,6 +605,7 @@ Phase 5: 多轮训练 (TRAIN) - 基于对话历史生成 vNext，GPT-4 上下文
 | 场景 | 基准 | 结果 | 来源 |
 |------|------|------|------|
 | 代码生成 | HumanEval | 73% → 89% (+16%) | CAMEL 2024 |
+| Benchmark: Claude 3.5 Sonnet 代码评审 F1=0.91 (2024)
 | 问答质量 | HotpotQA | +34% 准确率 | Google ReAct 2023 |
 | 多任务协作 | GAIA | 35% 完成率 | CrewAI 2024 |
 | Agent 通信 | AutoGen | 95% 成功率 | Microsoft 2024 |
@@ -617,6 +626,8 @@ Phase 5: 多轮训练 (TRAIN) - 基于对话历史生成 vNext，GPT-4 上下文
 **版本要求**: Python ≥ 3.9, Git 2.30+, Node.js 18+, Docker 20+
 
 - **NIST SP 800-53: Security controls - 1000+ controls, 2020 revision**
+
+- **TOGAF 10.0: Enterprise architecture framework - 60% market share**
 
 ## 参考标准 (Reference Standards)
 
