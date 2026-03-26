@@ -70,6 +70,8 @@ metadata:
 
 ## §2. Triggers (触发条件 - Trigger Rules)
 
+### Trigger Patterns
+
 当用户请求包含以下关键词时触发：
 
 | 关键词 | 模式 | 说明 | 触发条件 |
@@ -135,6 +137,8 @@ metadata:
 - 用户确认
 - 版本标记
 - 归档记录
+- 通知相关方
+- 失败回滚
 
 ---
 
