@@ -3,7 +3,7 @@
 ---
 
 **Authors**  
-*[Author names and affiliations to be added]*
+thneoai <lucas_hsueh@hotmail.com>
 
 **Submission Metadata**  
 *Date: March 27, 2026*  
@@ -241,19 +241,19 @@ The orchestration architecture employs a hierarchical model where an aggregator 
          ▼                      ▼                      ▼
  ┌───────────────┐      ┌───────────────┐      ┌───────────────┐
  │   Security    │      │    Trigger    │      │    Runtime    │
- │    Agent     │      │     Agent     │      │     Agent     │
+ │    Agent      │      │     Agent     │      │     Agent     │
  └───────┬───────┘      └───────┬───────┘      └───────┬───────┘
          │                      │                      │
          ▼                      ▼                      ▼
  ┌───────────────┐      ┌───────────────┐      ┌───────────────┐
- │    Quality    │      │   EdgeCase   │      │  (Results     │
- │     Agent     │      │    Agent     │      │  Aggregation) │
+ │    Quality    │      │   EdgeCase    │      │  (Results     │
+ │     Agent     │      │    Agent      │      │  Aggregation) │
  └───────┬───────┘      └───────┬───────┘      └───────────────┘
          │                      │
          └──────────────┬───────┘
                         ▼
                  ┌─────────────┐
-                 │  Aggregator  │
+                 │  Aggregator │
                  └─────────────┘
 ```
 
