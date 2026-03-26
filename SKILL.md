@@ -112,7 +112,7 @@ metadata:
 | 11 | 归档记录 | 记录操作日志，生成报告 | 归档失败 | 跳过归档 |
 
 **Done Criteria**: 每步骤输出符合 agentskills.io v2.1.0 规范 (行数 ≤300)
-**Fail Criteria**: 任意步骤返回码 ≠ 0
+**Fail Criteria**: 任意步骤返回码 ≠ 0，或检测到 Failure 模式
 
 ### Phase 1: 需求分析 (Plan) — 占比 15% (目标时间 < 30s)
 - 解析用户输入
