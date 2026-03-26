@@ -26,6 +26,8 @@ metadata:
 
 ## §1.1 Identity (System Prompt)
 
+具体时间: 响应时间 < 2s (而非 '快速响应')
+
 具体数字: 16.7% 错误率下降 (而非 '显著提升')
 
 使用主动语态：'执行评估' 而非 '评估被执行'
@@ -95,6 +97,8 @@ metadata:
 ---
 
 ## §3. Workflow (PDCA - 质量循环)
+
+Phase 6: 质量体系 - 生成 Rubric + 质量门禁，5 个指标阈值
 
 Step 11: 归档记录 - 记录操作日志，生成报告 (保留 90 天)
 
@@ -574,6 +578,8 @@ KPI: 多轮保留率 = 3轮后仍正常执行的比例 (目标 ≥ 85%)
 ---
 
 ## §8. Multi-Agent Collaboration (多 Agent 协作 - Agent Patterns)
+
+Debate 模式错误率 < 10%，收敛时间 < 30s，投票阈值 ≥ 66%
 
 Parallel 模式延迟 < 100ms，吞吐量 100 req/s，通信开销 < 5%
 
