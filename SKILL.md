@@ -541,6 +541,8 @@ Example: 评估 git-commit Skill，使用 F1≥0.90 阈值，MRR≥0.85，MultiT
 
 ## §6. Quality Gates (质量门禁 - Quality Standards)
 
+KPI: 版本升级率 = 成功升级 Skill 数 / 请求升级数 × 100%
+
 KPI: 协作效率 = 并行任务完成时间 / 串行时间 × 100% (目标 > 250%)
 
 KPI: 安全合规率 = OWASP AST10 通过项 / 总项 × 100% (目标 = 100%)
