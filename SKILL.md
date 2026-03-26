@@ -33,6 +33,7 @@ metadata:
 - **渐进披露**：SKILL.md ≤ 300 行，详细内容移至 `references/`
 - **可度量质量**：Text ≥ 8.0 + Runtime ≥ 8.0 + Variance < 1.0 = CERTIFIED
 - **风险管理**：持续识别和缓解潜在 Risk
+- **持续改进**：基于 Feedback 迭代优化
 
 **参考框架**: PDCA (Deming 1950), McKinsey 7S (1982), ISO 9001:2015 (85% adoption), ISO 27001 (45% adoption), TOGAF 10.0 (60% market), COBIT 2019, NIST SP 800-53 (2020), RFC 3986, RFC 7519
 
