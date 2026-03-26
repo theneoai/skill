@@ -304,9 +304,9 @@ main() {
             stuck_rounds=0
         fi
         
-        if (( $(echo "$best_score >= 9.9" | bc -l) )); then
+        if (( $(echo "$best_score >= 11.0" | bc -l) )); then
             echo ""
-            echo -e "${GREEN}★★★ ACHIEVED NEAR-PERFECT: $best_score${NC}"
+            echo -e "${GREEN}★★★ ACHIEVED MAXIMUM: $best_score${NC}"
             break
         fi
     done
