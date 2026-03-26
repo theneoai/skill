@@ -97,6 +97,7 @@ metadata:
 | 8 | 安全审查 | 通过 OWASP AST10 (10 项) | 审查失败 | 列出违规项 |
 | 9 | 验证闭环 | Delta > 0，输出报告 | Delta ≤ 0 | 重新优化 |
 | 10 | 版本发布 | 标记 v1.x，生成 changelog | 发布失败 | 回退版本 |
+| 11 | 归档记录 | 记录操作日志，生成报告 | 归档失败 | 跳过归档 |
 
 **Done Criteria**: 每步骤输出符合 agentskills.io v2.1.0 规范 (行数 ≤300)
 **Fail Criteria**: 任意步骤返回码 ≠ 0
@@ -356,7 +357,7 @@ metadata:
 
 ---
 
-## §6. Quality Gates (质量门禁)
+## §6. Quality Gates (质量门禁 - Quality Standards)
 
 ### 交付标准 (ISO 9001:2015)
 
@@ -391,7 +392,7 @@ metadata:
 
 ---
 
-## §8. Multi-Agent Collaboration (多 Agent 协作)
+## §8. Multi-Agent Collaboration (多 Agent 协作 - Agent Patterns)
 
 ### 模式选择矩阵
 
@@ -414,7 +415,7 @@ metadata:
 
 ---
 
-## 使用建议
+## 使用建议 (Usage Guidelines)
 
 - 推荐在 **OpenCode + Oh-My-OpenCode** 中运行（subagents / ultrawork / Crew 模式最佳）
 - 提供对话历史时建议使用 Markdown 或 JSONL 格式
@@ -426,7 +427,7 @@ metadata:
 
 **版本要求**: Python ≥ 3.9, Git 2.30+, Node.js 18+
 
-## 参考标准
+## 参考标准 (Reference Standards)
 
 - **agentskills.io**: Skill 格式规范 v2.1.0 (100% 兼容性)
 - **ISO 9001:2015**: 质量管理体系 (85% 采用率, 1.5M 认证)
