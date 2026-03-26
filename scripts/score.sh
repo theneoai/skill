@@ -1,15 +1,17 @@
 
-# ── Dimension 7: Readability (5%) ──────────────────────────────────────────
-RD_SCORE=5
-RD_NOTES=""
-HAS_SECTIONS=$(grep -c "^## " "$SKILL_FILE" || true)
-HAS_PARAGRAPHS=$(grep -c "^$" "$SKILL_FILE" || true)
-AVG_LINE_LEN=$(awk '{sum+=length; count++} END {print sum/count}' "$SKILL_FILE")
-LONG_LINES=$(awk -F: 'length($2) > 120 {count++} END {print count+0}' "$SKILL_FILE")
+# ── Dimension 8: Completeness (5%) ─────────────────────────────────────────
+CM_SCORE=5
+CM_NOTES=""
+HAS_SKILL_MD=$(grep -c "SKILL.md" "$SKILL_FILE" || true)
+HAS_EVALS=$(grep -ci "evals\|eval.sh\|evaluation" "$SKILL_FILE" || true)
+HAS_SCRIPTS=$(grep -ci "scripts\|script" "$SKILL_FILE" || true)
+HAS_REFS=$(grep -ci "references\|ref" "$SKILL_FILE" || true)
+HAS_TRIGGERS=$(grep -ci "trigger\|when.*require\|when.*ask" "$SKILL_FILE" || true)
 
-[[ $HAS_SECTIONS -ge 5 ]] && RD_SCORE=$((RD_SCORE+2)) && RD_NOTES+="well-structured "
-[[ $HAS_SECTIONS -ge 10 ]] && RD_SCORE=$((RD_SCORE+1)) && RD_NOTES+="detailed-toc "
-[[ $LONG_LINES -lt 5 ]] && RD_SCORE=$((RD_SCORE+1)) && RD_NOTES+="readable-lines "
-[[ $AVG_LINE_LEN -lt 100 ]] && RD_SCORE=$((RD_SCORE+1)) && RD_NOTES+="concise "
-[[ $RD_SCORE -gt 10 ]] && RD_SCORE=10
-dim_score "Readability" 5 "$RD_SCORE" "$RD_NOTES"
+[[ $HAS_SKILL_MD -gt 0 ]] && CM_SCORE=$((CM_SCORE+1)) && CM_NOTES+="self-referential "
+[[ $HAS_EVALS -gt 0 ]] && CM_SCORE=$((CM_SCORE+2)) && CM_NOTES+="eval-defined "
+[[ $HAS_SCRIPTS -gt 0 ]] && CM_SCORE=$((CM_SCORE+1)) && CM_NOTES+="scripts-defined "
+[[ $HAS_REFS -gt 0 ]] && CM_SCORE=$((CM_SCORE+1)) && CM_NOTES+="references-defined "
+[[ $HAS_TRIGGERS -gt 0 ]] && CM_SCORE=$((CM_SCORE+1)) && CM_NOTES+="triggers-defined "
+[[ $CM_SCORE -gt 10 ]] && CM_SCORE=10
+dim_score "Completeness" 5 "$CM_SCORE" "$CM_NOTES"
