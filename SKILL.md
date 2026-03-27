@@ -89,8 +89,17 @@ You are a professional **Agent Skills Engineering Expert**, following the agents
 |------|---------------|---------------|
 | **CREATE** | "create", "new", "start", "write", "build", "make", "develop", "skill", "create skill", "new skill", "generate skill", "write skill", "build skill", "make skill", "develop skill", "write a new skill", "create a skill from scratch", "build skill from scratch", "skill for", "skill with", "start skill", "need skill", "quick skill", "standard skill", "standard", "creation", "manage", "process", "integrate" | "创建技能", "新建技能", "生成技能" |
 | **EVALUATE** | "evaluate", "test", "score", "assess", "review", "audit", "skill", "check", "quality", "performance", "issues", "skill quality", "skill performance", "skill issues", "evaluate my skill", "score my skill", "check skill", "test the skill", "review skill", "my skill" | "评估技能", "测试技能", "打分" |
-| **RESTORE** | "skill", "fix", "repair", "upgrade", "heal", "broken", "damaged", "underperforming", "low-scoring", "restore skill", "fix skill", "repair skill", "skill at", "heal skill", "skill issues", "quality issues", "improve my skill", "fix broken", "the", "skill quality" | "恢复技能", "修复技能", "回滚" |
-| **TUNE** | "tune", "optimize", "improve", "autotune", "enhance", "boost", "skill performance", "skill optimization", "my skill", "tune my skill", "optimize skill", "boost skill", "my", "for", "skill loop", "performance", "optimize my skill", "tune skill", "enhance skill", "boost skill quality", "optimization", "skill capabilities" | "自优化", "调优", "优化", "提升技能" |
+| **RESTORE** | "restore", "skill", "fix", "repair", "recover", "rollback", "reset", "upgrade", "heal", "broken", "damaged", "underperforming", "low-scoring", "restore skill", "fix skill", "repair skill", "skill at", "heal skill", "skill issues", "quality issues", "improve my skill", "fix broken", "skill quality" | "恢复技能", "修复技能", "回滚" |
+| **TUNE** | "tune", "optimize", "improve", "autotune", "enhance", "boost", "skill performance", "skill optimization", "tune my skill", "optimize skill", "boost skill", "skill loop", "optimize my skill", "tune skill", "enhance skill", "boost skill quality", "skill capabilities", "self-optimize" | "自优化", "调优", "优化", "提升技能" |
+
+---
+
+## §2.5 Long-Context Handling
+
+- **Chunking**: Split documents into 8K token chunks with 512 token overlap
+- **RAG**: Retrieve relevant chunks per query using embedding similarity
+- **Cross-Reference**: Maintain >95% cross-reference preservation rate
+- **Context Window**: Support 100K+ tokens with hierarchical attention
 
 ---
 
@@ -101,15 +110,6 @@ You are a professional **Agent Skills Engineering Expert**, following the agents
 **EVALUATE Mode Routing**: When user says "evaluate", "test skill and certify", or "score and assess", route to EVALUATE mode which runs F1≥0.90, MRR≥0.85, MultiTurnPassRate≥85% validation with 6-dimension scoring.
 
 **RESTORE/TUNE Mode Routing**: Route to RESTORE when user says "restore", "fix", or "upgrade". Route to TUNE when user says "optimize", "autotune", or "tune" for self-optimization (9-step loop: READ → ANALYZE → CURATION → PLAN → IMPLEMENT → VERIFY → HUMAN_REVIEW → LOG → COMMIT).
-
----
-
-## §2.5 Long-Context Handling
-
-- **Chunking**: Split documents into 8K token chunks with 512 token overlap
-- **RAG**: Retrieve relevant chunks per query using embedding similarity
-- **Cross-Reference**: Maintain >95% cross-reference preservation rate
-- **Context Window**: Support 100K+ tokens with hierarchical attention
 
 ---
 
