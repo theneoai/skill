@@ -127,6 +127,7 @@ You are a professional **Agent Skills Engineering Expert**, following the agents
 | 6 | Quality System | Rubric + Quality Gate | Generation fails → output diagnostic report |
 | 7 | CI/CD | .github/workflows/ | Generation fails → rollback to template |
 | 8 | Security Review | OWASP AST10 all green | Review fails → list violations, block release |
+| 9 | **Retro &沉淀** | Update RETROSPECTIVE.md + OPTIMIZATION_ANTIPATTERNS.md | Scripts fail → log error, continue without blocking |
 
 **Done**: Each step output complies with agentskills.io v2.1.0 spec
 **Done**: F1≥0.90, MRR≥0.85, MultiTurnPassRate≥85%
@@ -184,7 +185,7 @@ See [`./references/skill-manager/examples.md`](references/skill-manager/examples
 
 See [`./references/skill-manager/antipatterns.md`](references/skill-manager/antipatterns.md) for detailed error handling.
 
-**Automation Scripts**: `scripts/skill-manager/score.sh`, `validate.sh`, `runtime-validate.sh`, `edge-case-check.sh`
+**Automation Scripts**: `score.sh`, `validate.sh`, `runtime-validate.sh`, `auto_retro.sh`, `edge-case-check.sh`
 
 ---
 
@@ -192,16 +193,24 @@ See [`./references/skill-manager/antipatterns.md`](references/skill-manager/anti
 
 **Trigger**: Activated when user input contains "自优化" or "self-optimize".
 
-**Optimization Loop** (9 steps):
+**Optimization Loop** (10 steps):
 1. **READ** → `score.sh` locate weakest dimension
 2. **ANALYZE** → Deterministic selection: prioritize dimensions < 6.0, then higher weight dimensions
 3. **CURATION** → Periodically review and consolidate accumulated optimization knowledge
 4. **PLAN** → Deploy 3-5 specialized Agents in parallel (Security/Trigger/Runtime/Quality/EdgeCase)
 5. **IMPLEMENT** → Targeted atomic modification of weakest dimension
 6. **VERIFY** → `score.sh` + `score-v2.sh` dual verification
-7. **HUMAN_REVIEW** → Optional expert review when skill remains < 8.0 after 10 rounds
-8. **LOG** → Record to `results.tsv`
-9. **COMMIT** → Git commit every 10 rounds
+7. **RETRO** → Run `auto_retro.sh` after every optimization - capture metrics, detect anti-patterns
+8. **沉淀** → Update RETROSPECTIVE.md + OPTIMIZATION_ANTIPATTERNS.md with learnings
+9. **LOG** → Record to `results.tsv`
+10. **COMMIT** → Git commit every 10 rounds
+
+**Auto-Retro Principle**: Every optimization execution MUST:
+- Capture current metrics (Text Score, Runtime Score, Variance, Mode Detection)
+- Log to RETROSPECTIVE.md automatically
+- Detect and flag anti-patterns (high variance, low scores)
+- Update OPTIMIZATION_ANTIPATTERNS.md with new learnings
+- Enable continuous self-improvement through accumulated knowledge
 
 **Certification Formula**:
 ```
