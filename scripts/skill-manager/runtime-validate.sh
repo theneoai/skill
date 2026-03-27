@@ -70,8 +70,8 @@ run_mode_detection_tests() {
     local mode="$1"
     local triggers="$2"
     
-    local tests_passed=0
-    local tests_total=0
+    local inputs_covered=0
+    local inputs_total=0
     local accuracy=0
     
     case "$mode" in
@@ -126,25 +126,30 @@ streamline skill workflow"
             ;;
     esac
     
-    oldIFS="$IFS"
-    IFS='|'
-    for trigger in $triggers; do
-        IFS="$oldIFS"
-        [[ -z "$trigger" ]] && continue
+    while IFS= read -r test_input; do
+        [[ -z "$test_input" ]] && continue
+        inputs_total=$((inputs_total + 1))
         
-        while IFS= read -r test_input; do
-            [[ -z "$test_input" ]] && continue
-            tests_total=$((tests_total + 1))
-            
+        matched=0
+        oldIFS="$IFS"
+        IFS='|'
+        for trigger in $triggers; do
+            IFS="$oldIFS"
+            [[ -z "$trigger" ]] && continue
             if [[ $(test_trigger_match "$trigger" "$test_input") == "1" ]]; then
-                tests_passed=$((tests_passed + 1))
+                matched=1
+                break
             fi
-        done <<< "$test_inputs"
-    done
-    IFS="$oldIFS"
+        done
+        IFS="$oldIFS"
+        
+        if [[ $matched == 1 ]]; then
+            inputs_covered=$((inputs_covered + 1))
+        fi
+    done <<< "$test_inputs"
     
-    if [[ $tests_total -gt 0 ]]; then
-        accuracy=$(echo "scale=2; $tests_passed * 100 / $tests_total" | bc)
+    if [[ $inputs_total -gt 0 ]]; then
+        accuracy=$(echo "scale=2; $inputs_covered * 100 / $inputs_total" | bc)
     else
         accuracy=0
     fi
@@ -152,23 +157,23 @@ streamline skill workflow"
     case "$mode" in
         CREATE)
             MODE_ACCURACY_CREATE=$accuracy
-            MODE_PASSED_CREATE=$tests_passed
-            MODE_TOTAL_CREATE=$tests_total
+            MODE_PASSED_CREATE=$inputs_covered
+            MODE_TOTAL_CREATE=$inputs_total
             ;;
         EVALUATE)
             MODE_ACCURACY_EVALUATE=$accuracy
-            MODE_PASSED_EVALUATE=$tests_passed
-            MODE_TOTAL_EVALUATE=$tests_total
+            MODE_PASSED_EVALUATE=$inputs_covered
+            MODE_TOTAL_EVALUATE=$inputs_total
             ;;
         RESTORE)
             MODE_ACCURACY_RESTORE=$accuracy
-            MODE_PASSED_RESTORE=$tests_passed
-            MODE_TOTAL_RESTORE=$tests_total
+            MODE_PASSED_RESTORE=$inputs_covered
+            MODE_TOTAL_RESTORE=$inputs_total
             ;;
         TUNE)
             MODE_ACCURACY_TUNE=$accuracy
-            MODE_PASSED_TUNE=$tests_passed
-            MODE_TOTAL_TUNE=$tests_total
+            MODE_PASSED_TUNE=$inputs_covered
+            MODE_TOTAL_TUNE=$inputs_total
             ;;
     esac
 }
