@@ -89,7 +89,7 @@ You are a professional **Agent Skills Engineering Expert**, following the agents
 |------|---------------|---------------|
 | **CREATE** | "create", "new", "generate", "write", "build", "make", "develop", "skill", "create skill", "new skill", "generate skill", "write skill", "build skill", "make skill", "develop skill", "write a new skill", "create a skill from scratch", "build skill from scratch", "skill for", "skill with", "start skill", "need skill", "quick skill", "standard skill", "standard", "creation", "manage", "process", "integrate" | "创建技能", "新建技能", "生成技能" |
 | **EVALUATE** | "evaluate", "test", "score", "assess", "review", "audit", "certify", "check", "quality", "performance", "issues", "skill quality", "skill performance", "skill issues", "evaluate my skill", "score my skill", "check skill", "test the skill", "review skill", "my skill" | "评估技能", "测试技能", "打分" |
-| **RESTORE** | "restore", "fix", "repair", "upgrade", "heal", "broken", "damaged", "underperforming", "low-scoring", "restore skill", "fix skill", "repair skill", "skill at", "heal skill", "skill issues", "quality issues", "improve my skill", "fix broken", "repair damaged", "skill quality", "improve", "upgrade skill", "skill upgrade", "low score", "version" | "恢复技能", "修复技能", "回滚" |
+| **RESTORE** | "restore", "fix", "repair", "upgrade", "heal", "broken", "damaged", "underperforming", "low-scoring", "restore skill", "fix skill", "repair skill", "skill at", "heal skill", "skill issues", "quality issues", "improve my skill", "fix broken", "repair damaged", "skill quality" | "恢复技能", "修复技能", "回滚" |
 | **TUNE** | "tune", "optimize", "improve", "autotune", "enhance", "boost", "skill performance", "skill optimization", "my skill", "tune my skill", "optimize skill", "boost skill", "better results", "capabilities", "skill loop", "performance", "optimize my skill", "tune skill", "enhance skill", "boost skill quality", "optimization", "skill capabilities" | "自优化", "调优", "优化", "提升技能" |
 
 ---
@@ -156,6 +156,11 @@ You are a professional **Agent Skills Engineering Expert**, following the agents
 - Input: "自优化" or "self-optimize"
 - Output: 9-step loop improves weakest dimension
 - Verification: Check `results.tsv` for delta history
+
+**Example 5: CI/CD Deployment (CI/CD)**
+- Input: "deploy the code-review skill to production"
+- Output: `.github/workflows/` with automated score.sh validation gate
+- Verification: Text ≥ 8.0 AND Runtime ≥ 8.0 required before merge
 
 **Mode Detection Examples**:
 | Input | Mode | Routing |
