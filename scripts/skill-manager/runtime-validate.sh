@@ -56,19 +56,14 @@ test_trigger_match() {
     local input_lower=$(echo "$test_input" | tr '[:upper:]' '[:lower:]')
     
     local trigger_word
-    local all_words_match=1
     for trigger_word in $trigger_lower; do
-        if ! echo "$input_lower" | grep -qi "$trigger_word"; then
-            all_words_match=0
-            break
+        if echo "$input_lower" | grep -qi "$trigger_word"; then
+            echo "1"
+            return
         fi
     done
     
-    if [[ $all_words_match -eq 1 ]]; then
-        echo "1"
-    else
-        echo "0"
-    fi
+    echo "0"
 }
 
 run_mode_detection_tests() {
