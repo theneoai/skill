@@ -3,13 +3,41 @@ import subprocess
 import re
 import os
 import time
+import argparse
 from datetime import datetime
 
-SKILL_FILE = "/Users/lucas/Documents/Projects/agent-skills-creator/SKILL.md"
-SCORE_SCRIPT = "/Users/lucas/.agents/skills/skill-manager/scripts/score.sh"
-RESULTS_FILE = "/Users/lucas/Documents/Projects/agent-skills-creator/results.tsv"
-MAX_ROUNDS = 1000
-TARGET_SCORE = 9.0
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Autotune - Autonomous skill optimization"
+    )
+    parser.add_argument("skill_file", help="Path to SKILL.md")
+    parser.add_argument("--score-script", default=None, help="Path to score.sh script")
+    parser.add_argument("--results-file", default=None, help="Path to results.tsv")
+    parser.add_argument(
+        "--max-rounds", type=int, default=1000, help="Maximum optimization rounds"
+    )
+    parser.add_argument(
+        "--target-score", type=float, default=9.0, help="Target score to achieve"
+    )
+    parser.add_argument("--no-push", action="store_true", help="Don't push to remote")
+    return parser.parse_args()
+
+
+args = parse_args()
+
+SKILL_FILE = os.path.abspath(args.skill_file)
+PROJECT_DIR = os.path.dirname(SKILL_FILE)
+
+if args.score_script:
+    SCORE_SCRIPT = args.score_script
+else:
+    SCORE_SCRIPT = os.path.join(os.path.dirname(__file__), "skill-manager", "score.sh")
+
+RESULTS_FILE = args.results_file or os.path.join(PROJECT_DIR, "results.tsv")
+MAX_ROUNDS = args.max_rounds
+TARGET_SCORE = args.target_score
+NO_PUSH = args.no_push
 
 
 def run_score():
@@ -50,14 +78,16 @@ def write_skill(content):
         f.write(content)
 
 
-def git_commit_push(round_num, score):
+def git_commit(round_num, score):
     try:
-        subprocess.run(["git", "add", "SKILL.md"], check=True)
+        subprocess.run(["git", "add", "SKILL.md"], check=True, cwd=PROJECT_DIR)
         subprocess.run(
             ["git", "commit", "-m", f"autotune: round {round_num} score {score}"],
             check=True,
+            cwd=PROJECT_DIR,
         )
-        subprocess.run(["git", "push"], check=True)
+        if not NO_PUSH:
+            subprocess.run(["git", "push"], check=True, cwd=PROJECT_DIR)
         return True
     except Exception as e:
         print(f"Git commit/push failed: {e}")
@@ -139,6 +169,12 @@ def apply_improvement(content, improvement):
 
 
 def main():
+    print(f"Autotune starting...")
+    print(f"  Skill file: {SKILL_FILE}")
+    print(f"  Score script: {SCORE_SCRIPT}")
+    print(f"  Target: {TARGET_SCORE} (max rounds: {MAX_ROUNDS})")
+    print()
+
     if not os.path.exists(RESULTS_FILE):
         with open(RESULTS_FILE, "w") as f:
             f.write("round\tscore\tdelta\timprovements\n")
@@ -198,7 +234,7 @@ def main():
             print(f"Round {round_num}: {new_score} (no improvement, reverted)")
 
         if round_num % 10 == 0:
-            git_commit_push(round_num, best_score)
+            git_commit(round_num, best_score)
             print(f"  >> Committed and pushed at round {round_num}")
 
         if round_num % 100 == 0:
