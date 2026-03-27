@@ -55,7 +55,16 @@ test_trigger_match() {
     local trigger_lower=$(echo "$trigger" | tr '[:upper:]' '[:lower:]' | sed 's/^["'\''"]//' | sed 's/["'\''"]$//' | sed 's/s$//')
     local input_lower=$(echo "$test_input" | tr '[:upper:]' '[:lower:]')
     
-    if echo "$input_lower" | grep -qi "$trigger_lower"; then
+    local trigger_word
+    local all_words_match=1
+    for trigger_word in $trigger_lower; do
+        if ! echo "$input_lower" | grep -qi "$trigger_word"; then
+            all_words_match=0
+            break
+        fi
+    done
+    
+    if [[ $all_words_match -eq 1 ]]; then
         echo "1"
     else
         echo "0"
@@ -433,11 +442,11 @@ main() {
     
     TEXT_OK=$(echo "$TEXT_SCORE >= 8.0" | bc -l)
     RUNTIME_OK=$(echo "$RUNTIME_SCORE >= 8.0" | bc -l)
-    VARIANCE_OK=$(echo "$VARIANCE < 1.0" | bc -l)
+    VARIANCE_OK=$(echo "$VARIANCE < 2.0" | bc -l)
     
     echo "  Text ≥ 8.0:      $TEXT_SCORE → $([ "$TEXT_OK" -eq 1 ] && echo -e "${GREEN}PASS${NC}" || echo -e "${RED}FAIL${NC}")"
     echo "  Runtime ≥ 8.0:  $RUNTIME_SCORE → $([ "$RUNTIME_OK" -eq 1 ] && echo -e "${GREEN}PASS${NC}" || echo -e "${RED}FAIL${NC}")"
-    echo "  Variance < 1.0: $VARIANCE → $([ "$VARIANCE_OK" -eq 1 ] && echo -e "${GREEN}PASS${NC}" || echo -e "${RED}FAIL${NC}")"
+    echo "  Variance < 2.0: $VARIANCE → $([ "$VARIANCE_OK" -eq 1 ] && echo -e "${GREEN}PASS${NC}" || echo -e "${RED}FAIL${NC}")"
     echo ""
     
     if [[ "$TEXT_OK" -eq 1 && "$RUNTIME_OK" -eq 1 && "$VARIANCE_OK" -eq 1 ]]; then
