@@ -405,8 +405,8 @@ main() {
     
     if [[ -n "$TEXT_SCORE_PARAM" ]]; then
         TEXT_SCORE="$TEXT_SCORE_PARAM"
-    elif [[ -x "$(dirname "$SKILL_FILE")/scripts/score.sh" ]]; then
-        TEXT_SCORE=$(bash "$(dirname "$SKILL_FILE")/scripts/score.sh" "$SKILL_FILE" 2>/dev/null | grep "Text Score" | awk '{print $4}' | tr -d '/10')
+    elif [[ -x "$(dirname "$SKILL_FILE")/scripts/skill-manager/score.sh" ]]; then
+        TEXT_SCORE=$(bash "$(dirname "$SKILL_FILE")/scripts/skill-manager/score.sh" "$SKILL_FILE" 2>/dev/null | grep "Text Score" | awk '{print $4}' | sed 's|/.*||')
     else
         TEXT_SCORE=7.8
     fi

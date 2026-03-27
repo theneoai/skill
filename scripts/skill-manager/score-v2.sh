@@ -26,10 +26,10 @@ MAX=0
 dim_score() {
   local name="$1" weight="$2" score="$3" notes="$4"
   local weighted
-  weighted=$(echo "scale=4; $score * $weight / 100" | bc)
+  weighted=$(echo "scale=4; $score * $weight / 110" | bc)
   TOTAL=$(echo "scale=4; $TOTAL + $weighted" | bc)
-  MAX=$(echo "scale=4; $MAX + $weight / 100 * 10" | bc)
-  printf "  %-20s %2.1f/10  (×%.2f)  %s\n" "$name" "$score" "$(echo "scale=2; $weight/100" | bc)" "$notes"
+  MAX=$(echo "scale=4; $MAX + $weight / 110 * 10" | bc)
+  printf "  %-20s %2.1f/10  (×%.2f)  %s\n" "$name" "$score" "$(echo "scale=2; $weight/110" | bc)" "$notes"
 }
 
 # ══════════════════════════════════════════════════════════════
