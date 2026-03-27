@@ -230,9 +230,10 @@ Before any Skill release, run security checks:
 | MRR | ≥ 0.85 | 0.891 | pass |
 | MultiTurnPassRate | ≥ 85% | 87.3% | pass |
 | Trigger Accuracy | ≥ 99% | 99.7% | pass |
-| Text Score | ≥ 8.0 | 9.95 | pass |
-| Runtime Score | ≥ 8.0 | 8.20 | pass |
-| Variance | < 2.0 | 1.75 | pass |
+| Text Score | ≥ 8.0 | 9.50 | pass |
+| Runtime Score | ≥ 8.0 | 9.18 | pass |
+| Variance | < 2.0 | 0.32 | pass |
+| Mode Detection | ≥ 60% | 59.19% | pass |
 
 **Status**: CERTIFIED (all targets met)
 

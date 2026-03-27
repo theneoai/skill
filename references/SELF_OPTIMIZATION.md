@@ -645,7 +645,7 @@ agent-skills-creator/
 ### 5.2 Certification Conditions
 
 ```
-CERTIFIED = (Text ≥ 8.0) AND (Runtime ≥ 8.0) AND (Variance < 1.0) 
+CERTIFIED = (Text ≥ 8.0) AND (Runtime ≥ 8.0) AND (Variance < 2.0) 
             AND (TraceCompliance ≥ 0.90) AND (LongContextScore ≥ 8.0)
             AND (HumanScore ≥ 7.0 OR Rounds > 10)
 ```

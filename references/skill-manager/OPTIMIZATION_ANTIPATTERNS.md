@@ -204,6 +204,42 @@
 
 ---
 
-**Document Version**: 1.0  
-**Source Rounds**: 52-70  
+## Anti-Pattern 9: ALL-mode Trigger Matching (Overly Strict)
+
+- **What happened**: The `runtime-validate.sh` used ALL-mode matching where every word in a trigger must exist in the input. Multi-word triggers like "skill quality" required BOTH "skill" AND "quality" to be present.
+
+- **Impact**:
+  - Mode detection scores artificially low (16% instead of 59%)
+  - "skill quality" trigger matched 0% of inputs because inputs only had "skill" or "quality", not both
+  - EVALUATE mode scored 39% instead of actual ~52%
+
+- **Root Cause**: Natural language inputs don't contain all words from trigger phrases.
+
+- **How to avoid**:
+  - Use ANY-mode: trigger matches if ANY word matches
+  - Test trigger effectiveness with actual user inputs
+  - Prefer root-form triggers (evaluate, test, score) over suffix forms (evaluation, testing, scoring)
+
+---
+
+## Anti-Pattern 10: Suffix-form Trigger Pollution
+
+- **What happened**: Triggers like "evaluation", "testing", "scoring", "assessment", "auditing", "certification" were added for "completeness" but scored 0/7 because the `sed 's/s$//'` transforms them into broken words.
+
+- **Impact**:
+  - "testing" → "testin" (not "test")
+  - "scoring" → "scorin" (not "score")
+  - 30% of documented triggers were completely non-functional
+
+- **Root Cause**: The `sed 's/s$//'` was intended to handle pluralization but breaks suffix-heavy words.
+
+- **How to avoid**:
+  - Prefer root-form triggers
+  - Validate each trigger against test inputs before adding
+  - Remove triggers with 0% match rate
+
+---
+
+**Document Version**: 1.1  
+**Source Rounds**: 52-70, 751-900  
 **Last Updated**: 2026-03-27

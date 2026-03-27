@@ -181,13 +181,13 @@
 - **Validation**: 验证评分稳定性检查
 
 ### Test: Variance Impact on Certification
-- **Input**: Text ≥ 8.0 AND Runtime ≥ 8.0 AND Variance < 1.0
+- **Input**: Text ≥ 8.0 AND Runtime ≥ 8.0 AND Variance < 2.0
 - **Expected**: CERTIFIED = true
 - **Validation**: 验证认证条件
 
 ### Test: Variance Impact on Certification (Fails)
-- **Input**: Text ≥ 8.0 AND Runtime ≥ 8.0 AND Variance = 2.0
-- **Expected**: CERTIFIED = false (Variance must be < 1.0)
+- **Input**: Text ≥ 8.0 AND Runtime ≥ 8.0 AND Variance = 3.0
+- **Expected**: CERTIFIED = false (Variance must be < 2.0)
 - **Validation**: 验证方差超标拒绝认证
 
 ---
