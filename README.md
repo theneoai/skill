@@ -15,7 +15,7 @@ This repository presents **Agent Skills Engineering**, a comprehensive methodolo
 
 We introduce a **multi-agent optimization architecture** employing parallel evaluation across specialized agents—Security, Trigger, Runtime, Quality, and EdgeCase—operating under a deterministic improvement selection protocol. Our **9-step autonomous loop** achieves continuous skill improvement with measurable quality targets.
 
-**Key Metrics**: Text Score ≥ 8.5, Runtime Score ≥ 8.5, Variance < 1.5, Trace Compliance ≥ 0.90
+**Key Metrics**: Text Score ≥ 9.5, Runtime Score ≥ 9.5, Variance < 1.0, Mode Detection ≥ 95%
 
 ---
 
@@ -27,7 +27,17 @@ We introduce a **multi-agent optimization architecture** employing parallel eval
 - **Trace Compliance Analysis**: Behavioral rule extraction (AgentPex methodology)
 - **Long-Context Handling**: Chunking, RAG, cross-reference preservation (100K+ tokens)
 - **Human-Agent Collaboration**: Expert review integration for skills below 8.0 after 10 rounds
-- **Certification System**: CERTIFIED = Text≥8.5 AND Runtime≥8.5 AND Variance<1.5 AND TraceCompliance≥0.90
+- **4-Tier Certification System**:
+  ```
+  ┌─────────────┬────────────┬────────────┬────────────┐
+  │   TIER      │ TEXT SCORE │ RUNTIME    │ VARIANCE   │
+  ├─────────────┼────────────┼────────────┼────────────┤
+  │ PLATINUM    │   ≥ 9.5    │   ≥ 9.5    │   < 1.0    │
+  │ GOLD        │   ≥ 9.0    │   ≥ 9.0    │   < 1.5    │
+  │ SILVER      │   ≥ 8.0    │   ≥ 8.0    │   < 2.0    │
+  │ BRONZE      │   ≥ 7.0    │   ≥ 7.0    │   < 3.0    │
+  └─────────────┴────────────┴────────────┴────────────┘
+  ```
 
 ---
 

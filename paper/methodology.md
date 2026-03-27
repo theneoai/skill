@@ -56,13 +56,20 @@ The runtime evaluation protocol encompasses five validation categories, each tar
 
 ### 1.3 Variance Control
 
-Variance between text score and runtime score constitutes a critical quality indicator reflecting the degree of alignment between documented specifications and actual implementation behavior. The certification formula requires:
+Variance between text score and runtime score constitutes a critical quality indicator reflecting the degree of alignment between documented specifications and actual implementation behavior. The certification system uses a 4-tier structure:
 
 ```
-CERTIFIED = (Text Score ≥ 8.5) AND (Runtime Score ≥ 8.5) AND (Variance < 1.5)
+┌─────────────┬────────────┬────────────┬────────────┐
+│   TIER      │ TEXT SCORE │ RUNTIME    │ VARIANCE   │
+├─────────────┼────────────┼────────────┼────────────┤
+│ PLATINUM    │   ≥ 9.5    │   ≥ 9.5    │   < 1.0    │
+│ GOLD        │   ≥ 9.0    │   ≥ 9.0    │   < 1.5    │
+│ SILVER      │   ≥ 8.0    │   ≥ 8.0    │   < 2.0    │
+│ BRONZE      │   ≥ 7.0    │   ≥ 7.0    │   < 3.0    │
+└─────────────┴────────────┴────────────┴────────────┘
 ```
 
-Variance exceeding 1.0 indicates disagreement between documented specification and actual behavior—a condition termed **specification-behavior divergence**. Variance exceeding 2.0 triggers immediate red-flag status, indicating either excellent documentation of poor implementation or poorly documented but accidentally functional implementation. Neither state represents acceptable skill quality.
+Variance exceeding 1.0 indicates disagreement between documented specification and actual behavior—a condition termed **specification-behavior divergence**. Variance exceeding 2.0 triggers immediate red-flag status for lower tiers, while PLATINUM requires variance < 1.0 for elite consistency.
 
 The variance control mechanism operates as a gatekeeper preventing premature certification. Skills achieving high text scores but low runtime scores must undergo runtime hardening—enhancing actual behavioral fidelity to match documented specifications. Conversely, skills with excellent runtime behavior but poor documentation must undergo specification enrichment—improving documentation to accurately represent existing capabilities. Only convergence between both tracks enables certification.
 

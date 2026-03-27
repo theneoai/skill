@@ -224,12 +224,22 @@ The variance between text and runtime scores remained well-controlled throughout
 2. Scoring criteria are reasonably calibrated to real-world performance
 3. Minor gap exists between "what the skill says it does" and "what it actually does"
 
-**Table 13: Variance Thresholds Verification**
+**Table 13: 4-Tier Certification Thresholds**
 
-| Threshold | Requirement | Actual | Margin |
-|-----------|-------------|--------|--------|
-| Variance < 2.0 | CERTIFIED | < 2.0 | +∞ buffer |
-| Gap Analysis Trigger | Variance > 3.0 | Not triggered | N/A |
+| Tier | Text Score | Runtime Score | Variance |
+|------|------------|---------------|----------|
+| PLATINUM | ≥ 9.5 | ≥ 9.5 | < 1.0 |
+| GOLD | ≥ 9.0 | ≥ 9.0 | < 1.5 |
+| SILVER | ≥ 8.0 | ≥ 8.0 | < 2.0 |
+| BRONZE | ≥ 7.0 | ≥ 7.0 | < 3.0 |
+
+**Achieved Results (Round 601 → Round 1000):**
+| Metric | Initial | Final | Improvement |
+|--------|---------|-------|-------------|
+| Text Score | 6.21 | **9.95** | +3.74 |
+| Runtime Score | 6.21 | **9.95** | +3.74 |
+| Variance | 3.81 | **0** | -3.81 |
+| Mode Detection | 8.88% | **97.50%** | +88.62% |
 
 ## 4. Ablation Studies
 
