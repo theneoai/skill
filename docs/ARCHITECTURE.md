@@ -1,37 +1,32 @@
-# Skill System Architecture
+# Architecture
 
 > Technical architecture of the skill lifecycle management system
 
----
-
 ## Overview
 
-The skill system is a self-contained skill engineering framework that enables creating, evaluating, restoring, securing, and optimizing AI skills through a multi-LLM deliberation system.
+The skill system enables creating, evaluating, restoring, securing, and optimizing AI skills through a multi-LLM deliberation system.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         User Interface                               │
 │                    (scripts/ + SKILL.md)                           │
 └─────────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
+                                 │
+                                 ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    ENGINE - Lifecycle Management                     │
 │                                                                      │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐           │
 │  │ CREATE   │  │ EVALUATE │  │ RESTORE  │  │ SECURITY │           │
-│  │ orchestr │  │ evaluato │  │ restorer │  │ security │           │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘           │
-│       │              │              │              │                  │
-│       └──────────────┴──────────────┴──────────────┘                  │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘           │
 │                              │                                      │
-│                    ┌─────────▼─────────┐                             │
-│                    │   EVOLUTION       │                             │
-│                    │   (9-step loop)    │                             │
-│                    └───────────────────┘                             │
+│                    ┌─────────▼─────────┐                           │
+│                    │   EVOLUTION       │                            │
+│                    │   (9-step loop)    │                           │
+│                    └───────────────────┘                            │
 └─────────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
+                                 │
+                                 ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    EVAL - Quality Assurance                         │
 │                                                                      │
@@ -39,165 +34,44 @@ The skill system is a self-contained skill engineering framework that enables cr
 │  │ Parse   │  │  Text   │  │ Runtime │  │ Certify │               │
 │  │ Phase 1 │  │ Phase 2 │  │ Phase 3 │  │ Phase 4 │               │
 │  └─────────┘  └─────────┘  └─────────┘  └─────────┘               │
-│                                                                      │
-│                    ┌─────────────────────┐                          │
-│                    │   Multi-LLM Call    │                          │
-│                    │   agent_executor    │                          │
-│                    └─────────────────────┘                          │
 └─────────────────────────────────────────────────────────────────────┘
 ```
-
----
 
 ## Directory Structure
 
 ```
-docs/
-├── product/                    # Product documentation
-│   ├── README.md
-│   ├── OVERVIEW.md
-│   ├── ROADMAP.md
-│   └── CHANGELOG.md
-│
-├── user/                      # User documentation
-│   ├── README.md
-│   ├── QUICKSTART.md
-│   ├── TUTORIAL.md
-│   └── workflows/
-│       ├── CREATE.md
-│       ├── EVALUATE.md
-│       ├── OPTIMIZE.md
-│       ├── RESTORE.md
-│       ├── SECURITY.md
-│       └── AUTO-EVOLVE.md
-│
-├── technical/                 # Technical documentation
-│   ├── README.md
-│   ├── ARCHITECTURE.md        # This file
-│   ├── DESIGN.md
-│   ├── core/
-│   │   ├── ENGINE.md
-│   │   ├── EVAL.md
-│   │   ├── EVOLUTION.md
-│   │   └── LEAN-EVAL.md
-│   └── api/
-│       ├── CLI.md
-│       └── INTERNAL.md
-│
-└── reference/                 # Reference documentation
-    ├── README.md
-    ├── SKILL.md
-    ├── METRICS.md
-    ├── THRESHOLDS.md
-    └── PROVIDERS.md
-
 skill-system/
-├── SKILL.md                    # Self-describing skill manifest
-├── README.md                   # Project overview
+├── SKILL.md                    # Skill manifest
+├── README.md                   # Quick start
 ├── CHANGELOG.md                # Version history
 │
-├── scripts/                    # User-facing CLI tools
+├── scripts/                    # User-facing CLI
 │   ├── create-skill.sh        # Skill creation
-│   ├── evaluate-skill.sh       # Full evaluation
-│   ├── optimize-skill.sh       # Self-optimization
+│   ├── evaluate-skill.sh      # Full evaluation
+│   ├── optimize-skill.sh      # Self-optimization
 │   ├── security-audit.sh       # Security audit
 │   ├── restore-skill.sh       # Skill restoration
-│   ├── auto-evolve.sh         # Auto-evolution trigger
-│   └── quick-score.sh         # Fast text scoring
+│   └── lean-orchestrator.sh   # Fast evaluation (~0s)
 │
-├── engine/                     # Skill lifecycle management
-│   ├── main.sh                # Engine entry point
-│   ├── orchestrator.sh         # Workflow coordinator
-│   │
-│   ├── agents/                # Specialized agents
-│   │   ├── base.sh           # Agent infrastructure
-│   │   ├── creator.sh         # Section generator
-│   │   ├── evaluator.sh       # Skill evaluator
-│   │   ├── restorer.sh       # Skill repair
-│   │   └── security.sh        # OWASP audit
-│   │
-│   ├── evolution/             # Self-optimization
-│   │   ├── engine.sh          # 9-step loop
-│   │   ├── analyzer.sh        # Log analysis
-│   │   ├── improver.sh        # LLM improvement
-│   │   ├── summarizer.sh      # Finding synthesis
-│   │   ├── rollback.sh        # Snapshot/rollback
-│   │   ├── _storage.sh        # Log abstraction
-│   │   └── auto-trigger.sh    # Auto-evolution logic
-│   │
+├── engine/                     # Lifecycle management
+│   ├── agents/                # Creator, Evaluator, Restorer, Security
+│   ├── evolution/             # 9-step optimization loop
 │   ├── orchestrator/          # Workflow components
-│   │   ├── _state.sh         # State management
-│   │   ├── _actions.sh       # Decision logic
-│   │   ├── _workflow.sh      # Main workflow
-│   │   └── _parallel.sh       # Background tasks
-│   │
-│   ├── lib/                   # Shared libraries
-│   │   ├── bootstrap.sh       # Module loading
-│   │   ├── constants.sh       # Configuration
-│   │   ├── concurrency.sh     # Lock management
-│   │   ├── errors.sh         # Error handling
-│   │   └── integration.sh     # Eval integration
-│   │
-│   └── prompts/               # Agent prompts
-│       ├── creator-system.md
-│       └── evaluator-system.md
+│   └── lib/                   # Shared libraries
 │
-├── eval/                       # Quality assurance framework
-│   ├── main.sh                # Eval entry point
-│   │
-│   ├── parse/                 # Phase 1: Structure
-│   │   └── parse_validate.sh
-│   │
-│   ├── scorer/                # Phase 2-3: Quality
-│   │   ├── text_scorer.sh    # Text quality (350pts)
-│   │   ├── runtime_tester.sh  # Runtime (450pts)
-│   │   └── runtime_agent_tester.sh
-│   │
-│   ├── analyzer/              # Metrics
-│   │   ├── trigger_analyzer.sh  # F1/MRR
-│   │   ├── variance_analyzer.sh   # Score variance
-│   │   └── dimension_analyzer.sh
-│   │
-│   ├── report/                # Output
-│   │   ├── json_reporter.sh
-│   │   └── html_reporter.sh
-│   │
-│   ├── corpus/                # Test data
-│   │   ├── corpus_100.json   # Fast eval
-│   │   └── corpus_1000.json  # Full eval
-│   │
-│   └── lib/                   # Eval utilities
-│       ├── agent_executor.sh   # LLM orchestration
-│       ├── constants.sh        # Thresholds
-│       ├── utils.sh
-│       └── i18n.sh
+├── eval/                       # Quality assurance
+│   ├── scorer/                # Text & runtime scoring
+│   ├── analyzer/             # F1/MRR/variance
+│   └── corpus/               # Test data
 │
-├── tests/                      # Test suite
-│   ├── run_tests.sh           # Test runner
-│   ├── unit/                  # Unit tests
-│   └── integration/            # Integration tests
-│
-└── .github/workflows/         # CI/CD
-    ├── ci.yml                # Continuous integration
-    └── pages.yml              # GitHub Pages
+└── docs/                      # Documentation
+    ├── ARCHITECTURE.md        # This file
+    ├── WORKFLOWS.md          # Workflow reference
+    └── technical/
+        └── DESIGN.md         # Design decisions
 ```
 
----
-
-## Core Concepts
-
-### Multi-LLM Deliberation
-
-All critical decisions use multiple LLM providers (Anthropic, OpenAI, Kimi) for cross-validation:
-
-1. **Independent Analysis**: Each LLM analyzes independently
-2. **Result Comparison**: Results compared for agreement
-3. **Conflict Resolution**: Disagreements trigger deliberation
-4. **Confidence Scoring**: Final confidence level assigned
-
-### 9-Step Optimization Loop
-
-The evolution engine continuously improves skills through:
+## 9-Step Optimization Loop
 
 ```
 READ → ANALYZE → CURATION → PLAN → IMPLEMENT → VERIFY → HUMAN_REVIEW → LOG → COMMIT
@@ -213,7 +87,7 @@ READ → ANALYZE → CURATION → PLAN → IMPLEMENT → VERIFY → HUMAN_REVIEW
 - **LOG**: Record to results.tsv
 - **COMMIT**: Git commit every 10 rounds
 
-### 4-Phase Evaluation (Full)
+## 4-Phase Evaluation
 
 | Phase | Focus | Score |
 |-------|-------|-------|
@@ -224,35 +98,19 @@ READ → ANALYZE → CURATION → PLAN → IMPLEMENT → VERIFY → HUMAN_REVIEW
 
 **Total: 1000pts**
 
-### Lean Evaluation (~0 seconds, $0)
+## Lean Evaluation (~0 seconds, $0)
 
-For fast feedback during development, lean evaluation uses heuristic scoring without LLM:
+For fast feedback during development:
 
-```
-LEAN: fast_parse → text_score_heuristic → runtime_test_fast → CERTIFY
-```
+| Phase | Focus | Max |
+|-------|-------|-----|
+| Parse | YAML, §1.x, triggers | 100 |
+| Text | §1.x quality | 350 |
+| Runtime | §2 trigger patterns | 50 |
 
-**Lean Scoring (500pts)**:
+**Thresholds**: GOLD ≥475 | SILVER ≥425 | BRONZE ≥350
 
-| Phase | Focus | Max | Method |
-|-------|-------|-----|--------|
-| Parse | YAML, §1.x, triggers | 100 | Grep pattern matching |
-| Text | §1.x quality, domain, workflow | 350 | Keyword frequency |
-| Runtime | §2 trigger patterns, modes | 50 | Table/pattern detection |
-
-**Lean Thresholds**:
-
-| Tier | Total | Percentage |
-|------|-------|------------|
-| GOLD | 475+ | 95% |
-| SILVER | 425+ | 85% |
-| BRONZE | 350+ | 70% |
-
-**When to Use Lean vs Full**:
-- **Lean**: CI/CD, iterative development, quick checks
-- **Full**: Production certification, final validation
-
-### Certification Tiers
+## Certification Tiers
 
 | Tier | Score | F1 | MRR | Variance |
 |------|-------|-----|-----|----------|
@@ -261,52 +119,24 @@ LEAN: fast_parse → text_score_heuristic → runtime_test_fast → CERTIFY
 | SILVER | ≥800 | ≥0.92 | ≥0.87 | <20 |
 | BRONZE | ≥700 | ≥0.90 | ≥0.85 | <30 |
 
----
+## Multi-LLM Deliberation
 
-## Data Flow
+All critical decisions use multiple LLM providers (Anthropic, OpenAI, Kimi) for cross-validation:
+1. Independent Analysis
+2. Result Comparison
+3. Conflict Resolution
+4. Confidence Scoring
 
-### Skill Creation
-```
-User Input → create-skill.sh → orchestrator.sh
-    → Creator Agent (LLM) → evaluator.sh → Iteration Loop
-    → Final Skill File
-```
+## Auto-Evolution Triggers
 
-### Skill Evaluation (Full)
-```
-User Input → evaluate-skill.sh → eval/main.sh
-    → parse_validate.sh (Phase 1)
-    → text_scorer.sh (Phase 2)
-    → runtime_tester.sh (Phase 3)
-    → certifier.sh (Phase 4)
-    → JSON/HTML Report
-```
+| Priority | Trigger | Condition |
+|----------|---------|-----------|
+| 1 | Manual | `force=true` |
+| 2 | Threshold | Score < 475 |
+| 3 | Scheduled | 24h since last check |
+| 4 | Usage | F1 < 0.85 or Rate < 0.80 |
 
-### Lean Evaluation (~0 seconds)
-```
-User Input → lean-orchestrator.sh
-    → fast_parse (grep patterns)
-    → text_score_heuristic (keyword frequency)
-    → runtime_test_fast (trigger detection)
-    → CERTIFY
-```
-
-### Skill Optimization
-```
-User Input → optimize-skill.sh → evolution/engine.sh
-    → Multi-LLM Analysis (READ)
-    → Strategy Selection (ANALYZE)
-    → Improvement Generation (IMPLEMENT)
-    → Verification Loop
-    → Snapshot on improvement
-    → Auto-rollback on regression
-```
-
----
-
-## Security
-
-### OWASP AST10 Checklist
+## Security (OWASP AST10)
 
 1. Credential Scan
 2. Input Validation
@@ -321,177 +151,4 @@ User Input → optimize-skill.sh → evolution/engine.sh
 
 ---
 
-## Auto-Evolution Architecture
-
-### Overview
-
-Auto-evolution enables skills to automatically improve themselves based on usage data and evaluation results. The system monitors skill performance in production and triggers optimization when degradation is detected.
-
-### Components
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    AUTO-EVOLUTION SYSTEM                             │
-│                                                                      │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
-│  │ USAGE        │  │ TRIGGER      │  │ EVOLUTION    │               │
-│  │ TRACKER      │──▶│ MONITOR      │──▶│ ENGINE       │               │
-│  │              │  │              │  │ (9-step loop)│               │
-│  └──────────────┘  └──────────────┘  └──────────────┘               │
-│         │                 │                 │                         │
-│         ▼                 ▼                 ▼                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
-│  │ metrics.db   │  │ threshold    │  │ snapshots/   │               │
-│  │ (SQLite)     │  │ config       │  │ git commits  │               │
-│  └──────────────┘  └──────────────┘  └──────────────┘               │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Usage Tracking
-
-The usage tracker collects real-time metrics for each skill:
-
-| Metric | Description | Threshold |
-|--------|-------------|-----------|
-| `invocation_count` | Number of skill executions | > 10 |
-| `failure_count` | Failed executions | > 0 |
-| `avg_latency_ms` | Average response time | > 5000ms |
-| `error_rate` | Failure / Total | > 5% |
-| `quality_score` | User feedback (1-5) | < 3.5 |
-
-### Trigger Logic
-
-```bash
-auto-trigger.sh:
-    if [ "$failure_count" -gt "$THRESHOLD_FAILURE" ]; then
-        trigger_evolution "FAILURE_DETECTED"
-    elif [ "$error_rate" -gt "$THRESHOLD_ERROR_RATE" ]; then
-        trigger_evolution "DEGRADATION_DETECTED"
-    elif [ "$avg_latency_ms" -gt "$THRESHOLD_LATENCY" ]; then
-        trigger_evolution "LATENCY_DEGRADATION"
-    elif [ "$quality_score" -lt "$THRESHOLD_QUALITY" ]; then
-        trigger_evolution "QUALITY_DEGRADATION"
-    fi
-```
-
-### Evolution Thresholds by Skill Age
-
-| Skill State | Evals Before Evolution | Description |
-|-------------|------------------------|-------------|
-| NEW | 10 | Initial learning phase |
-| GROWING | 50 | Building proficiency |
-| STABLE | 100 | Minor refinements only |
-| MATURE | 200 | Rarely evolves |
-
-### Auto-Evolution Flow
-
-```
-1. TRIGGER detected → Lock skill for evolution
-2. SNAPSHOT current state → Git commit + snapshot
-3. RUN evolution loop → 9-step optimization
-4. VERIFY improved → Multi-LLM verification
-5. COMPARE scores → New vs baseline
-6. COMMIT or ROLLBACK → If improved, commit; else rollback
-7. UNLOCK skill → Resume service
-```
-
-### Rollback Mechanism
-
-On evolution failure or regression:
-- Restore from latest snapshot
-- Reset to previous git commit
-- Log failure reason
-- Alert if score drops below minimum threshold
-
----
-
-## Usage Tracking Architecture
-
-### Overview
-
-Usage tracking captures skill execution data for analytics, trigger decisions, and continuous improvement decisions.
-
-### Data Collection
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    USAGE TRACKING PIPELINE                           │
-│                                                                      │
-│  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐       │
-│  │ Skill    │───▶│ Collector │───▶│ Aggregat │───▶│ SQLite   │       │
-│  │ Runtime  │    │ (async)  │    │ or       │    │ metrics  │       │
-│  └──────────┘    └──────────┘    └──────────┘    └──────────┘       │
-│                                                   │                  │
-│                                                   ▼                  │
-│                                            ┌──────────┐              │
-│                                            │ Trigger  │              │
-│                                            │ Monitor  │              │
-│                                            └──────────┘              │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Metrics Schema
-
-```sql
-CREATE TABLE skill_metrics (
-    skill_id TEXT PRIMARY KEY,
-    invocation_count INTEGER DEFAULT 0,
-    failure_count INTEGER DEFAULT 0,
-    total_latency_ms INTEGER DEFAULT 0,
-    quality_scores TEXT,  -- JSON array
-    last_updated TIMESTAMP,
-    state TEXT DEFAULT 'NEW'
-);
-
-CREATE TABLE metric_history (
-    id INTEGER PRIMARY KEY,
-    skill_id TEXT,
-    metric_type TEXT,
-    value REAL,
-    recorded_at TIMESTAMP
-);
-```
-
-### Aggregation
-
-- **Per-invocation**: Latency, success/failure, quality score
-- **5-minute windows**: Error rate, throughput
-- **Hourly**: P50/P95/P99 latency, trend analysis
-- **Daily**: Overall health score, comparison to baseline
-
-### Integration Points
-
-| Component | Data Provided | Usage |
-|-----------|---------------|-------|
-| `invoke-skill.sh` | Latency, success | Real-time monitoring |
-| `evaluate-skill.sh` | Quality scores | Certification decisions |
-| `auto-evolve.sh` | Health metrics | Trigger decisions |
-| `dashboard` | Aggregated stats | User visibility |
-
----
-
-## Configuration
-
----
-
-## Configuration
-
-### Thresholds
-
-| Setting | Value | Description |
-|---------|-------|-------------|
-| `EVOLUTION_THRESHOLD_NEW` | 10 | Evals before first evolution |
-| `EVOLUTION_THRESHOLD_GROWING` | 50 | Evals for growing skills |
-| `EVOLUTION_THRESHOLD_STABLE` | 100 | Evals for stable skills |
-| `PASSING_SCORE` | 800 | Minimum score for production |
-| `MAX_SNAPSHOTS` | 10 | Snapshots to retain |
-
-### Timeouts (seconds)
-
-| Setting | Value |
-|---------|-------|
-| `CREATOR_TIMEOUT` | 60 |
-| `EVALUATOR_TIMEOUT` | 30 |
-| `EVOLUTION_TIMEOUT` | 120 |
-| `SKILL_FILE_TIMEOUT` | 10 |
-| `LLM_TIMEOUT` | 15 |
+**Last Updated**: 2026-03-28
