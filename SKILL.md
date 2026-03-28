@@ -467,6 +467,29 @@ User Input
 
 ## §4.1 Tool Set
 
+### 4.1.0 User Scripts
+
+**Quick CLI access to all core functionality:**
+
+| Tool | Path | Purpose |
+|------|------|---------|
+| **create-skill** | `scripts/create-skill.sh` | Create new skill from description |
+| **evaluate-skill** | `scripts/evaluate-skill.sh` | Full evaluation (fast/full) |
+| **optimize-skill** | `scripts/optimize-skill.sh` | 9-step self-optimization loop |
+| **security-audit** | `scripts/security-audit.sh` | OWASP AST10 security check |
+| **restore-skill** | `scripts/restore-skill.sh` | Fix broken skills |
+| **quick-score** | `scripts/quick-score.sh` | Fast text scoring (no LLM) |
+
+**Usage:**
+```bash
+./scripts/create-skill.sh "Create a code review skill" ./code-review.md GOLD
+./scripts/evaluate-skill.sh ./code-review.md fast
+./scripts/optimize-skill.sh ./code-review.md 20
+./scripts/security-audit.sh ./code-review.md FULL
+```
+
+---
+
 ### 4.1.1 ENGINE - Skill Lifecycle Management
 
 #### Core Orchestration

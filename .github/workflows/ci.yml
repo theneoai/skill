@@ -14,7 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        shell: [bash, sh]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,16 +46,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup output directory
-        run: echo "OUTPUT_DIR=./eval_results" >> $GITHUB_ENV
-
-      - name: Run eval on SKILL.md
-        working-directory: .
+      - name: Run eval using script
         run: |
-          bash eval/main.sh --skill ./SKILL.md --fast --output ./eval_results --ci || true
+          ./scripts/evaluate-skill.sh ./SKILL.md
 
       - name: Check eval results
-        working-directory: .
         run: |
           if [[ -f ./eval_results/summary.json ]]; then
             echo "=== Eval Summary ==="
@@ -88,27 +82,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run engine tests
-        working-directory: ./engine
+      - name: Make scripts executable
         run: |
-          bash tests/run_tests.sh
+          chmod +x ./scripts/*.sh
+          chmod +x ./tests/*.sh
+          chmod +x ./tests/unit/*.sh
 
-      - name: Run test cases
-        working-directory: .
+      - name: Run all tests
         run: |
-          for test_case in test_cases/*/; do
-            if [[ -d "$test_case" ]]; then
-              echo "=== Running tests in: $test_case ==="
-              for test_file in "$test_case"*.md; do
-                if [[ -f "$test_file" ]]; then
-                  echo "Processing: $test_file"
-                fi
-              done
-            fi
-          done
+          ./tests/run_tests.sh
 
-      - name: Run self-optimization tests
-        if: fileExists('test_cases/self_optimization_tests.md')
+      - name: Run quick score
         run: |
-          echo "Self-optimization tests found"
-          head -50 test_cases/self_optimization_tests.md
+          ./scripts/quick-score.sh ./SKILL.md

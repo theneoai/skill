@@ -4,9 +4,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-EVAL_DIR_FROM_ENGINE="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ENGINE_DIR="${PROJECT_ROOT}/engine"
+EVAL_DIR="${PROJECT_ROOT}/eval"
 
-source "${EVAL_DIR_FROM_ENGINE}/lib/bootstrap.sh"
+source "${ENGINE_DIR}/lib/bootstrap.sh"
 require constants concurrency errors
 require_evolution rollback
 

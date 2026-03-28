@@ -1,10 +1,10 @@
 # Skill Engineering
 
-[![PLATINUM Tier](https://img.shields.io/badge/Tier-PLATINUM-4CAF50)](engine/)
+[![PLATINUM Tier](https://img.shields.io/badge/Tier-PLATINUM-4CAF50)](SKILL.md)
 [![F1 Score](https://img.shields.io/badge/F1%20Score-0.923-2196F3)](eval/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-**Authors**: theneoai <lucas_hsueh@hotmail.com> | **Version**: 1.9.0 | **Standard**: agentskills.io v2.1.0
+**Authors**: theneoai <lucas_hsueh@hotmail.com> | **Version**: 2.0.0 | **Standard**: agentskills.io v2.1.0
 
 ---
 
@@ -20,12 +20,12 @@ Our **multi-agent optimization architecture** employs parallel evaluation across
 
 ## Key Features
 
+- **5 Modes**: CREATE, EVALUATE, RESTORE, SECURITY, OPTIMIZE
 - **9-Step Autonomous Optimization Loop**: READ → ANALYZE → CURATION → PLAN → IMPLEMENT → VERIFY → HUMAN_REVIEW → LOG → COMMIT
+- **Multi-LLM Deliberation**: Cross-validation with Anthropic, OpenAI, Kimi
 - **Dual-Track Validation**: Text quality + Runtime effectiveness
-- **Multi-Agent Parallel Evaluation**: 5 specialized agents
-- **4-Tier Certification**: PLATINUM ≥ 9.5 | GOLD ≥ 9.0 | SILVER ≥ 8.0 | BRONZE ≥ 7.0
-- **Trace Compliance** (AgentPex methodology)
-- **Long-Context Handling**: 100K+ tokens with chunking, RAG, cross-reference preservation
+- **4-Tier Certification**: PLATINUM ≥ 950 | GOLD ≥ 900 | SILVER ≥ 800 | BRONZE ≥ 700
+- **OWASP AST10 Security**: 10-item security checklist
 
 ---
 
@@ -33,16 +33,19 @@ Our **multi-agent optimization architecture** employs parallel evaluation across
 
 ```bash
 # Create a new skill
-./engine/main.sh create "code-review skill"
+./scripts/create-skill.sh "Create a code review skill"
 
 # Evaluate a skill
-./eval/main.sh score path/to/SKILL.md
+./scripts/evaluate-skill.sh ./code-review.md
 
-# Run self-optimization
-./engine/main.sh tune path/to/SKILL.md
+# Optimize a skill
+./scripts/optimize-skill.sh ./code-review.md
 
-# Run security review
-./engine/main.sh security path/to/SKILL.md
+# Security audit
+./scripts/security-audit.sh ./code-review.md
+
+# Restore broken skill
+./scripts/restore-skill.sh ./broken-skill.md
 ```
 
 ---
@@ -50,19 +53,44 @@ Our **multi-agent optimization architecture** employs parallel evaluation across
 ## Directory Structure
 
 ```
-skill/
-├── SKILL.md              # Main skill definition
-├── engine/               # Core optimization engine
-│   ├── main.sh           # Entry point
-│   ├── orchestrator.sh   # Workflow orchestration
-│   ├── agents/           # Specialized agents
-│   └── evolution/        # Self-optimization loop
-├── eval/                 # Evaluation framework
-│   ├── main.sh           # Evaluation entry
-│   ├── scorer/            # Scoring engines
-│   └── certifier.sh      # Certification
-├── references/           # Detailed documentation
-└── paper/                # Academic papers
+skill-system/
+├── SKILL.md                    # Self-describing skill manifest
+├── README.md                   # This file
+├── CHANGELOG.md               # Version history
+│
+├── scripts/                   # User-facing CLI tools
+│   ├── create-skill.sh
+│   ├── evaluate-skill.sh
+│   ├── optimize-skill.sh
+│   ├── security-audit.sh
+│   ├── restore-skill.sh
+│   └── quick-score.sh
+│
+├── engine/                    # Skill lifecycle management
+│   ├── agents/               # Creator, Evaluator, Restorer, Security
+│   ├── evolution/            # 9-step optimization loop
+│   ├── orchestrator/         # Workflow components
+│   ├── lib/                  # Shared libraries
+│   └── prompts/              # Agent prompts
+│
+├── eval/                     # Quality assurance framework
+│   ├── scorer/              # Text & runtime scoring
+│   ├── analyzer/            # F1/MRR/variance
+│   ├── corpus/              # Test data
+│   └── report/              # Output formatters
+│
+├── tests/                    # Test suite
+│   ├── run_tests.sh          # Test runner
+│   ├── unit/                # Unit tests
+│   └── integration/          # Integration tests
+│
+├── docs/                     # Documentation
+│   ├── API.md               # API reference
+│   └── ARCHITECTURE.md      # Technical architecture
+│
+├── examples/                # Usage examples
+│
+└── .github/workflows/        # CI/CD
 ```
 
 ---
