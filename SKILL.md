@@ -195,6 +195,52 @@ User Input
 
 ---
 
+### Mode: LEAN (Fast Path)
+
+**Purpose**: Lean, fast, cost-effective skill evaluation (~1 second)
+
+**Design Principles**:
+- Fast Path: Parse + Heuristic scoring (no LLM)
+- LLM on-demand: Multi-LLM only for critical decisions
+- Parallel Execution: Independent dimensions run in parallel
+- Incremental: Only fix what needs fixing
+
+**Workflow (~1 second)**:
+```
+1. FAST_PARSE: YAML, sections, triggers (heuristic, no LLM)
+2. TEXT_SCORE: Domain, workflow, error handling (heuristic, no LLM)
+3. RUNTIME_TEST: Trigger matching with corpus (no LLM)
+4. DECIDE: Compare to threshold
+5. ITERATE (if needed): Fast LLM fix for specific issues
+6. CERTIFY: Tier determination
+```
+
+**Fast Path Thresholds**:
+| Tier | Parse | Text | Runtime | Total |
+|------|-------|------|---------|-------|
+| GOLD | 80+ | 280+ | 40+ | 900+ |
+| SILVER | 70+ | 210+ | 30+ | 700+ |
+| BRONZE | 60+ | 140+ | 20+ | 500+ |
+
+**When to Escalate to Full Eval**:
+- Score near threshold boundary
+- High disagreement between heuristics
+- Production deployment required
+- User explicitly requests full eval
+
+**Usage**:
+```bash
+./scripts/lean-orchestrator.sh <skill_file> [target_tier]
+```
+
+**Example**:
+```bash
+./scripts/lean-orchestrator.sh ./SKILL.md BRONZE
+# Output: {"status":"PASS","tier":"SILVER","parse":100,"text":305,"runtime":25,"total":430}
+```
+
+---
+
 ### Mode: EVALUATE
 
 **Purpose**: Score an existing skill with comprehensive metrics
@@ -471,21 +517,29 @@ User Input
 
 **Quick CLI access to all core functionality:**
 
-| Tool | Path | Purpose |
-|------|------|---------|
-| **create-skill** | `scripts/create-skill.sh` | Create new skill from description |
-| **evaluate-skill** | `scripts/evaluate-skill.sh` | Full evaluation (fast/full) |
-| **optimize-skill** | `scripts/optimize-skill.sh` | 9-step self-optimization loop |
-| **security-audit** | `scripts/security-audit.sh` | OWASP AST10 security check |
-| **restore-skill** | `scripts/restore-skill.sh` | Fix broken skills |
-| **quick-score** | `scripts/quick-score.sh` | Fast text scoring (no LLM) |
+| Tool | Path | Purpose | Speed |
+|------|------|---------|-------|
+| **create-skill** | `scripts/create-skill.sh` | Create new skill from description | ~30s |
+| **evaluate-skill** | `scripts/evaluate-skill.sh` | Full evaluation (fast/full) | ~2-10min |
+| **lean-orchestrator** | `scripts/lean-orchestrator.sh` | Fast evaluation (~1s) | **~1s** |
+| **optimize-skill** | `scripts/optimize-skill.sh` | 9-step self-optimization loop | ~5min |
+| **security-audit** | `scripts/security-audit.sh` | OWASP AST10 security check | ~10s |
+| **restore-skill** | `scripts/restore-skill.sh` | Fix broken skills | ~20s |
+| **quick-score** | `scripts/quick-score.sh` | Fast text scoring (no LLM) | <1s |
 
 **Usage:**
 ```bash
+# Fast path (~1 second)
+./scripts/lean-orchestrator.sh ./SKILL.md BRONZE
+
+# Full evaluation (~2 minutes)
+./scripts/evaluate-skill.sh ./SKILL.md fast
+
+# Create new skill
 ./scripts/create-skill.sh "Create a code review skill" ./code-review.md GOLD
-./scripts/evaluate-skill.sh ./code-review.md fast
+
+# Optimize
 ./scripts/optimize-skill.sh ./code-review.md 20
-./scripts/security-audit.sh ./code-review.md FULL
 ```
 
 ---
