@@ -49,6 +49,7 @@ ${evaluator_feedback:-No feedback yet. This is the first section.}
 creator_init_skill_file() {
     local skill_file="$1"
     local skill_name="$2"
+    local parent_skill="${3:-}"
     
     local content="# ${skill_name}
 
@@ -61,6 +62,62 @@ creator_init_skill_file() {
 "
     
     echo "$content" > "$skill_file"
+    
+    if [[ -n "$parent_skill" ]]; then
+        apply_inheritance "$parent_skill" "$skill_file"
+    fi
+}
+
+extract_inherited_sections() {
+    local parent_skill="$1"
+    
+    if [[ ! -f "$parent_skill" ]]; then
+        echo "WARNING: Parent skill not found: $parent_skill" >&2
+        return 1
+    fi
+    
+    local content=""
+    
+    local identity
+    identity=$(sed -n '/^## §1\.1\|^## 1\.1 Identity\|^# .*$/,/^## §[0-9]\|^## [0-9]\.[0-9]/p' "$parent_skill" | head -n -1)
+    if [[ -n "$identity" ]]; then
+        content+="$identity"$'\n'
+    fi
+    
+    local redlines
+    redlines=$(sed -n '/^**Red Lines\|^## Red Lines\|严禁/p' "$parent_skill" | head -10)
+    if [[ -n "$redlines" ]]; then
+        content+="$redlines"$'\n'
+    fi
+    
+    local evolution
+    evolution=$(sed -n '/^## §6\|^## 6\./p' "$parent_skill")
+    if [[ -n "$evolution" ]]; then
+        content+="$evolution"$'\n'
+    fi
+    
+    echo "$content"
+}
+
+apply_inheritance() {
+    local parent_skill="$1"
+    local target_file="$2"
+    
+    local inherited
+    inherited=$(extract_inherited_sections "$parent_skill")
+    
+    if [[ -z "$inherited" ]]; then
+        echo "No inheritance content found"
+        return 1
+    fi
+    
+    if [[ -s "$target_file" ]]; then
+        echo "Target file already has content, inheritance skipped (child content priority)"
+        return 0
+    fi
+    
+    echo "$inherited" >> "$target_file"
+    echo "" >> "$target_file"
 }
 
 creator_get_next_section_prompt() {
