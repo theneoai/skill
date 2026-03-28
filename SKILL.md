@@ -207,20 +207,20 @@ User Input
 
 **Workflow (~1 second)**:
 ```
-1. FAST_PARSE: YAML, sections, triggers (heuristic, no LLM)
-2. TEXT_SCORE: Domain, workflow, error handling (heuristic, no LLM)
-3. RUNTIME_TEST: Trigger matching with corpus (no LLM)
+1. FAST_PARSE: YAML, §1.x sections, triggers (heuristic, no LLM)
+2. TEXT_SCORE: §1.x quality, domain knowledge, workflow (heuristic, no LLM)
+3. RUNTIME_TEST: §2 trigger patterns, mode definitions (no LLM)
 4. DECIDE: Compare to threshold
 5. ITERATE (if needed): Fast LLM fix for specific issues
 6. CERTIFY: Tier determination
 ```
 
-**Fast Path Thresholds**:
-| Tier | Parse | Text | Runtime | Total |
+**Fast Path Thresholds (500-point scale)**:
+| Tier | Parse | Text | Runtime | Total | 
 |------|-------|------|---------|-------|
-| GOLD | 80+ | 280+ | 40+ | 900+ |
-| SILVER | 70+ | 210+ | 30+ | 700+ |
-| BRONZE | 60+ | 140+ | 20+ | 500+ |
+| GOLD | 80+ | 280+ | 40+ | 475+ | (95%)
+| SILVER | 70+ | 245+ | 35+ | 425+ | (85%)
+| BRONZE | 60+ | 210+ | 30+ | 350+ | (70%) |
 
 **When to Escalate to Full Eval**:
 - Score near threshold boundary
