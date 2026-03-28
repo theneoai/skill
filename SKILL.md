@@ -3,7 +3,7 @@ name: skill
 description: >
   全生命周期AI技能工程系统：创建、评估、恢复、安全、优化。
   支持中英双语触发：创建/评估/恢复/安全/优化技能。
-  特性：多LLM deliberation、交叉验证、自动进化、Lean评估(~0秒/$0)、OWASP AST10安全审计。
+  特性：多LLM deliberation、交叉验证、自动进化、Lean评估(~0秒/0 token)、OWASP AST10安全审计。
   自我进化：阈值+定时+使用数据三重触发，使用分析提升触发准确率F1>=0.90。
 license: MIT
 metadata:
@@ -299,7 +299,7 @@ Where:
 
 ### Mode: LEAN (Fast Path)
 
-**Purpose**: Lean, fast, cost-effective skill evaluation (~1 second)
+**Purpose**: Lean, fast skill evaluation (~0s, 0 tokens)
 
 **Design Principles**:
 - Fast Path: Parse + Heuristic scoring (no LLM)
@@ -799,7 +799,7 @@ eval/analyzer/variance_analyzer.sh 280 360
 | 4 | minimax | 80 | `MINIMAX_API_KEY` |
 | 5 | kimi | 75 | `KIMI_API_KEY` |
 
-**Auto-Selection**: System automatically detects available providers and selects top 2 for cross-validation. Lean evaluation uses heuristic scoring (~0s, $0) and only invokes LLM deliberation for edge cases or when score is below threshold.
+**Auto-Selection**: System automatically detects available providers and selects top 2 for cross-validation. Lean evaluation uses heuristic scoring (~0s, 0 tokens) and only invokes LLM deliberation for edge cases or when score is below threshold.
 
 **Cross-Validation**: All critical decisions require 2/3 LLM agreement. Conflicts trigger HUMAN_REVIEW.
 
@@ -1060,7 +1060,7 @@ track_feedback "skill" 5 "Good results"
 
 ### 6.6 Integration with Lean Eval
 
-Lean evaluation (~0s, $0) runs first:
+Lean evaluation (~0s, 0 tokens) runs first:
 - If score >= GOLD threshold → skip expensive LLM evolution
 - If score < threshold → trigger evolution
 - Usage metrics provide additional trigger signals
