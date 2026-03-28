@@ -46,10 +46,14 @@ main() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --extends|-e)
+                [[ -z "${2:-}" ]] && { echo "Error: --extends requires a value"; exit 1; }
+                [[ "$2" =~ ^- ]] && { echo "Error: --extends requires a value, got $2"; exit 1; }
                 parent_skill="$2"
                 shift 2
                 ;;
             --tier|-t)
+                [[ -z "${2:-}" ]] && { echo "Error: --tier requires a value"; exit 1; }
+                [[ "$2" =~ ^- ]] && { echo "Error: --tier requires a value, got $2"; exit 1; }
                 tier="$2"
                 shift 2
                 ;;
@@ -83,6 +87,11 @@ main() {
     
     local skill_name
     skill_name=$(echo "$description" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]+/-/g' | sed 's/^-//;s/-$//')
+    
+    if [[ -z "$skill_name" ]]; then
+        echo "Error: Could not generate valid skill name from description"
+        exit 1
+    fi
     
     if [[ -z "$output_path" ]]; then
         output_path="${PROJECT_ROOT}/${skill_name}.md"
