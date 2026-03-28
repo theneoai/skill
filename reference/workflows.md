@@ -2,48 +2,67 @@
 
 > **Purpose**: Detailed workflow specifications for each mode
 > **Load**: When §3 Process section is accessed
-> **Note**: Core steps in SKILL.md, full details here
+> **Patterns**: Tool Wrapper + Generator + Inversion + Pipeline
 
 ---
 
-## Mode: CREATE
+## Mode: CREATE (Generator + Inversion)
 
 ### Purpose
-Generate a new SKILL.md from description with multi-LLM validation
+Generate a new SKILL.md using template-based generation with structured requirement gathering
 
-### Workflow (Multi-LLM Deliberation)
+### Pattern: Inversion (Gather Requirements First)
+
+**GATE: Do NOT start generating until ALL questions answered**
 
 ```
-1. ASK: "What skill do you want to create?"
-   → Capture: skill_description
+## Phase 1 — Problem Discovery (一次问一个问题，等回答)
 
-2. ASK: "Target tier (GOLD/SILVER/BRONZE)?"
-   → Capture: target_tier (default: BRONZE)
+Q1: "这个Skill为用户解决什么问题？"
+   → Wait for answer before Q2
 
-3. ASK: "Output path?"
-   → Capture: output_path (default: ./[derived-name].md)
+Q2: "主要用户是谁？他们的技术水平如何？"
+   → Wait for answer before Q3
 
-4. DELIBERATE:
-   - LLM-1 (Anthropic): Proposes skill structure
-   - LLM-2 (OpenAI): Proposes alternative structure
-   - LLM-3 (Kimi): Proposes third option
+Q3: "预期规模是多少？（简单/中等/复杂）"
+   → Wait for answer before synthesis
 
-5. CROSS-VALIDATE: Merge proposals into optimal structure
+## Phase 2 — Technical Constraints (Phase 1 全部回答完之后)
 
-6. EXECUTE: engine/orchestrator.sh "$prompt" "$output_path" "$tier"
+Q4: "你有什么技术栈要求或偏好？"
+   → Wait for answer before Q5
 
-7. VERIFY: Multi-LLM evaluation of final output
-   - F1 score calculation
-   - MRR calculation
-   - Score ≥ 600 for BRONZE
+Q5: "有哪些不可妥协的要求？（质量/速度/安全性）"
+   → Wait for answer before synthesis
+```
 
-8. PRESENT: Display final score, tier, F1, MRR
+### Pattern: Generator (Template-Based Output)
+
+```
+## Phase 3 — Synthesis (所有问题都回答完之后)
+
+1. LOAD: 'reference/workflows.md' for skill template structure
+2. LOAD: 'reference/tools.md' for tool categories
+3. GENERATE: Fill template with collected requirements
+4. VERIFY: Check all required sections present
+5. PRESENT: Show generated skill structure
+6. CONFIRM: "这个结构符合你的需求吗？"
+```
+
+### Workflow
+
+```
+1. ASK requirements (Inversion)
+2. LOAD templates (Tool Wrapper)
+3. GENERATE skill structure (Generator)
+4. CROSS-VALIDATE (Multi-LLM)
+5. VERIFY with lean-orchestrator
+6. PRESENT result
 ```
 
 ### Exit Criteria
 - SKILL.md created at output_path
-- Score ≥ 600 (BRONZE minimum)
-- F1 ≥ 0.90, MRR ≥ 0.85
+- Score ≥ 420 (BRONZE minimum)
 
 ---
 
