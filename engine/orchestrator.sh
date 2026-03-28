@@ -23,16 +23,24 @@ orchestrate() {
     local parent_skill="${PARENT_SKILL:-}"
     
     if [[ -n "$PARENT_SKILL" ]]; then
+        if [[ -z "$PROJECT_ROOT" ]]; then
+            echo "ERROR: PROJECT_ROOT must be set" >&2
+            return 1
+        fi
+
         if [[ "$PARENT_SKILL" == *".md"* ]]; then
             PARENT_SKILL_PATH="$PARENT_SKILL"
         else
             PARENT_SKILL_PATH="${PROJECT_ROOT}/${PARENT_SKILL}.md"
         fi
-        
-        if [[ -f "$PARENT_SKILL_PATH" ]]; then
-            echo "Using parent skill: $PARENT_SKILL_PATH"
-            export PARENT_SKILL_PATH
+
+        if [[ ! -f "$PARENT_SKILL_PATH" ]]; then
+            echo "ERROR: Parent skill not found: $PARENT_SKILL_PATH" >&2
+            return 1
         fi
+
+        echo "Using parent skill: $PARENT_SKILL_PATH"
+        export PARENT_SKILL_PATH
     fi
     
     workflow_init "$user_prompt" "$output_file" "$parent_skill"
