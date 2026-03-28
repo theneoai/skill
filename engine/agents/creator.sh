@@ -64,7 +64,7 @@ creator_init_skill_file() {
     echo "$content" > "$skill_file"
     
     if [[ -n "$parent_skill" ]]; then
-        apply_inheritance "$parent_skill" "$skill_file"
+        inherit_sections "$parent_skill" "$skill_file"
     fi
 }
 
@@ -79,19 +79,19 @@ extract_inherited_sections() {
     local content=""
     
     local identity
-    identity=$(sed -n '/^## §1\.1\|^## 1\.1 Identity\|^# .*$/,/^## §[0-9]\|^## [0-9]\.[0-9]/p' "$parent_skill" | head -n -1)
+    identity=$(awk '/^## §1\.1/{found=1} found{print} /^## [^§]/{if(found && NR>1) exit}' "$parent_skill")
     if [[ -n "$identity" ]]; then
         content+="$identity"$'\n'
     fi
     
     local redlines
-    redlines=$(sed -n '/^**Red Lines\|^## Red Lines\|严禁/p' "$parent_skill" | head -10)
+    redlines=$(awk '/\*\*Red Lines|严禁/{found=1} found{print} /^$/{if(found) exit}' "$parent_skill")
     if [[ -n "$redlines" ]]; then
         content+="$redlines"$'\n'
     fi
     
     local evolution
-    evolution=$(sed -n '/^## §6\|^## 6\./p' "$parent_skill")
+    evolution=$(awk '/^## §6/,/^## [^§]/ {print}' "$parent_skill" | head -n -1)
     if [[ -n "$evolution" ]]; then
         content+="$evolution"$'\n'
     fi
@@ -99,7 +99,7 @@ extract_inherited_sections() {
     echo "$content"
 }
 
-apply_inheritance() {
+inherit_sections() {
     local parent_skill="$1"
     local target_file="$2"
     
