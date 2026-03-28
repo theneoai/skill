@@ -132,40 +132,47 @@ confidence = primary_match×0.5 + secondary×0.2 + context×0.2 + no_negative×0
 ## §3.1 Process
 
 ### Mode: CREATE (Generator + Inversion)
-**Purpose**: Generate new SKILL.md from description
+**Purpose**: Generate a new SKILL.md from description with multi-LLM validation
 **Pattern**: Tool Wrapper + Inversion - load references/ only when needed
 
 **Steps**:
-1. Load `reference/workflows.md` for template
-2. Gather requirements (Inversion: ask one question at a time)
-3. Multi-LLM deliberation
-4. Generate skill structure
-5. Verify against template
-6. Present with confidence
+1. **ASK**: "What skill do you want to create?" (Inversion: one question at a time)
+2. **LOAD**: `reference/workflows.md` for template structure
+3. **DELIBERATE**: Multi-LLM proposals (kimi-code + minimax)
+4. **CROSS-VALIDATE**: Merge proposals into optimal structure
+5. **GENERATE**: Fill template with collected requirements
+6. **VERIFY**: Run lean-orchestrator for validation
+7. **PRESENT**: Display final score, tier, F1, MRR
 
 ### Mode: LEAN (Fast Path)
 **Purpose**: Fast evaluation (~0s, 0 tokens)
 **Pattern**: Tool Wrapper - heuristic-based checks
-**Steps**: FAST_PARSE → TEXT_SCORE → RUNTIME_TEST → DECIDE → CERTIFY
+**Steps**:
+1. **FAST_PARSE**: YAML frontmatter + section structure (100ms)
+2. **TEXT_SCORE**: Heuristic quality scoring (100ms)
+3. **RUNTIME_TEST**: Trigger pattern validation (100ms)
+4. **DECIDE**: Compare against threshold
+5. **CERTIFY**: Assign tier (GOLD/SILVER/BRONZE)
 
 ### Mode: EVALUATE (Reviewer)
 **Purpose**: Score existing skill with metrics
 **Pattern**: Reviewer - severity-scored validation
 
 **Steps**:
-1. Load `reference/triggers.md` for checklist
-2. Parse skill structure
-3. Apply checklist rules by severity:
+1. **LOAD**: `reference/triggers.md` for checklist
+2. **PARSE**: Extract skill structure and metadata
+3. **APPLY**: Checklist rules by severity:
    - **error**: Must fix (CWE, missing sections)
    - **warning**: Should fix (incomplete docs)
    - **info**: Consider (style improvements)
-4. Score each dimension
-5. Compute F1/MRR
-6. Present with severity-sorted findings
+4. **SCORE**: Each dimension (Parse, Text, Runtime)
+5. **COMPUTE**: F1/MRR metrics
+6. **PRESENT**: Severity-sorted findings + final score
 
 ### Mode: RESTORE
 **Purpose**: Fix broken skills
-**Steps**: Analyze (Multi-LLM) → Diagnose → Propose fixes → Implement → Verify
+**Pipeline**: Analyze → Diagnose → Propose fixes → Implement → Verify
+**Done criteria**: Score ≥ previous score with all P0 issues resolved
 
 ### Mode: SECURITY
 **Purpose**: OWASP AST10 audit
@@ -177,15 +184,17 @@ confidence = primary_match×0.5 + secondary×0.2 + context×0.2 + no_negative×0
 **Pattern**: Pipeline with checkpoints
 
 **Steps**:
-1. READ → Load skill file
-2. ANALYZE → Locate weakest dimension
-3. CURATION → Select improvement
-4. PLAN → Propose change
-5. IMPLEMENT → Apply change
-6. VERIFY → Run lean evaluation
-7. HUMAN_REVIEW → User confirms
-8. LOG → Record improvement
-9. COMMIT → Save result
+1. **READ**: Load skill file, parse structure
+2. **ANALYZE**: Locate weakest dimension (Multi-LLM)
+3. **CURATION**: Select top improvement candidate
+4. **PLAN**: Propose specific change with rationale
+5. **IMPLEMENT**: Apply change to skill file
+6. **VERIFY**: Run lean evaluation
+7. **HUMAN_REVIEW**: User confirms or rejects
+8. **LOG**: Record improvement in usage_tracker
+9. **COMMIT**: Save to git with descriptive message
+
+**Done criteria**: Score ≥ threshold with no regression
 
 ---
 
@@ -260,13 +269,61 @@ track_feedback "skill" 5 "Good"
 
 ---
 
-## Reference Index
+## §7.1 Examples
 
-| File | Content | Load |
-|------|---------|------|
-| `reference/triggers.md` | Full trigger patterns | EVALUATE |
-| `reference/workflows.md` | Detailed workflows | CREATE |
-| `reference/tools.md` | Tool documentation | §4.1 |
+### CREATE Example
+```bash
+./scripts/create-skill.sh "Create a code review skill" --extends skill
+# Output: skill-code-review.md with §1.1 + Red Lines + §6 inherited
+```
+
+### EVALUATE Example
+```bash
+./scripts/evaluate-skill.sh ./my-skill.md
+# Output: JSON with F1=0.92, MRR=0.88, tier=GOLD
+```
+
+### LEAN Example
+```bash
+./scripts/lean-orchestrator.sh ./my-skill.md
+# Output: 0.5s, $0, score=580/600, tier=GOLD
+```
+
+### SECURITY Example
+```bash
+./scripts/security-audit.sh ./my-skill.md OWASP
+# Output: violations by severity (error/warning/info)
+```
+
+### RESTORE Example
+```bash
+./scripts/restore-skill.sh ./broken-skill.md
+# Output: Fixed skill with diagnosis report
+```
+
+### Case Study: agent-skill Evolution
+- Initial Score: 425 (SILVER)
+- After 300 rounds: 580 (GOLD)
+- F1: 0.87 → 0.92
+- MRR: 0.82 → 0.88
+
+## §7.2 Frameworks
+
+| Framework | Application | Metrics |
+|-----------|-------------|---------|
+| ReAct | Reasoning + Action loop | F1 ≥ 0.90 |
+| Chain-of-Thought | Step-by-step reasoning | MRR ≥ 0.85 |
+| Tree-of-Thought | Exploration branches | Quality ≥ 8.0 |
+| RAG | Retrieval augmented gen | Recall ≥ 0.90 |
+
+## §7.3 Standards
+
+- **NIST**: AI Risk Management Framework 1.0
+- **OWASP**: AST10 Security Checklist (AST10-1 to AST10-10)
+- **ISO**: 25010 Software Quality Model ( SQuaRE )
+- **CWE**: Common Weakness Enumeration v4.14
+- **F1 Score**: Harmonic mean: 2×P×R/(P+R)
+- **MRR**: Mean Reciprocal Rank: Σ(1/rank)/N
 
 ---
 
