@@ -202,7 +202,7 @@ runtime_test_fast() {
 }
 
 # ============================================================================
-# MULTI-LLM DELIBERATION (Only when needed)
+# MULTI-LLM DELIBERATION (kimi-code + minimax cross-validation)
 # ============================================================================
 
 llm_deliberate() {
@@ -211,51 +211,37 @@ llm_deliberate() {
     local prompt="$3"
     
     log_lean "LLM Deliberation: $dimension"
+    log_lean "Using kimi-code + minimax for cross-validation"
     
-    local top_providers
-    top_providers=$(select_top_providers)
+    local kimi_result minimax_result
+    kimi_result=$(call_llm "You are an expert skill evaluator." "$prompt" "auto" "kimi-code" 2>/dev/null || echo '{"score": 0}')
+    minimax_result=$(call_llm "You are an expert skill evaluator." "$prompt" "auto" "minimax" 2>/dev/null || echo '{"score": 0}')
     
-    if [[ -z "$top_providers" ]]; then
-        log_lean "No LLM providers available, skipping deliberation"
-        echo "0"
-        return
-    fi
+    local kimi_score minimax_score
+    kimi_score=$(echo "$kimi_result" | jq -r '.score // 0' 2>/dev/null || echo "0")
+    minimax_score=$(echo "$minimax_result" | jq -r '.score // 0' 2>/dev/null || echo "0")
     
-    local p1 p2
-    p1=$(echo "$top_providers" | cut -d' ' -f1)
-    p2=$(echo "$top_providers" | cut -d' ' -f2)
-    
-    log_lean "Using providers: $p1 + $p2 for cross-validation"
-    
-    local r1 r2
-    r1=$(call_llm "You are an expert skill evaluator." "$prompt" "auto" "$p1")
-    r2=$(call_llm "You are an expert skill evaluator." "$prompt" "auto" "$p2" 2>/dev/null || echo '{"score": 0}')
-    
-    local s1 s2
-    s1=$(echo "$r1" | jq -r '.score // 0' 2>/dev/null || echo "0")
-    s2=$(echo "$r2" | jq -r '.score // 0' 2>/dev/null || echo "0")
+    log_lean "kimi-code score: $kimi_score, minimax score: $minimax_score"
     
     local diff
-    diff=$(echo "$s1 - $s2" | bc 2>/dev/null || echo "0")
+    diff=$(echo "$kimi_score - $minimax_score" | bc 2>/dev/null || echo "0")
     diff=${diff#-}
     
     if (( $(echo "$diff > 15" | bc -l) )); then
         log_lean "High disagreement ($diff), requesting third opinion"
-        local p3="anthropic"
-        if [[ "$p1" == "anthropic" ]] || [[ "$p2" == "anthropic" ]]; then
-            p3="openai"
-        fi
-        local r3
-        r3=$(call_llm "You are an expert skill evaluator." "$prompt" "auto" "$p3" 2>/dev/null || echo '{"score": 0}')
-        local s3
-        s3=$(echo "$r3" | jq -r '.score // 0' 2>/dev/null || echo "0")
+        local third_result
+        third_result=$(call_llm "You are an expert skill evaluator." "$prompt" "auto" "openai" 2>/dev/null || echo '{"score": 0}')
+        local third_score
+        third_score=$(echo "$third_result" | jq -r '.score // 0' 2>/dev/null || echo "0")
+        
+        log_lean "Third opinion (openai): $third_score"
         
         local avg
-        avg=$(echo "($s1 + $s2 + $s3) / 3" | bc -l)
+        avg=$(echo "($kimi_score + $minimax_score + $third_score) / 3" | bc -l)
         echo "$avg"
     else
         local avg
-        avg=$(echo "($s1 + $s2) / 2" | bc -l)
+        avg=$(echo "($kimi_score + $minimax_score) / 2" | bc -l)
         echo "$avg"
     fi
 }
@@ -268,7 +254,7 @@ fast_iterate() {
     local skill_file="$1"
     local issues="$2"
     
-    log_lean "Fast Iterate: Fixing specific issues"
+    log_lean "Fast Iterate: Fixing specific issues (kimi-code + minimax)"
     
     local issues_count
     issues_count=$(echo "$issues" | jq 'length' 2>/dev/null || echo "0")
@@ -286,15 +272,23 @@ $(cat "$skill_file")
 
 Return JSON with fixed content: {\"content\": \"<fixed SKILL.md>\"}"
 
-    local response
-    response=$(call_llm "You are an expert SKILL.md editor." "$fix_prompt" "auto" "kimi-code")
+    local kimi_response minimax_response
+    kimi_response=$(call_llm "You are an expert SKILL.md editor." "$fix_prompt" "auto" "kimi-code")
+    minimax_response=$(call_llm "You are an expert SKILL.md editor." "$fix_prompt" "auto" "minimax")
     
-    local fixed_content
-    fixed_content=$(echo "$response" | jq -r '.content // empty' 2>/dev/null || true)
+    local kimi_content minimax_content
+    kimi_content=$(echo "$kimi_response" | jq -r '.content // empty' 2>/dev/null || true)
+    minimax_content=$(echo "$minimax_response" | jq -r '.content // empty' 2>/dev/null || true)
     
-    if [[ -n "$fixed_content" ]]; then
-        echo "$fixed_content" > "$skill_file"
-        log_lean "Fixed $issues_count issues"
+    if [[ -n "$kimi_content" ]] && [[ "$kimi_content" == "$minimax_content" ]]; then
+        echo "$kimi_content" > "$skill_file"
+        log_lean "Fixed $issues_count issues (cross-validated)"
+    elif [[ -n "$kimi_content" ]]; then
+        echo "$kimi_content" > "$skill_file"
+        log_lean "Fixed $issues_count issues (kimi-code)"
+    elif [[ -n "$minimax_content" ]]; then
+        echo "$minimax_content" > "$skill_file"
+        log_lean "Fixed $issues_count issues (minimax)"
     fi
 }
 
