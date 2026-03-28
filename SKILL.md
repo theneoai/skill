@@ -13,14 +13,6 @@ metadata:
   tags: [meta, agent, lifecycle, quality, autonomous-optimization, multi-agent, security, bilingual, self-evolution]
 ---
 
-# skill
-
-> **Version**: 2.2.0 | **Date**: 2026-03-28 | **Status**: ACTIVE
-> **Capabilities**: CREATE, EVALUATE, RESTORE, SECURITY, OPTIMIZE, AUTO-EVOLVE
-> **Core**: Progressive Disclosure (SKILL.md ≤400 lines, details in reference/)
-
----
-
 ## §1.1 Identity
 
 **Name**: skill
