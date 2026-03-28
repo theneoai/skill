@@ -91,7 +91,7 @@ extract_inherited_sections() {
     fi
     
     local evolution
-    evolution=$(awk '/^## §6/,/^## [^§]/ {print}' "$parent_skill" | head -n -1)
+    evolution=$(awk '/^## §6/,/^## [^§]/ {print}' "$parent_skill" | sed '$ d')
     if [[ -n "$evolution" ]]; then
         content+="$evolution"$'\n'
     fi
@@ -109,11 +109,6 @@ inherit_sections() {
     if [[ -z "$inherited" ]]; then
         echo "No inheritance content found"
         return 1
-    fi
-    
-    if [[ -s "$target_file" ]]; then
-        echo "Target file already has content, inheritance skipped (child content priority)"
-        return 0
     fi
     
     echo "$inherited" >> "$target_file"

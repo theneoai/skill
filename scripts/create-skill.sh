@@ -104,6 +104,7 @@ main() {
     echo ""
     
     # 传递 parent_skill 给 orchestrator
+    export PROJECT_ROOT
     PARENT_SKILL="$parent_skill" TARGET_TIER="$tier" "${PROJECT_ROOT}/engine/orchestrator.sh" "$description" "$output_path"
     
     echo ""

@@ -14,6 +14,8 @@ workflow_init() {
     local output_file="$2"
     local parent_skill="${3:-}"
     
+    source "${EVAL_DIR_FROM_ENGINE}/agents/creator.sh"
+    
     state_set_prompt "$user_prompt"
     state_set_target_file "$output_file"
     
@@ -22,10 +24,11 @@ workflow_init() {
     fi
     
     mkdir -p "$(dirname "$TARGET_SKILL_FILE")"
-    touch "$TARGET_SKILL_FILE"
     
     if [[ -n "$parent_skill" ]]; then
         creator_init_skill_file "$TARGET_SKILL_FILE" "$(basename "$TARGET_SKILL_FILE" .md)" "$parent_skill"
+    else
+        touch "$TARGET_SKILL_FILE"
     fi
     
     echo "Workflow initialized: $TARGET_SKILL_FILE"

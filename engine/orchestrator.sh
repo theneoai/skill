@@ -43,7 +43,7 @@ orchestrate() {
         export PARENT_SKILL_PATH
     fi
     
-    workflow_init "$user_prompt" "$output_file" "$parent_skill"
+    workflow_init "$user_prompt" "$output_file" "${PARENT_SKILL_PATH:-}"
     workflow_run
 }
 
