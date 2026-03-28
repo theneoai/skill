@@ -1,3 +1,5 @@
+# DEPRECATED: Use engine/evolution/ instead. Obsolete after 2026-03-28 restructure.
+
 #!/usr/bin/env bash
 # fast-debate.sh — Fast Multi-Agent Debate Optimizer (v2)
 # Usage: ./fast-debate.sh [rounds] [commit_interval]

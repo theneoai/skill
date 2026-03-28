@@ -1,3 +1,4 @@
+# DEPRECATED: Use engine/evolution/ instead. Obsolete after 2026-03-28 restructure.
 #!/usr/bin/env bash
 # autotuner.sh - Agent Skill Creator 自优化引擎
 # 执行 1000 轮自优化迭代
@@ -59,8 +60,8 @@ enhance_examples() {
     
     if grep -q "^## §4. Examples" "$SKILL_FILE"; then
         if ! grep -qF "$random_example" "$SKILL_FILE"; then
-            sed -i.tmp "/^## §4. Examples/a\\
-\\
+            sed -i.tmp "/^## §4. Examples/a\
+\
 $random_example" "$SKILL_FILE"
             rm -f "$SKILL_FILE.tmp"
             return 0
@@ -83,7 +84,7 @@ add_benchmarks() {
     
     if ! grep -qF "$random_benchmark" "$SKILL_FILE"; then
         if grep -q "## §8. Multi-Agent Collaboration" "$SKILL_FILE"; then
-            sed -i.tmp "/| 代码生成.*HumanEval/a\\
+            sed -i.tmp "/| 代码生成.*HumanEval/a\
 | $random_benchmark" "$SKILL_FILE"
             rm -f "$SKILL_FILE.tmp"
             return 0
@@ -108,8 +109,8 @@ expand_domain_knowledge() {
     local random_knowledge="${knowledge[$((RANDOM % ${#knowledge[@]}))]}"
     
     if ! grep -qF "$random_knowledge" "$SKILL_FILE"; then
-        sed -i.tmp "/^## 参考标准/i\\
-- **${random_knowledge}**\\
+        sed -i.tmp "/^## 参考标准/i\
+- **${random_knowledge}**\
 " "$SKILL_FILE"
         rm -f "$SKILL_FILE.tmp"
         return 0
@@ -126,8 +127,8 @@ improve_workflow_detail() {
     local random_workflow="${workflows[$((RANDOM % ${#workflows[@]}))]}"
     
     if ! grep -qF "$random_workflow" "$SKILL_FILE"; then
-        sed -i.tmp "/^## §3. Workflow/a\\
-\\
+        sed -i.tmp "/^## §3. Workflow/a\
+\
 $random_workflow" "$SKILL_FILE"
         rm -f "$SKILL_FILE.tmp"
         return 0
@@ -146,7 +147,7 @@ enhance_error_handling() {
     
     if ! grep -qF "$random_error" "$SKILL_FILE"; then
         if grep -q "| E6 | 安全审查失败" "$SKILL_FILE"; then
-            sed -i.tmp "/| E6 | 安全审查失败/a\\
+            sed -i.tmp "/| E6 | 安全审查失败/a\
 | E7 | API 限流 | 指数退避 | - | Medium | < 30s |" "$SKILL_FILE"
             rm -f "$SKILL_FILE.tmp"
             return 0
@@ -166,8 +167,8 @@ add_metrics_kpis() {
     local random_metric="${metrics[$((RANDOM % ${#metrics[@]}))]}"
     
     if ! grep -qF "$random_metric" "$SKILL_FILE"; then
-        sed -i.tmp "/^## §6. Quality Gates/a\\
-\\
+        sed -i.tmp "/^## §6. Quality Gates/a\
+\
 $random_metric" "$SKILL_FILE"
         rm -f "$SKILL_FILE.tmp"
         return 0
@@ -185,8 +186,8 @@ expand_multi_agent() {
     local random_agent="${agents[$((RANDOM % ${#agents[@]}))]}"
     
     if ! grep -qF "$random_agent" "$SKILL_FILE"; then
-        sed -i.tmp "/^## §8. Multi-Agent Collaboration/a\\
-\\
+        sed -i.tmp "/^## §8. Multi-Agent Collaboration/a\
+\
 $random_agent" "$SKILL_FILE"
         rm -f "$SKILL_FILE.tmp"
         return 0
@@ -204,8 +205,8 @@ improve_readability() {
     local random_read="${readability[$((RANDOM % ${#readability[@]}))]}"
     
     if ! grep -qF "$random_read" "$SKILL_FILE"; then
-        sed -i.tmp "/^## §1.1 Identity/a\\
-\\
+        sed -i.tmp "/^## §1.1 Identity/a\
+\
 $random_read" "$SKILL_FILE"
         rm -f "$SKILL_FILE.tmp"
         return 0
@@ -214,11 +215,14 @@ $random_read" "$SKILL_FILE"
 }
 
 add_more_tables() {
-    local table="| **Metric** | **Target** | **Current** | **Gap** |\n|------|------|------|------|\n| F1 Score | ≥ 0.90 | TBD | TBD |\n| Text Score | ≥ 8.0 | TBD | TBD |"
+    local table="| **Metric** | **Target** | **Current** | **Gap** |
+|------|------|------|------|
+| F1 Score | ≥ 0.90 | TBD | TBD |
+| Text Score | ≥ 8.0 | TBD | TBD |"
     
     if ! grep -qF "Metric" "$SKILL_FILE" || ! grep -qF "Target" "$SKILL_FILE"; then
-        sed -i.tmp "/^## §6. Quality Gates/a\\
-\\
+        sed -i.tmp "/^## §6. Quality Gates/a\
+\
 $table" "$SKILL_FILE"
         rm -f "$SKILL_FILE.tmp"
         return 0
@@ -237,8 +241,8 @@ enhance_specificity() {
     local random_specific="${specifics[$((RANDOM % ${#specifics[@]}))]}"
     
     if ! grep -qF "$random_specific" "$SKILL_FILE"; then
-        sed -i.tmp "/^## §1.1 Identity/a\\
-\\
+        sed -i.tmp "/^## §1.1 Identity/a\
+\
 $random_specific" "$SKILL_FILE"
         rm -f "$SKILL_FILE.tmp"
         return 0

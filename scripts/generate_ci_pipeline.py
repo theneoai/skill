@@ -1,3 +1,4 @@
+# DEPRECATED: Use .github/workflows/ci.yml instead. Obsolete after 2026-03-28 restructure.
 import sys
 from pathlib import Path
 

@@ -1,3 +1,5 @@
+# DEPRECATED: Use engine/evolution/ instead. Obsolete after 2026-03-28 restructure.
+
 #!/usr/bin/env bash
 # debate-optimize.sh — Multi-Agent Debate Self-Optimization Engine
 # 多agent辩论优化：Security/Quality/Runtime/EdgeCase/System 5个agent并行分析、辩论、投票

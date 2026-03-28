@@ -1,3 +1,5 @@
+# DEPRECATED: Use engine/evolution/ instead. Obsolete after 2026-03-28 restructure.
+
 #!/usr/bin/env bash
 # multi_agent_optimizer.sh — Multi-agent autonomous optimization loop
 # Runs multi-agent optimization for skill

@@ -1,3 +1,5 @@
+# DEPRECATED: Use engine/evolution/ instead. Obsolete after 2026-03-28 restructure.
+
 #!/usr/bin/env python3
 import subprocess
 import re
