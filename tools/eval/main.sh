@@ -361,7 +361,7 @@ run_phase3() {
         
         # Run agent-based tester
         if [[ -x "${SCRIPT_DIR}/scorer/runtime_agent_tester.sh" ]]; then
-            source "${SCRIPT_DIR}/lib/agent_executor.sh"
+            source "${SCRIPT_DIR}/../lib/agent_executor.sh"
             
             local results
             results=$("${SCRIPT_DIR}/scorer/runtime_agent_tester.sh" "$skill" "$corpus" "$output" 2>/dev/null || echo "0:0:0:0:0:0.5")
