@@ -67,8 +67,8 @@ handle_error() {
     
     case "$action" in
         retry)
-            local max_retries="${recovery%%:*}"
-            max_retries="${max_retries#retry:}"
+            local max_retries
+            max_retries=$(echo "$recovery" | cut -d: -f2)
             local delay_type="${recovery#*:}"
             delay_type="${delay_type%%:*}"
             local delays="${recovery##*:}"
@@ -85,7 +85,9 @@ handle_error() {
             return 1
             ;;
         rollback)
-            rollback_to_latest 2>/dev/null
+            if declare -f rollback_to_snapshot >/dev/null 2>&1; then
+                rollback_to_snapshot 2>/dev/null || true
+            fi
             return 1
             ;;
         skip)
@@ -108,7 +110,7 @@ retry_with_backoff() {
     local delays="1 2 4 8 16"
     
     local i
-    for i in 1 2 3; do
+    for i in $(seq 1 "$max_attempts"); do
         if "$@"; then
             return 0
         fi

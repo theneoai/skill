@@ -124,7 +124,7 @@ run_phase1() {
     
     echo "【Phase 1】 Parse & Validate (100pts)" >&2
     
-    source "${SCRIPT_DIR}/lib/constants.sh"
+    source "${SCRIPT_DIR}/../lib/constants.sh"
     
     local yaml_front=0 sections=0 trigger_list=0 no_placeholder=0
     local security_violation=0
@@ -211,7 +211,7 @@ run_phase2() {
     
     echo "【Phase 2】 Text Score (350pts)" >&2
     
-    source "${SCRIPT_DIR}/lib/constants.sh"
+    source "${SCRIPT_DIR}/../lib/constants.sh"
     
     # System Prompt (70pts)
     local sp_score=0
@@ -235,7 +235,7 @@ run_phase2() {
     [[ $quant -ge 5 ]] && ((dk_score+=20)) || [[ $quant -ge 2 ]] && ((dk_score+=10))
     [[ $frameworks -ge 3 ]] && ((dk_score+=20)) || [[ $frameworks -ge 1 ]] && ((dk_score+=10))
     [[ $standards -ge 2 ]] && ((dk_score+=15)) || [[ $standards -ge 1 ]] && ((dk_score+=8))
-    [[ $generic -ge 3 ]] && ((dk_score=-10))  # Penalty for generic content
+    [[ $generic -ge 3 ]] && ((dk_score-=10))  # Penalty for generic content
     
     [[ $dk_score -lt 0 ]] && dk_score=0
     [[ $dk_score -gt 70 ]] && dk_score=70
@@ -284,16 +284,16 @@ run_phase2() {
     local total=$((sp_score + dk_score + wf_score + eh_score + ex_score + md_score))
     
     local cross_ref_score=0
-    if grep -qE 'reference/triggers\.md' "$skill" && [[ -f "${SCRIPT_DIR}/../reference/triggers.md" ]]; then
+    if grep -qE 'refs/triggers\.md' "$skill" && [[ -f "${SCRIPT_DIR}/../../refs/triggers.md" ]]; then
         ((cross_ref_score+=25))
     fi
-    if grep -qE 'reference/workflows\.md' "$skill" && [[ -f "${SCRIPT_DIR}/../reference/workflows.md" ]]; then
+    if grep -qE 'refs/workflows\.md' "$skill" && [[ -f "${SCRIPT_DIR}/../../refs/workflows.md" ]]; then
         ((cross_ref_score+=25))
     fi
-    if grep -qE 'reference/tools\.md' "$skill" && [[ -f "${SCRIPT_DIR}/../reference/tools.md" ]]; then
+    if grep -qE 'refs/tools\.md' "$skill" && [[ -f "${SCRIPT_DIR}/../../refs/tools.md" ]]; then
         ((cross_ref_score+=25))
     fi
-    if grep -qE 'Progressive Disclosure' "$skill" && grep -qE 'reference/' "$skill"; then
+    if grep -qE 'Progressive Disclosure' "$skill" && grep -qE 'refs/' "$skill"; then
         ((cross_ref_score+=25))
     fi
     
@@ -351,7 +351,7 @@ run_phase3() {
     
     echo "【Phase 3】 Runtime Score (450pts)" >&2
     
-    source "${SCRIPT_DIR}/lib/constants.sh"
+    source "${SCRIPT_DIR}/../lib/constants.sh"
     
     local agent_available
     agent_available=$(check_llm_available)
@@ -456,7 +456,7 @@ run_phase4() {
     
     echo "【Phase 4】 Certification (100pts)" >&2
     
-    source "${SCRIPT_DIR}/lib/constants.sh"
+    source "${SCRIPT_DIR}/../lib/constants.sh"
     
     # Variance calculation using text vs runtime difference
     local variance
@@ -651,7 +651,7 @@ HTMLEOF
 
 # Main
 main() {
-    source "${SCRIPT_DIR}/lib/constants.sh" 2>/dev/null || true
+    source "${SCRIPT_DIR}/../lib/constants.sh" 2>/dev/null || true
     
     parse_args "$@"
     

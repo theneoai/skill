@@ -44,7 +44,7 @@ run_tests() {
 }
 
 show_stats() {
-    require_evolution _storage
+    require_evolution storage
     
     if [[ ! -f "$USAGE_LOG" ]]; then
         echo "No usage statistics available"
@@ -101,7 +101,6 @@ evolve_skill() {
     
     echo "Triggering evolution for: $skill_file"
     
-    require_evolution engine
     acquire_lock "evolution" "$EVOLUTION_TIMEOUT" || {
         echo "Error: Failed to acquire evolution lock"
         return 1

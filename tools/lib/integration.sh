@@ -2,7 +2,7 @@
 # integration.sh - 集成 eval 框架
 
 source "$(dirname "${BASH_SOURCE[0]}")/bootstrap.sh"
-source "${EVAL_DIR}/lib/agent_executor.sh"
+source "${EVAL_DIR_FROM_ENGINE}/lib/agent_executor.sh"
 
 # ============================================================================
 # 评估函数

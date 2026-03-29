@@ -6,8 +6,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/../lib/constants.sh"
-source "${SCRIPT_DIR}/../lib/agent_executor.sh"
+source "${SCRIPT_DIR}/../../lib/constants.sh"
+source "${SCRIPT_DIR}/../../lib/agent_executor.sh"
 
 # Check dependencies
 check_dependencies() {
@@ -118,10 +118,19 @@ run_agent_runtime_eval() {
     fi
     
     # Calculate scores
-    local trigger_accuracy
-    trigger_accuracy=$(echo "scale=4; ($trigger_tp + $trigger_fp + $trigger_fn)" | bc)
-    if [[ "$trigger_accuracy" -gt 0 ]]; then
-        trigger_accuracy=$(echo "scale=4; ($trigger_tp + $trigger_fp) / $trigger_accuracy" | bc)
+    local trigger_precision trigger_recall trigger_accuracy
+    if [[ $(echo "$trigger_tp + $trigger_fp" | bc) -gt 0 ]]; then
+        trigger_precision=$(echo "scale=4; $trigger_tp / ($trigger_tp + $trigger_fp)" | bc)
+    else
+        trigger_precision="0"
+    fi
+    if [[ $(echo "$trigger_tp + $trigger_fn" | bc) -gt 0 ]]; then
+        trigger_recall=$(echo "scale=4; $trigger_tp / ($trigger_tp + $trigger_fn)" | bc)
+    else
+        trigger_recall="0"
+    fi
+    if [[ $(echo "$trigger_precision + $trigger_recall" | bc) -gt 0 ]]; then
+        trigger_accuracy=$(echo "scale=4; 2 * $trigger_precision * $trigger_recall / ($trigger_precision + $trigger_recall)" | bc)
     else
         trigger_accuracy="0"
     fi

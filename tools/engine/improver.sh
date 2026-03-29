@@ -3,7 +3,7 @@
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/bootstrap.sh"
 require constants integration
-source "${EVAL_DIR}/lib/agent_executor.sh"
+source "${EVAL_DIR_FROM_ENGINE}/lib/agent_executor.sh"
 
 improver_system_prompt="You are an expert SKILL.md editor. Your task is to improve existing SKILL.md files based on improvement suggestions.
 

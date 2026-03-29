@@ -2,7 +2,7 @@
 # analyzer.sh - LLM日志分析
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/bootstrap.sh"
-source "${EVAL_DIR}/lib/agent_executor.sh"
+source "${EVAL_DIR_FROM_ENGINE}/lib/agent_executor.sh"
 
 analyzer_system_prompt="You are an expert data analyst specializing in AI skill usage patterns and performance metrics.
 

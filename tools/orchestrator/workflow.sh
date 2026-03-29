@@ -14,7 +14,7 @@ workflow_init() {
     local output_file="$2"
     local parent_skill="${3:-}"
     
-    source "${EVAL_DIR_FROM_ENGINE}/agents/creator.sh"
+        source "${EVAL_DIR_FROM_ENGINE}/agents/create.sh"
     
     state_set_prompt "$user_prompt"
     state_set_target_file "$output_file"
@@ -43,7 +43,7 @@ workflow_run_creator() {
     local evaluator_feedback="${1:-}"
     
     if [[ $CREATOR_SOURCED -eq 0 ]]; then
-        source "${EVAL_DIR_FROM_ENGINE}/agents/creator.sh"
+    source "${EVAL_DIR_FROM_ENGINE}/agents/create.sh"
         CREATOR_SOURCED=1
     fi
     

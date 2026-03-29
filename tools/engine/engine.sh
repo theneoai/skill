@@ -5,13 +5,14 @@
 # 9-Step Optimization Loop: READ → ANALYZE → CURATION → PLAN → IMPLEMENT → VERIFY → HUMAN_REVIEW → LOG → COMMIT
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/bootstrap.sh"
-source "${EVAL_DIR}/lib/agent_executor.sh"
+source "${EVAL_DIR_FROM_ENGINE}/lib/agent_executor.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../agents/agent.sh"
 
 require constants concurrency errors integration
-require_evolution rollback _storage
+require_evolution rollback storage
 
 source "$(dirname "${BASH_SOURCE[0]}")/usage_tracker.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/evolve_decider.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/decider.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/learner.sh"
 
 EVOLUTION_LOG="${LOG_DIR}/evolution.log"

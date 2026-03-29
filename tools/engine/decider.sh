@@ -3,7 +3,7 @@
 # Decides when to trigger self-evolution based on thresholds and schedule
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/bootstrap.sh"
-source "${EVAL_DIR}/lib/agent_executor.sh"
+source "${EVAL_DIR_FROM_ENGINE}/lib/agent_executor.sh"
 
 EVOLVE_DECIDER_VERSION="1.0"
 
@@ -27,7 +27,7 @@ should_evolve() {
     fi
     
     local current_score
-    current_score=$(bash scripts/lean-orchestrator.sh "$skill_file" SILVER 2>/dev/null | jq -r '.total // 0')
+    current_score=$(bash "${EVAL_DIR_FROM_ENGINE}/../cli/skill" "$skill_file" SILVER 2>/dev/null | jq -r '.total // 0')
     
     if [[ "$(echo "$current_score < $GOLD_THRESHOLD" | bc -l)" == "1" ]]; then
         local reason="score_below_gold"

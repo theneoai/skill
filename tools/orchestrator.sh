@@ -8,10 +8,10 @@
 #   _parallel.sh  - 并行执行
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib/bootstrap.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/orchestrator/_state.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/orchestrator/_workflow.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/orchestrator/_actions.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/orchestrator/_parallel.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/orchestrator/state.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/orchestrator/workflow.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/orchestrator/actions.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/orchestrator/parallel.sh"
 
 # ============================================================================
 # 主入口

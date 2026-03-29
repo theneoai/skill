@@ -2,7 +2,7 @@
 # summarizer.sh - LLM总结提炼
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/bootstrap.sh"
-source "${EVAL_DIR}/lib/agent_executor.sh"
+source "${EVAL_DIR_FROM_ENGINE}/lib/agent_executor.sh"
 
 summarizer_system_prompt="You are an expert AI skill architect specializing in synthesizing analysis findings into actionable improvement plans.
 

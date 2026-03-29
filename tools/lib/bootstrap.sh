@@ -96,8 +96,8 @@ require() {
 require_evolution() {
     local module
     for module in "$@"; do
-        if [[ -f "${EVAL_DIR_FROM_ENGINE}/evolution/${module}.sh" ]]; then
-            source "${EVAL_DIR_FROM_ENGINE}/evolution/${module}.sh"
+        if [[ -f "${EVAL_DIR_FROM_ENGINE}/engine/${module}.sh" ]]; then
+            source "${EVAL_DIR_FROM_ENGINE}/engine/${module}.sh"
         fi
     done
 }

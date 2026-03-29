@@ -4,7 +4,7 @@
 # v2.0: Added strong_triggers for positive learning
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/bootstrap.sh"
-source "${EVAL_DIR}/lib/agent_executor.sh"
+source "${EVAL_DIR_FROM_ENGINE}/lib/agent_executor.sh"
 
 LEARNER_VERSION="2.0"
 

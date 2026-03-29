@@ -180,16 +180,16 @@ text_score_heuristic() {
     fi
     
     local cross_ref_score=0
-    if grep -qE 'reference/triggers\.md' "$skill_file" && [[ -f "${PROJECT_ROOT}/reference/triggers.md" ]]; then
+    if grep -qE 'refs/triggers\.md' "$skill_file" && [[ -f "${PROJECT_ROOT}/refs/triggers.md" ]]; then
         ((cross_ref_score+=25))
     fi
-    if grep -qE 'reference/workflows\.md' "$skill_file" && [[ -f "${PROJECT_ROOT}/reference/workflows.md" ]]; then
+    if grep -qE 'refs/workflows\.md' "$skill_file" && [[ -f "${PROJECT_ROOT}/refs/workflows.md" ]]; then
         ((cross_ref_score+=25))
     fi
-    if grep -qE 'reference/tools\.md' "$skill_file" && [[ -f "${PROJECT_ROOT}/reference/tools.md" ]]; then
+    if grep -qE 'refs/tools\.md' "$skill_file" && [[ -f "${PROJECT_ROOT}/refs/tools.md" ]]; then
         ((cross_ref_score+=25))
     fi
-    if grep -qE 'Progressive Disclosure' "$skill_file" && grep -qE 'reference/' "$skill_file"; then
+    if grep -qE 'Progressive Disclosure' "$skill_file" && grep -qE 'refs/' "$skill_file"; then
         ((cross_ref_score+=25))
     fi
     

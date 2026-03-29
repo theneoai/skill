@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # _actions.sh - 操作决策
 
-source "$(dirname "${BASH_SOURCE[0]}")/_state.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/state.sh"
+
+EVOLUTION_THRESHOLD_NEW=10
+EVOLUTION_THRESHOLD_GROWING=50
+EVOLUTION_THRESHOLD_STABLE=100
 
 # ============================================================================
 # 决策函数
@@ -62,7 +66,7 @@ workflow_check_evolution_trigger() {
 }
 
 workflow_trigger_evolution() {
-    source "${EVAL_DIR_FROM_ENGINE}/evolution/engine.sh"
+    source "${EVAL_DIR_FROM_ENGINE}/engine/engine.sh"
     
     if is_lock_available "evolution" 5; then
         evolve_skill "$TARGET_SKILL_FILE"
