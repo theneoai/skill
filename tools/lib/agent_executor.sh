@@ -5,13 +5,12 @@
 
 set -euo pipefail
 
-# Guard against re-sourcing
-if [[ -n "${_AGENT_EXECUTOR_SOURCED:-}" ]]; then
-    return 0
+# Load API keys (always load, even on re-source)
+# Source ~/.bashrc to pick up exported API keys if not already set
+if [[ -z "${OPENAI_API_KEY:-}" ]] && [[ -f "$HOME/.bashrc" ]]; then
+    source "$HOME/.bashrc" 2>/dev/null || true
 fi
-export _AGENT_EXECUTOR_SOURCED=1
 
-# Load API keys
 OPENAI_API_KEY="${OPENAI_API_KEY:-}"
 ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}"
 KIMI_API_KEY="${KIMI_API_KEY:-}"
@@ -19,6 +18,10 @@ KIMI_CODE_API_KEY="${KIMI_CODE_API_KEY:-${KIMI_API_KEY}}"
 KIMI_CODE_ENDPOINT="${KIMI_CODE_ENDPOINT:-https://api.kimi.com/coding/v1}"
 MINIMAX_API_KEY="${MINIMAX_API_KEY:-}"
 MINIMAX_GROUP_ID="${MINIMAX_GROUP_ID:-}"
+
+# Export for subprocesses
+export OPENAI_API_KEY ANTHROPIC_API_KEY KIMI_API_KEY KIMI_CODE_API_KEY
+export KIMI_CODE_ENDPOINT MINIMAX_API_KEY MINIMAX_GROUP_ID
 
 # Default models
 DEFAULT_OPENAI_MODEL="gpt-4o-mini"
@@ -30,14 +33,78 @@ DEFAULT_MINIMAX_MODEL="MiniMax-M2.7-highspeed"
 # Multi-agent cross-evaluation settings
 CROSS_EVAL_ENABLED="${CROSS_EVAL_ENABLED:-false}"
 CROSS_EVAL_THRESHOLD="${CROSS_EVAL_THRESHOLD:-0.2}"  # 20% variance threshold
+export CROSS_EVAL_ENABLED CROSS_EVAL_THRESHOLD
+
+# Guard against re-sourcing (after variables are defined)
+if [[ -n "${_AGENT_EXECUTOR_SOURCED:-}" ]]; then
+    return 0
+fi
+_AGENT_EXECUTOR_SOURCED=1
+
+test_api_connection() {
+    local provider="$1"
+    local timeout="${2:-5}"
+    
+    case "$provider" in
+        kimi-code)
+            if [[ -z "${KIMI_CODE_API_KEY:-}" ]]; then return 1; fi
+            local response
+            response=$(curl -s --max-time "$timeout" "${KIMI_CODE_ENDPOINT}/messages" \
+                -H "x-api-key: $KIMI_CODE_API_KEY" \
+                -H "anthropic-version: 2023-06-01" \
+                -H "Content-Type: application/json" \
+                -d '{"model":"kimi-for-coding","max_tokens":10,"messages":[{"role":"user","content":"hi"}]}' 2>/dev/null)
+            [[ -z "$response" ]] && return 1
+            echo "$response" | jq -e '.content[0].text' >/dev/null 2>&1 && return 0
+            echo "$response" | jq -e '.error' >/dev/null 2>&1 && return 1
+            return 0
+            ;;
+        openai)
+            if [[ -z "${OPENAI_API_KEY:-}" ]]; then return 1; fi
+            response=$(curl -s --max-time "$timeout" "https://api.openai.com/v1/models" \
+                -H "Authorization: Bearer $OPENAI_API_KEY" 2>/dev/null)
+            [[ -z "$response" ]] && return 1
+            echo "$response" | jq -e '.data' >/dev/null 2>&1 && return 0
+            return 1
+            ;;
+        anthropic)
+            if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then return 1; fi
+            response=$(curl -s --max-time "$timeout" "https://api.anthropic.com/v1/messages" \
+                -H "x-api-key: $ANTHROPIC_API_KEY" \
+                -H "anthropic-version: 2023-06-01" \
+                -H "Content-Type: application/json" \
+                -d '{"model":"claude-sonnet-4-20250514","max_tokens":10,"messages":[{"role":"user","content":"hi"}]}' 2>/dev/null)
+            [[ -z "$response" ]] && return 1
+            echo "$response" | jq -e '.content[0].text' >/dev/null 2>&1 && return 0
+            echo "$response" | jq -e '.error' >/dev/null 2>&1 && return 1
+            return 0
+            ;;
+        minimax)
+            if [[ -z "${MINIMAX_API_KEY:-}" ]]; then return 1; fi
+            return 0
+            ;;
+        kimi)
+            if [[ -z "${KIMI_API_KEY:-}" ]]; then return 1; fi
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
 
 check_llm_available() {
     local providers=""
-    [[ -n "$KIMI_CODE_API_KEY" ]] && providers="${providers}kimi-code "
-    [[ -n "$KIMI_API_KEY" ]] && providers="${providers}kimi "
-    [[ -n "$MINIMAX_API_KEY" ]] && providers="${providers}minimax "
-    [[ -n "$OPENAI_API_KEY" ]] && providers="${providers}openai "
-    [[ -n "$ANTHROPIC_API_KEY" ]] && providers="${providers}anthropic "
+    
+    for provider in kimi-code openai anthropic minimax kimi; do
+        case "$provider" in
+            kimi-code) [[ -n "${KIMI_CODE_API_KEY:-}" ]] && test_api_connection "$provider" && providers="${providers}kimi-code " ;;
+            openai) [[ -n "${OPENAI_API_KEY:-}" ]] && test_api_connection "$provider" && providers="${providers}openai " ;;
+            anthropic) [[ -n "${ANTHROPIC_API_KEY:-}" ]] && test_api_connection "$provider" && providers="${providers}anthropic " ;;
+            minimax) [[ -n "${MINIMAX_API_KEY:-}" ]] && test_api_connection "$provider" && providers="${providers}minimax " ;;
+            kimi) [[ -n "${KIMI_API_KEY:-}" ]] && test_api_connection "$provider" && providers="${providers}kimi " ;;
+        esac
+    done
     
     if [[ -z "$providers" ]]; then
         echo "none"
@@ -312,7 +379,7 @@ call_minimax() {
     echo "$response" | jq -r '.choices[0].message.content' 2>/dev/null || return 1
 }
 
-# Cross-evaluate using multiple providers
+# Cross-evaluate using multiple providers in parallel
 cross_evaluate() {
     local system_prompt="$1"
     local user_prompt="$2"
@@ -321,23 +388,124 @@ cross_evaluate() {
     local providers
     providers=$(check_llm_available)
     
-    # Use only the first (fastest) provider to avoid double calls
-    local first_provider
-    first_provider=$(echo "$providers" | cut -d' ' -f1)
-    
-    if [[ "$first_provider" == "none" ]] || [[ -z "$first_provider" ]]; then
+    if [[ "$providers" == "none" ]] || [[ -z "$providers" ]]; then
         echo '{"status": "FAIL", "severity": "UNKNOWN", "findings": "No LLM provider available"}'
         return
     fi
     
-    local result
-    result=$(call_llm "$system_prompt" "$user_prompt" "auto" "$first_provider")
-    echo "single:$result"
+    # If cross-eval disabled or only one provider, use single mode
+    if [[ "$CROSS_EVAL_ENABLED" != "true" ]] || [[ $(echo "$providers" | wc -w) -lt 2 ]]; then
+        local first_provider
+        first_provider=$(echo "$providers" | cut -d' ' -f1)
+        local result
+        result=$(call_llm "$system_prompt" "$user_prompt" "auto" "$first_provider")
+        echo "single:$result"
+        return
+    fi
+    
+    # Multi-provider cross-evaluation in parallel using xargs
+    local provider_list=($providers)
+    local num_providers=${#provider_list[@]}
+    
+    # Create temp files for results
+    local tmpdir="/tmp/cross_eval_$$"
+    mkdir -p "$tmpdir"
+    local i=0
+    for provider in "${provider_list[@]}"; do
+        local outfile="$tmpdir/result_$i.txt"
+        call_llm "$system_prompt" "$user_prompt" "auto" "$provider" > "$outfile" 2>&1 &
+        i=$((i + 1))
+    done
+    
+    # Wait for background jobs with timeout
+    local timeout=15
+    local elapsed=0
+    while [[ $elapsed -lt $timeout ]]; do
+        local running=0
+        for job in $(jobs -p 2>/dev/null || true); do
+            running=1
+            break
+        done
+        if [[ $running -eq 0 ]]; then
+            break
+        fi
+        sleep 0.5
+        elapsed=$((elapsed + 1))
+    done
+    
+    # Kill any remaining jobs
+    jobs -p 2>/dev/null | xargs kill 2>/dev/null || true
+    
+    # Collect results
+    local binary_results=""
+    local score_sum=0
+    local score_count=0
+    
+    for ((i=0; i<num_providers; i++)); do
+        local outfile="$tmpdir/result_$i.txt"
+        if [[ -f "$outfile" ]] && [[ -s "$outfile" ]]; then
+            local result
+            result=$(cat "$outfile")
+            
+            if [[ -n "$result" ]] && [[ "$result" != *"ERROR"* ]]; then
+                # For trigger tests, normalize to 0/1
+                if [[ "$test_name" == "trigger" ]]; then
+                    if [[ "$result" == "TRIGGER"* ]] && [[ "$result" != "NO_TRIGGER"* ]]; then
+                        binary_results="${binary_results}:1"
+                        score_sum=$((score_sum + 1))
+                    else
+                        binary_results="${binary_results}:0"
+                    fi
+                    score_count=$((score_count + 1))
+                fi
+            fi
+        fi
+    done
+    
+    # Cleanup
+    rm -rf "$tmpdir"
+    
+    if [[ $score_count -eq 0 ]]; then
+        echo '{"status": "FAIL", "severity": "UNKNOWN", "findings": "All providers failed"}'
+        return
+    fi
+    
+    local avg_score
+    avg_score=$(echo "scale=4; $score_sum / $score_count" | bc)
+    
+    # Calculate variance for binary results
+    local variance=0
+    if [[ $score_count -gt 1 ]]; then
+        local diff_sum=0
+        for binary in $(echo "$binary_results" | tr ':' '\n' | grep -v '^$'); do
+            local diff
+            diff=$(echo "scale=4; $binary - $avg_score" | bc)
+            diff_sum=$(echo "scale=4; $diff_sum + $diff * $diff" | bc)
+        done
+        variance=$(echo "scale=4; $diff_sum / $score_count" | bc)
+    fi
+    
+    # Check if consensus is strong enough
+    local consensus_score
+    consensus_score=$(echo "1 - $variance" | bc)
+    
+    if [[ $(echo "$consensus_score >= $CROSS_EVAL_THRESHOLD" | bc -l) -eq 1 ]]; then
+        echo "cross:${binary_results#:}:${avg_score}:${variance}"
+    else
+        echo "cross:${binary_results#:}:${avg_score}:${variance}:WARN"
+    fi
 }
 
-# Extract skill's system prompt from SKILL.md
+# Extract skill's system prompt from SKILL.md (with simple file-based caching)
 extract_system_prompt() {
     local skill_file="$1"
+    local cache_file="/tmp/.skill_prompt_cache_$(echo "$skill_file" | md5sum | cut -d' ' -f1)"
+    
+    # Check if cache exists and is less than 60s old
+    if [[ -f "$cache_file" ]] && find "$cache_file" -mmin -1 | grep -q .; then
+        cat "$cache_file"
+        return
+    fi
     
     local content
     content=$(cat "$skill_file")
@@ -348,12 +516,19 @@ extract_system_prompt() {
     framework=$(echo "$content" | sed -n '/## §1\.2 Framework/,/## §[0-9]/p' | head -80 || true)
     thinking=$(echo "$content" | sed -n '/## §1\.3 Thinking/,/## §[0-9]/p' | head -50 || true)
     
-    echo "# Skill Instructions"
-    echo "$identity"
-    echo ""
-    echo "$framework"
-    echo ""
-    echo "$thinking"
+    local result="# Skill Instructions"
+    result+="
+$identity
+
+$framework
+
+$thinking"
+    
+    # Create cache directory if needed
+    mkdir -p "$(dirname "$cache_file")"
+    echo "$result" > "$cache_file"
+    
+    echo "$result"
 }
 
 # Cross-evaluation test wrappers
@@ -476,17 +651,33 @@ parse_cross_result() {
             echo "$content"
         fi
     elif [[ "$result" == cross:* ]]; then
+        # Format: cross:result1:result2:...:avg:variance[:WARN]
+        # For binary, results are 0 or 1
+        local last_field
+        local warn_flag=""
+        
+        # Check if last field is WARN
+        if [[ "$result" == *:WARN ]]; then
+            warn_flag=":WARN"
+            result="${result%:WARN}"
+        fi
+        
+        # Get the average score (second to last field before WARN)
         local avg_score
-        avg_score=$(echo "$result" | cut -d: -f3)
+        avg_score=$(echo "$result" | rev | cut -d: -f2 | rev)
+        
+        # Get variance (third to last field before WARN)
+        local variance
+        variance=$(echo "$result" | rev | cut -d: -f3 | rev)
         
         if [[ "$result_type" == "binary" ]]; then
             if [[ $(echo "$avg_score >= 0.5" | bc) -eq 1 ]]; then
-                echo "1"
+                echo "1${warn_flag}"
             else
-                echo "0"
+                echo "0${warn_flag}"
             fi
         else
-            echo "$avg_score"
+            echo "${avg_score}${warn_flag}"
         fi
     else
         echo "ERROR: Invalid result format"
@@ -507,7 +698,7 @@ calculate_f1() {
     local precision=$(echo "scale=4; $true_positives / ($true_positives + $false_positives)" | bc)
     local recall=$(echo "scale=4; $true_positives / ($true_positives + $false_negatives)" | bc)
     
-    if [[ $(echo "$precision + $recall" | bc) -eq 0 ]]; then
+    if [[ $(echo "$precision + $recall > 0" | bc) -eq 0 ]]; then
         echo "0"
         return
     fi

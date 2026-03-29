@@ -110,7 +110,11 @@ check_dependencies() {
 }
 
 check_llm_available() {
-    if [[ -n "${OPENAI_API_KEY:-}" ]] || [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
+    if [[ -f "$HOME/.bashrc" ]]; then
+        source "$HOME/.bashrc" 2>/dev/null || true
+    fi
+    
+    if [[ -n "${OPENAI_API_KEY:-}" ]] || [[ -n "${ANTHROPIC_API_KEY:-}" ]] || [[ -n "${KIMI_CODE_API_KEY:-}" ]] || [[ -n "${KIMI_API_KEY:-}" ]] || [[ -n "${MINIMAX_API_KEY:-}" ]]; then
         echo "available"
     else
         echo "unavailable"
@@ -258,7 +262,8 @@ run_phase2() {
     local recovery=$(grep -cE 'retry|fallback|circuit breaker|恢复|重试' "$skill" || true)
     
     [[ $failures -ge 3 ]] && ((eh_score+=25)) || [[ $failures -ge 1 ]] && ((eh_score+=15))
-    [[ $recovery -ge 2 ]] && ((eh_score+=20)) || [[ $recovery -ge 1 ]] && ((eh_score+=10))
+    [[ $recovery -ge 2 ]] && ((eh_score+=20))
+    [[ $recovery -ge 1 ]] && ((eh_score+=10))
     
     [[ $eh_score -gt 55 ]] && eh_score=55
     
@@ -309,6 +314,8 @@ run_phase2() {
     fi
     
     total=$((total + cross_ref_score + evolution_score))
+    
+    [[ $total -gt 350 ]] && total=350
     
     cat > "$output/phase2.json" <<EOF
 {
@@ -364,15 +371,20 @@ run_phase3() {
             source "${SCRIPT_DIR}/../lib/agent_executor.sh"
             
             local results
-            results=$("${SCRIPT_DIR}/scorer/runtime_agent_tester.sh" "$skill" "$corpus" "$output" 2>/dev/null || echo "0:0:0:0:0:0.5")
+            results=$("${SCRIPT_DIR}/scorer/runtime_agent_tester.sh" "$skill" "$corpus" "$output" 2>/dev/null || echo "0:0:0:0:0:0.5:50:40:20:15")
             
             local identity_score actionability_score knowledge_score conversation_score f1_score mode_accuracy
+            local framework_score trace_score longdoc_score multiagent_score
             identity_score=$(echo "$results" | cut -d: -f1)
             actionability_score=$(echo "$results" | cut -d: -f2)
             knowledge_score=$(echo "$results" | cut -d: -f3)
             conversation_score=$(echo "$results" | cut -d: -f4)
             f1_score=$(echo "$results" | cut -d: -f5)
             mode_accuracy=$(echo "$results" | cut -d: -f6)
+            framework_score=$(echo "$results" | cut -d: -f7)
+            trace_score=$(echo "$results" | cut -d: -f8)
+            longdoc_score=$(echo "$results" | cut -d: -f9)
+            multiagent_score=$(echo "$results" | cut -d: -f10)
             
             [[ -z "$identity_score" ]] && identity_score=40
             [[ -z "$actionability_score" ]] && actionability_score=35
@@ -380,6 +392,10 @@ run_phase3() {
             [[ -z "$conversation_score" ]] && conversation_score=25
             [[ -z "$f1_score" ]] && f1_score=0.5
             [[ -z "$mode_accuracy" ]] && mode_accuracy=0.5
+            [[ -z "$framework_score" ]] && framework_score=50
+            [[ -z "$trace_score" ]] && trace_score=40
+            [[ -z "$longdoc_score" ]] && longdoc_score=20
+            [[ -z "$multiagent_score" ]] && multiagent_score=15
         else
             echo "  Agent tester not found, using heuristic fallback"
             identity_score=40 actionability_score=35 knowledge_score=25 conversation_score=25
@@ -396,11 +412,7 @@ run_phase3() {
         mode_accuracy=0.5
     fi
     
-    # Fixed dimension scores based on text analysis
-    local framework_score=50
-    local trace_score=40
-    local longdoc_score=20
-    local multiagent_score=15
+    # Dynamic dimension scores (now calculated by runtime_agent_tester.sh)
     local trigger_score
     trigger_score=$(echo "$f1_score * 25 / 1" | bc)
     
@@ -458,9 +470,12 @@ run_phase4() {
     
     source "${SCRIPT_DIR}/../lib/constants.sh"
     
-    # Variance calculation using text vs runtime difference
-    local variance
-    variance=$(echo "if ($text_score > $runtime_score) $text_score - $runtime_score else $runtime_score - $text_score" | bc)
+    # Variance calculation - normalize both scores to per-1000 scale before comparing
+    # text_score is out of 350, runtime_score is out of 450
+    local text_normalized runtime_normalized variance
+    text_normalized=$(echo "scale=4; $text_score * 1000 / 350" | bc)
+    runtime_normalized=$(echo "scale=4; $runtime_score * 1000 / 450" | bc)
+    variance=$(echo "if ($text_normalized > $runtime_normalized) $text_normalized - $runtime_normalized else $runtime_normalized - $text_normalized" | bc)
     
     # Variance score (40pts max) - more lenient for real-world variation
     local variance_score=0

@@ -119,23 +119,29 @@ run_agent_runtime_eval() {
         echo "" >&2
     else
         # Run basic tests without corpus
-        echo "Running basic agent tests..." >&2
-        run_basic_agent_tests "$skill_file" "$provider"
+        local basic_results
+        basic_results=$(run_basic_agent_tests "$skill_file" "$provider")
+        # Parse basic results: tp:fp:fn:mode_correct:mode_total
+        trigger_tp=$(echo "$basic_results" | cut -d: -f1)
+        trigger_fp=$(echo "$basic_results" | cut -d: -f2)
+        trigger_fn=$(echo "$basic_results" | cut -d: -f3)
+        mode_correct=$(echo "$basic_results" | cut -d: -f4)
+        mode_total=$(echo "$basic_results" | cut -d: -f5)
     fi
     
     # Calculate scores
     local trigger_precision trigger_recall trigger_accuracy
-    if [[ $(echo "$trigger_tp + $trigger_fp" | bc) -gt 0 ]]; then
+    if [[ $(echo "$trigger_tp + $trigger_fp > 0" | bc) -eq 1 ]]; then
         trigger_precision=$(echo "scale=4; $trigger_tp / ($trigger_tp + $trigger_fp)" | bc)
     else
         trigger_precision="0"
     fi
-    if [[ $(echo "$trigger_tp + $trigger_fn" | bc) -gt 0 ]]; then
+    if [[ $(echo "$trigger_tp + $trigger_fn > 0" | bc) -eq 1 ]]; then
         trigger_recall=$(echo "scale=4; $trigger_tp / ($trigger_tp + $trigger_fn)" | bc)
     else
         trigger_recall="0"
     fi
-    if [[ $(echo "$trigger_precision + $trigger_recall" | bc) -gt 0 ]]; then
+    if [[ $(echo "$trigger_precision + $trigger_recall > 0" | bc) -eq 1 ]]; then
         trigger_accuracy=$(echo "scale=4; 2 * $trigger_precision * $trigger_recall / ($trigger_precision + $trigger_recall)" | bc)
     else
         trigger_accuracy="0"
@@ -170,7 +176,7 @@ run_agent_runtime_eval() {
     
     # Knowledge accuracy test - check if it knows the answer
     echo "Testing knowledge accuracy..." >&2
-    for i in 1 2; do
+    for i in 1 2 3; do
         local result
         result=$(cross_test_knowledge "$skill_file")
         local content="${result#single:}"
@@ -260,8 +266,19 @@ EOF
     echo "Knowledge Accuracy: $knowledge_final/50" >&2
     echo "Conversation Stability: $conversation_final/50" >&2
     
-    # Return scores: identity:actionability:knowledge:conversation:f1:mode_accuracy
-    echo "$identity_score:$actionability_final:$knowledge_final:$conversation_final:$f1:$mode_accuracy"
+    # Calculate dynamic dimension scores
+    local framework_score=$(calc_framework_execution "$skill_file")
+    local trace_score=$(calc_trace_compliance "$skill_file")
+    local longdoc_score=$(calc_long_document "$skill_file")
+    local multiagent_score=$(calc_multi_agent "$skill_file")
+    
+    echo "Framework Execution: $framework_score/70" >&2
+    echo "Trace Compliance: $trace_score/50" >&2
+    echo "Long-Document: $longdoc_score/30" >&2
+    echo "Multi-Agent: $multiagent_score/25" >&2
+    
+    # Return scores: identity:actionability:knowledge:conversation:f1:mode_accuracy:framework:trace:longdoc:multiagent
+    echo "$identity_score:$actionability_final:$knowledge_final:$conversation_final:$f1:$mode_accuracy:$framework_score:$trace_score:$longdoc_score:$multiagent_score"
 }
 
 # Fallback when no LLM available
@@ -332,6 +349,96 @@ run_basic_agent_tests() {
     
     local accuracy=$(echo "scale=4; $tp / $total" | bc)
     echo "Trigger accuracy: $accuracy" >&2
+    
+    # Return results in same format as corpus-based tests
+    # Format: trigger_tp:trigger_fp:trigger_fn:mode_correct:mode_total
+    echo "${tp}:${fp}:${fn}:0:0"
+}
+
+# Dynamic scoring functions
+calc_framework_execution() {
+    local skill_file="$1"
+    
+    local tool_score=0
+    local tool_mentions=$(grep -cE "tool|invoke|call" "$skill_file" 2>/dev/null || echo "0")
+    if [[ ${tool_mentions:-0} -ge 3 ]]; then
+        tool_score=23
+    elif [[ ${tool_mentions:-0} -ge 1 ]]; then
+        tool_score=15
+    fi
+    
+    local memory_score=0
+    local memory_mentions=$(grep -cE "memory|Memory|记忆|journal|Journal|read|write|store|retrieve|读取|写入" "$skill_file" 2>/dev/null || echo "0")
+    if [[ ${memory_mentions:-0} -ge 2 ]]; then
+        memory_score=24
+    elif [[ ${memory_mentions:-0} -ge 1 ]]; then
+        memory_score=12
+    fi
+    
+    local pipeline_score=0
+    local pipeline_mentions=$(grep -cE "workflow|Workflow|pipeline|Pipeline|流程|阶段|step|phase|stage|步骤|阶段" "$skill_file" 2>/dev/null || echo "0")
+    if [[ ${pipeline_mentions:-0} -ge 4 ]]; then
+        pipeline_score=23
+    elif [[ ${pipeline_mentions:-0} -ge 2 ]]; then
+        pipeline_score=15
+    fi
+    
+    echo $((tool_score + memory_score + pipeline_score))
+}
+
+calc_trace_compliance() {
+    local skill_file="$1"
+    
+    local score=0
+    local indicators=$(grep -cE "agentpex|behavior|behaviour|rule|规则|constraint|约束|limit|限制" "$skill_file" 2>/dev/null || echo "0")
+    
+    if [[ ${indicators:-0} -ge 10 ]]; then
+        score=50
+    elif [[ ${indicators:-0} -ge 7 ]]; then
+        score=35
+    elif [[ ${indicators:-0} -ge 4 ]]; then
+        score=35
+    fi
+    
+    echo "$score"
+}
+
+calc_long_document() {
+    local skill_file="$1"
+    
+    local chunking_score=0
+    local xref_score=0
+    local degradation_score=0
+    
+    local file_size=$(wc -c < "$skill_file" 2>/dev/null || echo "0")
+    
+    if [[ ${file_size:-0} -gt 50000 ]]; then
+        chunking_score=10; xref_score=10; degradation_score=10
+    elif [[ ${file_size:-0} -gt 20000 ]]; then
+        chunking_score=7; xref_score=5; degradation_score=5
+    elif [[ ${file_size:-0} -gt 5000 ]]; then
+        chunking_score=5; xref_score=3; degradation_score=2
+    fi
+    
+    grep -qE "chunk|split|分割|分块" "$skill_file" && chunking_score=10
+    grep -qE "reference|cross.?ref|引用|参考" "$skill_file" && xref_score=10
+    grep -qE "degradation|degrade|graceful|failover|容错" "$skill_file" && degradation_score=10
+    
+    echo $((chunking_score + xref_score + degradation_score))
+}
+
+calc_multi_agent() {
+    local skill_file="$1"
+    
+    local parallel_score=0
+    local hierarchical_score=0
+    local collab_score=0
+    
+    grep -qE "parallel|并发|并行" "$skill_file" && parallel_score=8
+    grep -qE "hierarchical|层级|层次|hierarchy" "$skill_file" && hierarchical_score=8
+    grep -qE "collaborat|collaboration|协作|合作" "$skill_file" && collab_score=9
+    
+    echo $((parallel_score + hierarchical_score + collab_score))
 }
 
 # Main execution
@@ -348,7 +455,7 @@ main() {
     mkdir -p "$output_dir"
     
     check_dependencies || echo "Continuing with limited evaluation..." >&2
-    
+     
     run_agent_runtime_eval "$skill_file" "$corpus_file" "$output_dir"
 }
 

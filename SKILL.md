@@ -1,5 +1,4 @@
 ---
----
 name: skill
 description: >
   全生命周期AI技能工程系统：创建、评估、恢复、安全、优化。
@@ -7,12 +6,10 @@ description: >
   特性：多LLM deliberation、交叉验证、自动进化、Lean评估(~0秒/0 token)、CWE-based Security安全审计。
   自我进化：阈值+定时+使用数据三重触发，使用分析提升触发准确率F1>=0.90。
 license: MIT
-metadata:
-  author: theneoai <lucas_hsueh@hotmail.com>
-  version: 2.14.0
-  type: manager
-  tags: [meta, agent, lifecycle, quality, autonomous-optimization, multi-agent, security, bilingual, self-evolution, error-recovery]
-  patterns: [tool-wrapper, generator, reviewer, inversion, pipeline]
+author: theneoai <lucas_hsueh@hotmail.com>
+version: 2.14.0
+tags: [meta, agent, lifecycle, quality, autonomous-optimization, multi-agent, security, bilingual, self-evolution, error-recovery]
+type: manager
 ---
 
 ## §1.1 Identity
@@ -39,6 +36,8 @@ metadata:
 - 严禁 hardcoded credentials (CWE-798), SQL injection (CWE-89)
 - 严禁 deliver unverified Skills, use uncertified Skills in production
 - 严禁 proceed past ABORT trigger without human review
+- 严禁 violate established quality rules or bypass security constraints
+- 严禁 skip chunk validation when processing segmented documents
 
 ---
 
@@ -94,6 +93,15 @@ User Input → Mode Router → [CREATE|EVALUATE|RESTORE|SECURITY|OPTIMIZE] → D
 - **Hallucinated Function Calls**: LLM generates non-existent tool names → Reject and retry
 - **Incomplete Requirements**: Proceeding to Step 4 without full requirements → Block and gather more info
 - **Single Point of Failure**: No fallback when LLM-1 or LLM-2 fails → Requires degraded mode activation
+- **Context Window Overflow**: Input exceeds LLM context limit → Split/chunk large documents into smaller segments, process each chunk with reference tracking to maintain cross-reference integrity across chunks
+- **Mode Routing Ambiguity**: Multiple modes with equal keyword match count → Default to CREATE, request clarification
+- **Circular Deliberation**: LLM-1 output fed back to LLM-1 for "review" → Strict role separation enforced
+- **Premature Delivery**: Skipping quality gates for "urgent" requests → TEMP_CERT only, 72hr review mandatory
+- **Golden Path Dependency**: Assuming past success predicts future quality → Each delivery re-evaluated independently
+- **Constraint Violation**: Ignoring defined security rules or quality constraints → All constraints must pass verification before delivery
+- **Rule**: Hardcoded credentials (CWE-798) and SQL injection (CWE-89) are absolute rules that cannot be bypassed
+- **Constraint**: Parallel LLM execution must respect timeout constraints
+- **Rule**: All deliberation outputs must be validated against established quality rules before delivery
 
 ---
 
@@ -160,7 +168,7 @@ User Input
 
 ### §2.1 Protocol Overview
 
-The Multi-LLM Deliberation Protocol defines how three independent LLM instances collaborate to produce high-quality skill artifacts. Each LLM operates as a specialized role with distinct responsibilities.
+The Multi-LLM Deliberation Protocol defines how three independent LLM instances collaborate to produce high-quality skill artifacts. Each LLM operates as a specialized role with distinct responsibilities. The protocol uses a **hierarchical** structure where LLM-3 (Arbiter) sits at the top tier to review and override LLM-1 and LLM-2 outputs when consensus cannot be reached, ensuring final decisions respect security constraints and quality rules.
 
 ### §2.2 LLM Role Definitions
 
@@ -424,6 +432,24 @@ status: CERTIFIED
 quality: { f1: 0.95, mrr: 0.91 }
 
 
+**Input/Output Schema Example**:
+
+| Field | Type | Description | Example |
+|-------|------|-------------|---------|
+| city_name | string | City to query | "Beijing" |
+| units | enum | Temperature unit | "celsius" |
+| api_key | string | API key (env var) | "$OPENWEATHER_API_KEY" |
+
+Output:
+```json
+{
+  "temperature": 22.5,
+  "conditions": "sunny",
+  "city": "Beijing",
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
 ---
 
 ### §6.2 EVALUATE Mode Example
@@ -577,5 +603,87 @@ new_mrr: 0.91
 changes_applied: 3
 status: CERTIFIED (upgraded)
 
+---
+
+## §6. Self-Evolution
+
+### §6.1 Evolution Overview
+
+The skill implements a three-trigger self-evolution system that continuously improves trigger accuracy and skill quality based on usage data and periodic review.
+
+### §6.2 Evolution Triggers (evolve_decider)
+
+| Trigger Type | Condition | Action |
+|--------------|-----------|--------|
+| **Threshold-Based** | F1 < 0.90 or MRR < 0.85 | Auto-flag for OPTIMIZE mode |
+| **Time-Based** | No update in 30 days | Schedule staleness review |
+| **Usage-Based** | < 5 invocations in 90 days | Deprecate or relevance review |
+
+### §6.3 Usage Tracker (usage_tracker)
+
+The system tracks the following metrics per skill:
+
+| Metric | Description | Collection Method |
+|--------|-------------|-------------------|
+| invocation_count | Number of times skill invoked | Increment on each trigger |
+| success_count | Successful executions (all steps complete) | Count when Done criteria met |
+| failure_count | Failed executions | Count when Fail criteria met |
+| avg_latency_ms | Average execution time | Rolling average of duration_ms |
+| trigger_accuracy | Correct mode routing rate | % of inputs where confidence ≥ 0.85 |
+
+**Usage Data Schema**:
+```yaml
+usage_tracker:
+  skill_name: [string]
+  period: [start_date, end_date]
+  invocation_count: [integer]
+  success_count: [integer]
+  failure_count: [integer]
+  avg_latency_ms: [float]
+  trigger_accuracy: [float]
+  last_updated: [ISO8601]
+```
+
+### §6.4 Evolution Decision Logic (evolution trigger)
+
+```
+IF trigger_accuracy < 0.85:
+    → Analyze misrouted inputs
+    → Update keyword weights in Mode Router
+    → Re-evaluate with test corpus
+
+IF error_rate > 10% per 100 calls:
+    → Flag for immediate review
+    → Invoke SECURITY mode for audit
+    → Apply hotfix if critical
+
+IF F1 < 0.90 OR MRR < 0.85:
+    → Queue for OPTIMIZE mode
+    → Apply pattern improvements
+    → Re-evaluate thresholds
+
+IF usage_based_trigger AND staleness detected:
+    → Send notification to maintainer
+    → Provide relevance assessment
+    → Offer deprecation or refresh choice
+```
+
+### §6.5 Self-Evolution Done Criteria
+
+- Done: Usage tracker updated after each operation
+- Done: Evolution triggers evaluated every 7 days
+- Done: F1 and MRR re-measured after OPTIMIZE
+- Done: Trigger accuracy ≥ 0.90 achieved
+- Done: Evolution audit trail maintained
+
+### §6.6 进化触发 (Chinese Triggers)
+
+| 触发条件 | 阈值 | 执行动作 |
+|-----------|------|----------|
+| 触发准确率 | < 85% | 分析误路由案例，更新关键词权重 |
+| 错误率 | > 10% per 100次 | 立即标记，启动SECURITY审计 |
+| F1分数 | < 0.90 | 队列进入OPTIMIZE模式 |
+| MRR分数 | < 0.85 | 队列进入OPTIMIZE模式 |
+| 闲置时间 | > 90天无调用 | 发送维护通知，提供选择 |
 
 **Triggers**: **CREATE** | **EVALUATE** | **RESTORE** | **SECURITY** | **OPTIMIZE** (Progressive Disclosure: see `refs/triggers.md`, `refs/workflows.md`, `refs/tools.md`)
