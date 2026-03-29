@@ -11,7 +11,7 @@
 if [[ -n "${_BOOTSTRAP_SOURCED:-}" ]]; then
     return 0
 fi
-export _BOOTSTRAP_SOURCED=1
+_BOOTSTRAP_SOURCED=1
 
 # ============================================================================
 # 路径初始化
@@ -19,7 +19,24 @@ export _BOOTSTRAP_SOURCED=1
 
 # 如果尚未定义 EVAL_DIR_FROM_ENGINE，则根据脚本位置自动计算
 if [[ -z "${EVAL_DIR_FROM_ENGINE:-}" ]]; then
-    EVAL_DIR_FROM_ENGINE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    _BS="${BASH_SOURCE[0]}"
+    # First resolve the relative path to an absolute path (using -P to resolve symlinks)
+    # This handles cases like engine/agents/../lib where lib is a symlink
+    _BS="$(cd "$(dirname "$_BS")" && pwd -P)/$(basename "$_BS")"
+    # Now resolve any symlinks in the path
+    if [[ -L "$_BS" ]]; then
+        _LINK_TARGET="$(readlink "$_BS")" || true
+        if [[ -n "$_LINK_TARGET" ]]; then
+            _LINK_DIR="$(dirname "$_BS")"
+            if [[ "$_LINK_TARGET" != /* ]]; then
+                _BS="$(cd "$_LINK_DIR" && cd "$_LINK_TARGET" && pwd -P)"
+            else
+                _BS="$_LINK_TARGET"
+            fi
+        fi
+    fi
+    EVAL_DIR_FROM_ENGINE="$(cd "$(dirname "$_BS")/.." && pwd -P)"
+    unset _BS _LINK_TARGET _LINK_DIR 2>/dev/null || true
 fi
 
 # eval 路径（可通过环境变量覆盖）
@@ -86,6 +103,8 @@ require() {
             *)
                 if [[ -f "${EVAL_DIR_FROM_ENGINE}/lib/${module}.sh" ]]; then
                     source "${EVAL_DIR_FROM_ENGINE}/lib/${module}.sh"
+                else
+                    echo "WARNING: Module not found: ${module}" >&2
                 fi
                 ;;
         esac

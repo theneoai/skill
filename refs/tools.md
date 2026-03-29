@@ -49,56 +49,56 @@
 
 | Tool | Path | Purpose | LLM-Enhanced |
 |------|------|---------|--------------|
-| orchestrator | `engine/orchestrator.sh` | Main workflow coordinator | Yes |
-| _workflow | `engine/orchestrator/_workflow.sh` | Workflow state machine | No |
-| _actions | `engine/orchestrator/_actions.sh` | Decision logic | Yes |
-| _state | `engine/orchestrator/_state.sh` | State management | No |
-| _parallel | `engine/orchestrator/_parallel.sh` | Background tasks | No |
+| orchestrator | `tools/orchestrator.sh` | Main workflow coordinator | Yes |
+| _workflow | `tools/orchestrator/_workflow.sh` | Workflow state machine | No |
+| _actions | `tools/orchestrator/_actions.sh` | Decision logic | Yes |
+| _state | `tools/orchestrator/_state.sh` | State management | No |
+| _parallel | `tools/orchestrator/_parallel.sh` | Background tasks | No |
 
 ### Agents
 
 | Tool | Path | Purpose | LLM-Enhanced |
 |------|------|---------|--------------|
-| creator | `engine/agents/creator.sh` | Section generator | Yes |
-| evaluator | `engine/agents/evaluator.sh` | Skill evaluator | Yes |
-| restorer | `engine/agents/restorer.sh` | Skill repair | Yes |
-| security | `engine/agents/security.sh` | OWASP AST10 audit | Yes |
-| base | `engine/agents/base.sh` | Agent infrastructure | No |
+| creator | `tools/agents/creator.sh` | Section generator | Yes |
+| evaluator | `tools/agents/evaluator.sh` | Skill evaluator | Yes |
+| restorer | `tools/agents/restorer.sh` | Skill repair | Yes |
+| security | `tools/agents/security.sh` | OWASP AST10 audit | Yes |
+| base | `tools/agents/base.sh` | Agent infrastructure | No |
 
 ### Evolution
 
 | Tool | Path | Purpose | LLM-Enhanced |
 |------|------|---------|--------------|
-| engine | `engine/evolution/engine.sh` | 9-step optimization loop | Yes |
-| analyzer | `engine/evolution/analyzer.sh` | Log analysis | Yes |
-| improver | `engine/evolution/improver.sh` | LLM improvement | Yes |
-| summarizer | `engine/evolution/summarizer.sh` | Finding synthesis | Yes |
-| rollback | `engine/evolution/rollback.sh` | Snapshot/rollback | No |
-| usage_tracker | `engine/evolution/usage_tracker.sh` | Usage data collection | No |
-| evolve_decider | `engine/evolution/evolve_decider.sh` | Evolution trigger decision | Yes |
-| learner | `engine/evolution/learner.sh` | Pattern learning | Yes |
+| engine | `tools/evolution/engine.sh` | 9-step optimization loop | Yes |
+| analyzer | `tools/evolution/analyzer.sh` | Log analysis | Yes |
+| improver | `tools/evolution/improver.sh` | LLM improvement | Yes |
+| summarizer | `tools/evolution/summarizer.sh` | Finding synthesis | Yes |
+| rollback | `tools/evolution/rollback.sh` | Snapshot/rollback | No |
+| usage_tracker | `tools/evolution/usage_tracker.sh` | Usage data collection | No |
+| evolve_decider | `tools/evolution/evolve_decider.sh` | Evolution trigger decision | Yes |
+| learner | `tools/evolution/learner.sh` | Pattern learning | Yes |
 
 ### Evaluation
 
 | Tool | Path | Purpose |
 |------|------|---------|
-| main | `eval/main.sh` | Eval entry point |
-| parse_validate | `eval/parse/parse_validate.sh` | Phase 1: Structure |
-| text_scorer | `eval/scorer/text_scorer.sh` | Phase 2: Text quality |
-| runtime_tester | `eval/scorer/runtime_tester.sh` | Phase 3: Runtime |
-| runtime_agent_tester | `eval/scorer/runtime_agent_tester.sh` | Phase 3: Agent-based |
-| certifier | `eval/certifier.sh` | Phase 4: Certification |
-| agent_executor | `eval/lib/agent_executor.sh` | Multi-LLM orchestration |
+| main | `tools/eval/main.sh` | Eval entry point |
+| parse_validate | `tools/eval/parse/parse_validate.sh` | Phase 1: Structure |
+| text_scorer | `tools/eval/scorer/text_scorer.sh` | Phase 2: Text quality |
+| runtime_tester | `tools/eval/scorer/runtime_tester.sh` | Phase 3: Runtime |
+| runtime_agent_tester | `tools/eval/scorer/runtime_agent_tester.sh` | Phase 3: Agent-based |
+| certifier | `tools/eval/certifier.sh` | Phase 4: Certification |
+| agent_executor | `tools/eval/lib/agent_executor.sh` | Multi-LLM orchestration |
 
 ### Libraries
 
 | Tool | Path | Purpose |
 |------|------|---------|
-| bootstrap | `engine/lib/bootstrap.sh` | Module loading |
-| constants | `engine/lib/constants.sh` | Configuration |
-| concurrency | `engine/lib/concurrency.sh` | Lock management |
-| errors | `engine/lib/errors.sh` | Error handling |
-| integration | `engine/lib/integration.sh` | Eval integration |
+| bootstrap | `tools/lib/bootstrap.sh` | Module loading |
+| constants | `tools/lib/constants.sh` | Configuration |
+| concurrency | `tools/lib/concurrency.sh` | Lock management |
+| errors | `tools/lib/errors.sh` | Error handling |
+| integration | `tools/lib/integration.sh` | Eval integration |
 
 ---
 

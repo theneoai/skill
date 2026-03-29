@@ -1,4 +1,5 @@
 ---
+---
 name: skill
 description: >
   全生命周期AI技能工程系统：创建、评估、恢复、安全、优化。
@@ -8,9 +9,9 @@ description: >
 license: MIT
 metadata:
   author: theneoai <lucas_hsueh@hotmail.com>
-  version: 2.3.0
+  version: 2.14.0
   type: manager
-  tags: [meta, agent, lifecycle, quality, autonomous-optimization, multi-agent, security, bilingual, self-evolution]
+  tags: [meta, agent, lifecycle, quality, autonomous-optimization, multi-agent, security, bilingual, self-evolution, error-recovery]
   patterns: [tool-wrapper, generator, reviewer, inversion, pipeline]
 ---
 
@@ -23,19 +24,21 @@ metadata:
 **Design Patterns** (Google 5 Patterns):
 - **Tool Wrapper**: Load reference/ on demand, execute as absolute truth
 - **Generator**: Template-based structured output
-- **Reviewer**: Severity-scored validation (error/warning/info)
-- **Inversion**: Structured requirement gathering before execution
+- **Reviewer**: Severity-scoped validation (error/warning/info)
+- **Inversion**: Structured requirement elicitation before execution
 - **Pipeline**: Multi-step workflow with hard checkpoints
 
 **Core Principles**:
-- **Multi-LLM Deliberation**: Multiple LLMs think independently, then cross-validate
+- **Multi-LLM Deliberation**: 3 LLMs think independently, then cross-validate
 - **No Rigid Scripts**: No automation that blindly executes without thinking
 - **Progressive Disclosure**: SKILL.md ≤400 lines, full details in reference/
 - **Measurable Quality**: F1 ≥ 0.90, MRR ≥ 0.85
+- **Fault Tolerance**: Graceful degradation with explicit recovery protocols
 
 **Red Lines (严禁)**:
 - 严禁 hardcoded credentials (CWE-798), SQL injection (CWE-89)
 - 严禁 deliver unverified Skills, use uncertified Skills in production
+- 严禁 proceed past ABORT trigger without human review
 
 ---
 
@@ -43,291 +46,536 @@ metadata:
 
 **Architecture**: Multi-LLM Orchestrated Skill Lifecycle Manager
 
-```
-User Input → Mode Router → [CREATE|EVALUATE|RESTORE|SECURITY] → OPTIMIZE
+User Input → Mode Router → [CREATE|EVALUATE|RESTORE|SECURITY|OPTIMIZE] → DELIVER
                               ↓
                      9-STEP LOOP (Multi-LLM)
-```
-
-**Tool Integration**:
-| Tool | Path | Purpose |
-|------|------|---------|
-| orchestrator | engine/orchestrator.sh | Main workflow |
-| evaluator | engine/agents/evaluator.sh | Skill evaluation |
-| evolution | engine/evolution/engine.sh | Self-optimization |
-| security | engine/agents/security.sh | CWE-based Security audit |
-| restorer | engine/agents/restorer.sh | Skill repair |
-
-**Constraints**:
-- Score thresholds: PLATINUM≥950, GOLD≥900, SILVER≥800, BRONZE≥700 (1000-point scale)
-- Auto-rollback on score regression
-- HUMAN_REVIEW when score < 8.0 after 10 rounds
+                              ↓
+                     ERROR RECOVERY LAYER
 
 ---
 
-## §1.3 Thinking
+## §1.3 9-STEP LOOP (Multi-LLM) — Explicit Definition
 
-**Cognitive Loop**:
-```
-1. DETECT → Parse user intent (bilingual multi-keyword)
-2. DELIBERATE → Each LLM proposes independently
-3. CROSS-VALIDATE → Compare recommendations, resolve conflicts
-4. CONFIRM → Present consensus
-5. EXECUTE → Call mode with LLM monitoring
-6. VERIFY → Multi-LLM validation
-7. PRESENT → Results with confidence level
-```
+| Step | Name | Description | Exit Criteria | Error Recovery |
+|------|------|-------------|---------------|----------------|
+| 1 | **PARSE INPUT** | Extract keywords (bilingual), detect language (ZH/EN/mixed), identify intent confidence | Keywords extracted, confidence score computed | Retry parse with fallback parser; escalate if 3 failures |
+| 2 | **ROUTE MODE** | Classify intent: CREATE/EVALUATE/RESTORE/SECURITY/OPTIMIZE based on keyword matching | Mode identified with confidence ≥0.70 | See §1.4 CONFIDENCE ROUTING for degraded mode |
+| 3 | **GATHER REQUIREMENTS** | Apply Inversion pattern: structured requirement elicitation before execution | Requirements doc complete with acceptance criteria | See §3.0 INVERSION PATTERN METHODOLOGY |
+| 4 | **LLM-1 GENERATE DRAFT** | Generator produces structured SKILL.md draft from requirements | Draft output within 30s timeout | Retry policy: max 3 attempts with backoff |
+| 5 | **LLM-2 REVIEW** | Reviewer performs security & quality audit with severity tagging | Issue list complete: CRITICAL/WARNING/INFO | Retry policy: max 3 attempts with backoff |
+| 6 | **LLM-3 CROSS-VALIDATE** | Arbiter reviews all outputs, flags discrepancies, builds consensus matrix | Cross-validation report with consensus status | See §2.4 DELIBERATION ERROR RECOVERY |
+| 7 | **RESOLVE CONFLICTS** | Apply consensus resolution protocol (unanimous/majority/arbitration) | Conflict resolved or escalated to HUMAN_REVIEW | Escalate to HUMAN_REVIEW after 2 rounds |
+| 8 | **APPLY QUALITY GATES** | Verify F1 ≥ 0.90, MRR ≥ 0.85 thresholds; enforce security baseline | All gates pass or TEMP_CERT flag applied | Flag for OPTIMIZE if thresholds missed |
+| 9 | **DELIVER WITH SIGN-OFF** | Final merge, change annotations, human/automated sign-off, certification | Deliverable ready with audit trail | See §4.0 AUDIT TRAIL SPECIFICATION |
 
----
+**Loop Exit Conditions**:
+- SUCCESS: All 9 steps complete, quality gates passed, sign-off obtained
+- TEMP_CERT: Quality gates not fully met, delivered with 72hr review flag
+- HUMAN_REVIEW: Step 7 escalation or Step 2 confidence <0.70 with user override
+- ABORT: Security red line violation detected at any step (see §5.0)
 
-## §2.1 Invocation
+**Done Criteria**:
+- Done: All 9 steps complete with sign-off
+- Done: Quality gates passed (F1 ≥ 0.90, MRR ≥ 0.85)
+- Done: Security baseline enforced (no CWE-798, CWE-89 violations)
+- Done: Audit trail complete with timestamps and artifacts
+- Done: Bilingual support verified (ZH/EN trigger detection)
 
-**Activation**: Manage skills (create/evaluate/restore/secure/optimize)
+**Fail Criteria**:
+- Fail: Any step exceeds timeout (30s per LLM, 60s total per phase)
+- Fail: Security red line violation detected (ABORT triggered)
+- Fail: Consensus not reached after 2 rounds of deliberation
+- Fail: Quality gates not met and TEMP_CERT rejected by human reviewer
+- Fail: Error rate > 10% per 100 calls in production use
 
-### Primary Triggers (中英双语)
-
-| Mode | EN Keywords | ZH Keywords | Priority |
-|------|-------------|-------------|----------|
-| CREATE | create/build skill | 创建/开发技能 | 1 |
-| EVALUATE | evaluate/test/score skill | 评估/测试/评分技能 | 2 |
-| RESTORE | restore/fix skill | 恢复/修复技能 | 3 |
-| SECURITY | security/OWASP/vulnerability | 安全审计/漏洞扫描 | 4 |
-| OPTIMIZE | optimize/improve skill | 优化/改进技能 | 5 |
-
-### Disambiguation Rules
-
-```
-1. EXACT MATCH → Respective mode (confidence ≥0.80)
-2. KEYWORD SCORING → Highest score wins
-3. NEGATIVE FILTER → Exclude anti-patterns
-4. CONFIDENCE <0.6 → Ask user clarification
-5. AMBIGUOUS → Default to EVALUATE
-```
-
-### Confidence Scoring
-
-```
-confidence = primary_match×0.5 + secondary×0.2 + context×0.2 + no_negative×0.1
-```
-
-**Full trigger patterns**: See `reference/triggers.md`
+**Failure Modes (Anti-Patterns)**:
+- **Hardcoded Credentials** (CWE-798): API keys or passwords in skill output → ABORT
+- **SQL Injection** (CWE-89): Unsanitized user input in queries → ABORT
+- **Hallucinated Function Calls**: LLM generates non-existent tool names → Reject and retry
+- **Incomplete Requirements**: Proceeding to Step 4 without full requirements → Block and gather more info
+- **Single Point of Failure**: No fallback when LLM-1 or LLM-2 fails → Requires degraded mode activation
 
 ---
 
-## §2.2 Recognition
+## §1.4 Mode Router Decision Tree
 
-**Intent Detection (Multi-LLM)**:
-1. Each LLM extracts keywords independently
-2. Cross-validate intent (must agree on top 2)
-3. If confidence < 0.6, ask user to clarify
-4. Default to EVALUATE if still ambiguous
-
-**Parameter Detection**:
-- Skill description: Free text after trigger keyword
-- Target tier: GOLD / SILVER / BRONZE (default: BRONZE)
-- Output path: File path (default: ./[skill-name].md)
-
----
-
-## §3.1 Process
-
-### Mode: CREATE (Generator + Inversion)
-**Purpose**: Generate a new SKILL.md from description with multi-LLM validation
-**Pattern**: Tool Wrapper + Inversion - load references/ only when needed
-
-**Steps**:
-1. **ASK**: "What skill do you want to create?" (Inversion: one question at a time)
-2. **LOAD**: `reference/workflows.md` for template structure
-3. **DELIBERATE**: Multi-LLM proposals (kimi-code + minimax)
-4. **CROSS-VALIDATE**: Merge proposals into optimal structure
-5. **GENERATE**: Fill template with collected requirements
-6. **VERIFY**: Run lean-orchestrator for validation
-7. **PRESENT**: Display final score, tier, F1, MRR
-
-### Mode: LEAN (Fast Path)
-**Purpose**: Fast evaluation (~0s, 0 tokens)
-**Pattern**: Tool Wrapper - heuristic-based checks
-**Steps**:
-1. **FAST_PARSE**: YAML frontmatter + section structure (100ms)
-2. **TEXT_SCORE**: Heuristic quality scoring (100ms)
-3. **RUNTIME_TEST**: Trigger pattern validation (100ms)
-4. **DECIDE**: Compare against threshold
-5. **CERTIFY**: Assign tier (GOLD/SILVER/BRONZE)
-
-### Mode: EVALUATE (Reviewer)
-**Purpose**: Score existing skill with metrics
-**Pattern**: Reviewer - severity-scored validation
-
-**Steps**:
-1. **LOAD**: `reference/triggers.md` for checklist
-2. **PARSE**: Extract skill structure and metadata
-3. **APPLY**: Checklist rules by severity:
-   - **error**: Must fix (CWE, missing sections)
-   - **warning**: Should fix (incomplete docs)
-   - **info**: Consider (style improvements)
-4. **SCORE**: Each dimension (Parse, Text, Runtime)
-5. **COMPUTE**: F1/MRR metrics
-6. **PRESENT**: Severity-sorted findings + final score
-
-### Mode: RESTORE
-**Purpose**: Fix broken skills
-**Pipeline**: Analyze → Diagnose → Propose fixes → Implement → Verify
-**Done criteria**: Score ≥ previous score with all P0 issues resolved
-
-### Mode: SECURITY
-**Purpose**: CWE-based Security audit
-**Pattern**: Reviewer - security-specific checklist
-**Steps**: Ask path → OWASP checklist (Multi-LLM) → Present violations by severity
-
-### Mode: OPTIMIZE (Pipeline)
-**Purpose**: 9-step self-optimization loop
-**Pattern**: Pipeline with checkpoints
-
-**Steps**:
-1. **READ**: Load skill file, parse structure
-2. **ANALYZE**: Locate weakest dimension (Multi-LLM)
-3. **CURATION**: Select top improvement candidate
-4. **PLAN**: Propose specific change with rationale
-5. **IMPLEMENT**: Apply change to skill file
-6. **VERIFY**: Run lean evaluation
-7. **HUMAN_REVIEW**: User confirms or rejects
-8. **LOG**: Record improvement in usage_tracker
-9. **COMMIT**: Save to git with descriptive message
-
-**Done criteria**: Score ≥ threshold with no regression
+User Input
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ PARSE INPUT                                                     │
+│ 1. Extract keywords (bilingual)                                │
+│ 2. Detect language (ZH/EN/mixed)                               │
+│ 3. Identify intent confidence                                   │
+└─────────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ MODE CLASSIFICATION                                             │
+│                                                                 │
+│ CREATE keywords:  [创建, create, build, 新建, new, 开发]         │
+│ EVALUATE keywords: [评估, evaluate, test, 测试, score, 评分]      │
+│ RESTORE keywords:  [恢复, restore, repair, fix, 修复, 还原]      │
+│ SECURITY keywords: [安全, security, audit, scan, 审计, 检查]     │
+│ OPTIMIZE keywords: [优化, optimize, improve, enhance, 提升,    │
+│                     refactor, 重构, 迭代]                        │
+│                                                                 │
+│ Mode = highest keyword match count with confidence ≥0.70        │
+│ Default = CREATE if ambiguous input                            │
+└─────────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ CONFIDENCE ROUTING                                              │
+│                                                                 │
+│ confidence ≥0.85 → AUTO-ROUTE to detected mode                  │
+│ confidence 0.70-0.84 → CONFIRM before route                     │
+│ confidence <0.70 → ESCALATE to HUMAN_REVIEW                    │
+│                                                                 │
+│ GRACEFUL DEGRADATION (confidence <0.70 + user insists):        │
+│ - Log explicit user override with timestamp                     │
+│ - Apply reduced confidence mode: single-LLM deliberation        │
+│ - Increase checkpoint strictness by 50%                         │
+│ - Require additional human sign-off before DELIVER              │
+│ - Flag skill with TEMP_CERT flag for 72hr review window        │
+└─────────────────────────────────────────────────────────────────┘
 
 ---
 
-## §4.1 Tool Set
+## §1.5 OPTIMIZE Trigger Conditions
 
-### User Scripts
-
-| Tool | Path | Speed |
-|------|------|-------|
-| create-skill | scripts/create-skill.sh | ~30s |
-| evaluate-skill | scripts/evaluate-skill.sh | ~2-10min |
-| **lean-orchestrator** | scripts/lean-orchestrator.sh | **~0s** |
-| optimize-skill | scripts/optimize-skill.sh | ~5min |
-| security-audit | scripts/security-audit.sh | ~10s |
-| restore-skill | scripts/restore-skill.sh | ~20s |
-
-### LLM Provider (kimi-code + minimax)
-
-| Provider | Strength | For |
-|----------|----------|-----|
-| kimi-code | 85 | Primary cross-validation |
-| minimax | 80 | Primary cross-validation |
-| openai | 90 | Third opinion |
-| anthropic | 100 | Third opinion |
+| Trigger Source | Threshold | Action |
+|----------------|-----------|--------|
+| F1 Score | < 0.90 | Auto-flag for refactor, queue for OPTIMIZE |
+| MRR Score | < 0.85 | Auto-flag for refactor, queue for OPTIMIZE |
+| Tier Downgrade | Skill tier drops 1+ level | Investigate root cause, apply OPTIMIZE |
+| Error Rate | > 5% per 100 calls | Flag for immediate review and OPTIMIZE |
+| Time-Based | Every 30 days without update | Schedule OPTIMIZE for staleness prevention |
+| Usage-Based | < 5 invocations in 90 days | Deprecate or OPTIMIZE for relevance |
+| Security Alert | Any CWE violation detected | ABORT and require SECURITY review before resume |
 
 ---
 
-## §5.1 Validation
+## §2.0 MULTI-LLM DELIBERATION PROTOCOL
 
-**Pre-flight Checks**:
-| Check | Condition | Failure Action |
-|-------|-----------|----------------|
-| File exists | Test -f "$path" | "Skill not found" |
-| Valid structure | Header + § sections | "Invalid format" |
-| Tier match | Score ≥ threshold | Warning |
-| Security scan | CWE-based Security pass | Block P0 |
+### §2.1 Protocol Overview
 
-**Score Thresholds (1000-point scale, Unified)**:
-| Tier | Min Score | F1 | MRR |
-|------|-----------|-----|-----|
-| PLATINUM | 950 | ≥0.92 | ≥0.88 |
-| GOLD | 900 | ≥0.90 | ≥0.85 |
-| SILVER | 800 | ≥0.87 | ≥0.82 |
-| BRONZE | 700 | ≥0.85 | ≥0.80 |
+The Multi-LLM Deliberation Protocol defines how three independent LLM instances collaborate to produce high-quality skill artifacts. Each LLM operates as a specialized role with distinct responsibilities.
 
----
+### §2.2 LLM Role Definitions
 
-## §6 Self-Evolution
+| LLM | Role | Responsibility | Output Format |
+|-----|------|----------------|---------------|
+| LLM-1 | Generator | Produce initial draft from requirements | Structured SKILL.md template |
+| LLM-2 | Reviewer | Security and quality audit | Severity-tagged issue list |
+| LLM-3 | Arbiter | Cross-validate and arbitrate | Consensus matrix + final judgment |
 
-### Trigger Mechanisms
+### §2.3 Message Exchange Format
 
-| Trigger | Condition | Priority |
-|---------|-----------|----------|
-| **Threshold** | Score < 570 | High |
-| **Scheduled** | Every 24 hours | Medium |
-| **Usage-based** | F1 < 0.85 OR Task Rate < 0.80 | High |
-| **Manual** | force=true | Highest |
 
-### Usage Data
+PHASE: [PARALLEL|SEQUENTIAL]
+TIMEOUT: [30s|60s]
+TURN: [1-N]
 
-```bash
-source engine/evolution/usage_tracker.sh
-track_trigger "skill" "CREATE" "CREATE"  # expected → actual
-track_task "skill" "optimization" "true" 3
-track_feedback "skill" 5 "Good"
-```
+MSG-LLM1: [content]
+MSG-LLM2: [content]
+MSG-LLM3: [content]
 
-### Pattern Learning
+CONSENSUS: [UNANIMOUS|MAJORITY|SPLIT|UNRESOLVED]
+ARBITRATION_NEEDED: [true|false]
 
-- **weak_triggers**: Array of expected→actual confusion pairs
-- **failed_task_types**: Task types with low completion
-- **Improvement hints**: Generated from patterns
 
----
+**Message Types**:
+- `CONTRIBUTION`: LLM provides its independent output
+- `REVIEW`: LLM comments on another LLM's output
+- `CHALLENGE`: LLM disputes a claim or suggestion
+- `ARBITRATION`: LLM-3 resolves a dispute
+- `FINAL`: Consensus reached, artifact approved
 
-## §7.1 Examples
+### §2.4 DELIBERATION ERROR RECOVERY
 
-### CREATE Example
-```bash
-./scripts/create-skill.sh "Create a code review skill" --extends skill
-# Output: skill-code-review.md with §1.1 + Red Lines + §6 inherited
-```
+| Error Condition | Recovery Action | Escalation Path |
+|-----------------|-----------------|-----------------|
+| LLM-1 timeout | Retry with exponential backoff (1s, 2s, 4s) | 3 failures → HUMAN_REVIEW |
+| LLM-2 timeout | Skip audit, apply baseline checklist only | 3 failures → ABORT delivery |
+| LLM-3 timeout | Use majority vote from LLM-1 and LLM-2 | 2 failures → HUMAN_REVIEW |
+| Disagreement on CRITICAL | Immediate arbitration required | LLM-3 must resolve within 60s |
+| Disagreement on WARNING | Majority vote decides | 2 rounds unresolved → HUMAN_REVIEW |
+| No consensus after 2 rounds | Escalate entire artifact to HUMAN_REVIEW | Log all inputs for audit |
+| Hallucinated content detected | Reject output, retry from last checkpoint | 2 hallucinations → ABORT |
 
-### EVALUATE Example
-```bash
-./scripts/evaluate-skill.sh ./my-skill.md
-# Output: JSON with F1=0.92, MRR=0.88, tier=GOLD
-```
+**Consensus Matrix Format**:
 
-### LEAN Example
-```bash
-./scripts/lean-orchestrator.sh ./my-skill.md
-# Output: 0.5s, $0, score=580/600, tier=GOLD
-```
+DECISION_MATRIX:
+  | Item          | LLM-1  | LLM-2  | LLM-3  | Consensus |
+  |---------------|--------|--------|--------|-----------|
+  | Structure     | PASS   | PASS   | PASS   | UNANIMOUS |
+  | Security      | PASS   | FAIL   | PASS   | SPLIT     |
+  | Completeness  | PASS   | WARN   | PASS   | MAJORITY  |
 
-### SECURITY Example
-```bash
-./scripts/security-audit.sh ./my-skill.md OWASP
-# Output: violations by severity (error/warning/info)
-```
+RESOLUTION: [Accept LLM-2 security finding, refactor, retry Step 5]
 
-### RESTORE Example
-```bash
-./scripts/restore-skill.sh ./broken-skill.md
-# Output: Fixed skill with diagnosis report
-```
 
-### Case Study: agent-skill Evolution
-- Initial Score: 425 (SILVER)
-- After 300 rounds: 580 (GOLD)
-- F1: 0.87 → 0.92
-- MRR: 0.82 → 0.88
+### §2.5 Timeout Handling
 
-## §7.2 Frameworks
-
-| Framework | Application | Metrics |
-|-----------|-------------|---------|
-| ReAct | Reasoning + Action loop | F1 ≥ 0.90 |
-| Chain-of-Thought | Step-by-step reasoning | MRR ≥ 0.85 |
-| Tree-of-Thought | Exploration branches | Quality ≥ 8.0 |
-| RAG | Retrieval augmented gen | Recall ≥ 0.90 |
-
-## §7.3 Standards
-
-- **NIST**: AI Risk Management Framework 1.0
-- **OWASP**: AST10 Security Checklist (AST10-1 to AST10-10)
-- **ISO**: 25010 Software Quality Model ( SQuaRE )
-- **CWE**: Common Weakness Enumeration v4.14
-- **F1 Score**: Harmonic mean: 2×P×R/(P+R)
-- **MRR**: Mean Reciprocal Rank: Σ(1/rank)/N
+- **Per-LLM Timeout**: 30 seconds for single turn
+- **Phase Timeout**: 60 seconds for parallel LLMs
+- **Total Deliberation Timeout**: 180 seconds (6 turns maximum)
+- **Graceful Degradation**: If any LLM exceeds timeout, apply single-LLM deliberation mode with increased validation
 
 ---
 
-**Version**: 2.3.0
-**Date**: 2026-03-29
-**Pattern**: Tool Wrapper + Generator + Reviewer + Inversion + Pipeline
+## §3.0 INVERSION PATTERN METHODOLOGY
+
+### §3.1 Purpose
+
+The Inversion Pattern ensures complete requirements are gathered BEFORE execution begins. Instead of assuming requirements, the skill actively elicits them through structured questioning.
+
+### §3.2 Required Elicitation Questions
+
+| Question | Purpose | Required For |
+|----------|---------|--------------|
+| 1. What is the skill's primary purpose? | Define core functionality | ALL modes |
+| 2. Who are the target users? | Determine interface complexity | ALL modes |
+| 3. What inputs does the skill accept? | Define parameter schema | CREATE, OPTIMIZE |
+| 4. What outputs does the skill produce? | Define return schema | CREATE, OPTIMIZE |
+| 5. What are the acceptance criteria? | Define success metrics | ALL modes |
+| 6. What security constraints apply? | Identify CWE risks | ALL modes |
+| 7. What is the expected quality threshold? | Define F1/MRR targets | EVALUATE, OPTIMIZE |
+| 8. What is the rollback plan? | Define recovery procedure | RESTORE |
+
+### §3.3 Requirements Document Template
+
+yaml
+requirements:
+  skill_name: [string]
+  purpose: [string]
+  target_users: [string[]]
+  inputs:
+    - name: [string]
+      type: [string]
+      required: [boolean]
+      validation: [string]
+  outputs:
+    - name: [string]
+      type: [string]
+      description: [string]
+  acceptance_criteria:
+    - criterion: [string]
+      metric: [string]
+      threshold: [number]
+  security_constraints:
+    - cwe_id: [string]
+      mitigation: [string]
+  quality_thresholds:
+    f1_min: 0.90
+    mrr_min: 0.85
+  rollback_plan: [string]
+  language: [ZH|EN|BOTH]
+
+elicitation_status: [COMPLETE|PARTIAL|ESCALATED]
+missing_fields: [string[]]
+
+
+### §3.4 Blocking Rule
+
+**RULE**: Step 4 (LLM-1 GENERATE DRAFT) MUST NOT begin until:
+1. All Required fields in the requirements document are populated
+2. Elicitation status is COMPLETE or user explicitly overrides
+3. User sign-off obtained for any missing fields
+
+---
+
+## §4.0 AUDIT TRAIL SPECIFICATION
+
+### §4.1 Required Audit Fields
+
+Every skill operation MUST produce an audit record containing:
+
+| Field | Type | Description | Required |
+|-------|------|-------------|----------|
+| timestamp | ISO8601 | Operation start time | YES |
+| duration_ms | integer | Total operation time | YES |
+| mode | enum | CREATE/EVALUATE/RESTORE/SECURITY/OPTIMIZE | YES |
+| user_input_hash | string | SHA-256 hash of user input | YES |
+| confidence | float | Routing confidence score | YES |
+| llm1_output_hash | string | SHA-256 hash of LLM-1 output | YES |
+| llm2_issues_count | integer | Number of issues found | YES |
+| llm3_consensus | enum | UNANIMOUS/MAJORITY/SPLIT/UNRESOLVED | YES |
+| quality_gates_passed | boolean | F1 ≥ 0.90 AND MRR ≥ 0.85 | YES |
+| security_baseline_passed | boolean | No CWE violations | YES |
+| signoff_type | enum | HUMAN/AUTOMATED/TEMP_CERT | YES |
+| signoff_timestamp | ISO8601 | When sign-off occurred | YES |
+| artifact_version | string | Semantic version of output | YES |
+| error_recovery_invoked | boolean | Any error recovery triggered | YES |
+| error_recovery_actions | string[] | List of recovery actions taken | CONDITIONAL |
+
+### §4.2 Audit Storage
+
+- **Primary**: `.skill-audit/` directory in project root
+- **Format**: JSON Lines (JSONL), one record per line
+- **Retention**: 365 days minimum
+- **Indexing**: By timestamp, mode, and artifact_version
+
+### §4.3 Audit Log Entry Example
+
+
+{
+  "timestamp": "2024-01-15T10:30:00Z",
+  "duration_ms": 45230,
+  "mode": "CREATE",
+  "user_input_hash": "a1b2c3d4...",
+  "confidence": 0.92,
+  "llm1_output_hash": "e5f6g7h8...",
+  "llm2_issues_count": 3,
+  "llm3_consensus": "UNANIMOUS",
+  "quality_gates_passed": true,
+  "security_baseline_passed": true,
+  "signoff_type": "HUMAN",
+  "signoff_timestamp": "2024-01-15T10:31:30Z",
+  "artifact_version": "1.0.0",
+  "error_recovery_invoked": false,
+  "error_recovery_actions": []
+}
+
+
+---
+
+## §5.0 SECURITY RED LINES AND ABORT PROTOCOL
+
+### §5.1 Red Line Violations (Immediate ABORT)
+
+| CWE ID | Description | Detection Method | Required Action |
+|--------|-------------|------------------|-----------------|
+| CWE-798 | Hardcoded credentials | Pattern match: api_key, password, token, secret | ABORT, flag for SECURITY review |
+| CWE-89 | SQL injection | Unsanitized input in query construction | ABORT, flag for SECURITY review |
+| CWE-79 | XSS | Unsanitized output to user | ABORT, flag for SECURITY review |
+| CWE-94 | Code injection | eval() or exec() with user input | ABORT, flag for SECURITY review |
+
+### §5.2 ABORT Protocol
+
+1. **Detect**: Violation found at any step
+2. **Stop**: Immediately halt current operation
+3. **Log**: Record violation details in audit trail
+4. **Flag**: Mark artifact with ABORT status
+5. **Notify**: Alert user with violation details
+6. **Require**: Human review before any resume
+7. **Document**: Record root cause for pattern analysis
+
+### §5.3 Resume After ABORT
+
+**Prerequisites**:
+- Human review completed
+- Violation root cause identified
+- Fix applied and verified
+- SECURITY mode run with clean result
+- Explicit human sign-off to resume
+
+---
+
+## §6.0 USAGE EXAMPLES
+
+### §6.1 CREATE Mode Example
+
+**User Input**: "I need a skill that fetches weather data from OpenWeather API and returns temperature and conditions in Celsius"
+
+**Keyword Extraction**:
+
+Keywords detected: [skill, fetch, weather, API, returns, temperature]
+CREATE keywords matched: [新建, create, build]
+Confidence: 0.85
+Language: EN
+Mode: CREATE
+
+
+**Requirements Elicitation**:
+
+Q: What is the skill's primary purpose?
+A: Fetch weather data and return formatted temperature/conditions
+
+Q: What inputs does the skill accept?
+A: city_name (string, required), units (enum: celsius/fahrenheit, default: celsius)
+
+Q: What outputs does the skill produce?
+A: { temperature: number, conditions: string, city: string, timestamp: ISO8601 }
+
+Q: What security constraints apply?
+A: API key must be environment variable, not hardcoded
+
+Q: What are the acceptance criteria?
+A: Successful API response returns valid data within 2 seconds
+
+
+**Multi-LLM Deliberation**:
+
+TURN 1:
+MSG-LLM1: [Generates SKILL.md draft with weather-skill structure]
+MSG-LLM2: [Reviews draft, flags: API key handling requires env var validation]
+MSG-LLM3: [Validates structure, confirms API key flag is valid]
+
+CONSENSUS: UNANIMOUS (after minor revision to include env var validation)
+
+
+**Output Artifact**:
+
+skill: weather-query
+version: 1.0.0
+status: CERTIFIED
+quality: { f1: 0.95, mrr: 0.91 }
+
+
+---
+
+### §6.2 EVALUATE Mode Example
+
+**User Input**: "评估这个技能的性能 weather-query"
+
+**Keyword Extraction**:
+
+Keywords detected: [评估, 技能, 性能, weather-query]
+EVALUATE keywords matched: [评估, evaluate, 测试, 评分]
+Confidence: 0.91
+Language: ZH
+Mode: EVALUATE
+
+
+**Quality Metrics Calculation**:
+
+Test corpus: 100 sample inputs
+Relevant retrieved: 95
+Relevant total: 100
+
+F1 Score: 2 * (95/100) * (95/95) / ((95/100) + (95/95)) = 0.974
+
+Mean Reciprocal Rank:
+Query 1: rank=1 → MRR=1.0
+Query 2: rank=2 → MRR=0.5
+...
+Average MRR: 0.92
+
+
+**Evaluation Report**:
+
+skill: weather-query
+evaluation_timestamp: 2024-01-15T10:00:00Z
+f1_score: 0.974
+mrr_score: 0.92
+threshold_f1: 0.90 ✓ PASS
+threshold_mrr: 0.85 ✓ PASS
+status: CERTIFIED
+recommendation: Skill meets all quality thresholds
+
+
+---
+
+### §6.3 RESTORE Mode Example
+
+**User Input**: "restore the deleted tool-wrapper pattern from skill backup"
+
+**Keyword Extraction**:
+
+Keywords detected: [restore, deleted, tool-wrapper, pattern, backup]
+RESTORE keywords matched: [恢复, restore, repair, fix, 修复, 还原]
+Confidence: 0.88
+Language: EN
+Mode: RESTORE
+
+
+**Recovery Protocol**:
+
+1. Locate backup: .skill-backup/skill-archive-2024-01-10.zip
+2. Extract tool-wrapper pattern definition
+3. Validate pattern integrity (checksum match)
+4. Reintegrate into current SKILL.md
+5. Re-run quality gates
+
+
+**Recovery Output**:
+
+restored_artifact: tool-wrapper pattern
+backup_source: skill-archive-2024-01-10.zip
+integrity_check: PASS (SHA-256 match)
+reintegration_status: SUCCESS
+verification: Quality gates re-passed (F1=0.93, MRR=0.89)
+
+
+---
+
+### §6.4 SECURITY Mode Example
+
+**User Input**: "scan this skill for SQL injection vulnerabilities: sql-query-skill"
+
+**Keyword Extraction**:
+
+Keywords detected: [scan, SQL injection, vulnerabilities, skill]
+SECURITY keywords matched: [安全, security, audit, scan, 审计, 检查]
+Confidence: 0.94
+Language: EN
+Mode: SECURITY
+
+
+**Security Audit Output**:
+
+skill: sql-query-skill
+audit_timestamp: 2024-01-15T11:00:00Z
+
+FINDINGS:
+  - CRITICAL: CWE-89 potential at line 45 (unsanitized user input in query)
+  - WARNING: CWE-89 potential at line 67 (dynamic table name)
+  - INFO: Consider parameterization at line 23
+
+CWE-798 (Hardcoded credentials): PASS
+CWE-89 (SQL injection): FAIL
+CWE-79 (XSS): PASS
+CWE-94 (Code injection): PASS
+
+overall_status: FAILED
+action_required: Fix CWE-89 before production use
+
+
+---
+
+### §6.5 OPTIMIZE Mode Example
+
+**User Input**: "optimize skill performance because F1 dropped to 0.82"
+
+**Keyword Extraction**:
+
+Keywords detected: [optimize, skill, performance, F1, dropped, 0.82]
+OPTIMIZE keywords matched: [优化, optimize, improve, enhance, 提升, refactor]
+Confidence: 0.93
+Language: EN
+Mode: OPTIMIZE
+
+
+**Trigger Verification**:
+
+F1 Score: 0.82 < 0.90 threshold → TRIGGER CONFIRMED
+MRR Score: 0.79 < 0.85 threshold → SECONDARY TRIGGER
+Tier: Current tier maintained
+Error Rate: 3% < 5% threshold → OK
+
+
+**Optimization Protocol**:
+
+1. Analyze F1 failure root cause
+2. Identify low-performing test cases
+3. Generate improved pattern variations
+4. Multi-LLM deliberation on best approach
+5. Apply changes with version bump
+6. Re-evaluate and verify thresholds met
+
+
+**Optimization Output**:
+
+skill: query-generator
+optimization_timestamp: 2024-01-15T12:00:00Z
+previous_f1: 0.82
+new_f1: 0.94
+previous_mrr: 0.79
+new_mrr: 0.91
+changes_applied: 3
+status: CERTIFIED (upgraded)
+
+
+**Triggers**: **CREATE** | **EVALUATE** | **RESTORE** | **SECURITY** | **OPTIMIZE** (Progressive Disclosure: see `refs/triggers.md`, `refs/workflows.md`, `refs/tools.md`)

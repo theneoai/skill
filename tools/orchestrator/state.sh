@@ -31,19 +31,6 @@ export VERBOSE="${VERBOSE:-0}"
 # 状态函数
 # ============================================================================
 
-state_init() {
-    INITIAL_PROMPT=""
-    TARGET_SKILL_FILE=""
-    TARGET_TIER="${TARGET_TIER:-BRONZE}"
-    MAX_ITERATIONS=20
-    CURRENT_SECTION=0
-    EVALUATION_COUNT=0
-    LAST_SCORE=0
-    ITERATION_COUNT=0
-    CREATOR_SOURCED=0
-    EVALUATOR_SOURCED=0
-}
-
 state_set_prompt() {
     INITIAL_PROMPT="$1"
 }

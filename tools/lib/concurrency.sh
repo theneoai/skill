@@ -43,7 +43,18 @@ acquire_lock() {
 release_lock() {
     local lock_name="$1"
     local lock_file="${LOCK_DIR}/${lock_name}.lock"
-    [[ -d "$lock_file" ]] && rm -rf "$lock_file"
+    
+    if [[ -d "$lock_file" ]]; then
+        local pid_file="${lock_file}/pid"
+        if [[ -f "$pid_file" ]]; then
+            local pid=$(cat "$pid_file" 2>/dev/null)
+            if [[ "$pid" == "$$" ]]; then
+                rm -rf "$lock_file"
+            fi
+        else
+            rm -rf "$lock_file"
+        fi
+    fi
 }
 
 with_lock() {

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 runtime_test() {
     local skill_file="$1"
     local corpus_file="$2"
@@ -496,7 +498,7 @@ calculate_f1_score() {
     fi
 
     local result
-    result=$(source "${SCRIPT_DIR}/../analyzer/trigger_analyzer.sh" 2>/dev/null && analyze_triggers "$corpus_file")
+    result=$(source "${SCRIPT_DIR}/../trigger_analyzer.sh" 2>/dev/null && analyze_triggers "$corpus_file")
     
     local f1_score
     f1_score=$(echo "$result" | grep "F1_SCORE=" | cut -d= -f2)
@@ -517,7 +519,7 @@ calculate_mrr_score() {
     fi
 
     local result
-    result=$(source "${SCRIPT_DIR}/../analyzer/trigger_analyzer.sh" 2>/dev/null && analyze_triggers "$corpus_file")
+    result=$(source "${SCRIPT_DIR}/../trigger_analyzer.sh" 2>/dev/null && analyze_triggers "$corpus_file")
     
     local mrr_score
     mrr_score=$(echo "$result" | grep "MRR_SCORE=" | cut -d= -f2)

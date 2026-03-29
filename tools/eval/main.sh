@@ -537,7 +537,7 @@ generate_summary() {
     "skill": "$SKILL_PATH",
     "timestamp": "$timestamp",
     "total_score": $total,
-    "max_score": 1155,
+    "max_score": 1000,
     "tier": "$tier",
     "phases": {
         "parse_validate": $p1,

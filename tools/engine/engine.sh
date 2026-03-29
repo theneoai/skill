@@ -5,10 +5,15 @@
 # 9-Step Optimization Loop: READ → ANALYZE → CURATION → PLAN → IMPLEMENT → VERIFY → HUMAN_REVIEW → LOG → COMMIT
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/bootstrap.sh"
-source "${EVAL_DIR_FROM_ENGINE}/lib/agent_executor.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/constants.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/errors.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/concurrency.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/integration.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/file_utils.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/agent_executor.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/../agents/agent.sh"
 
-require constants concurrency errors integration
+require constants concurrency errors integration file_utils
 require_evolution rollback storage
 
 source "$(dirname "${BASH_SOURCE[0]}")/usage_tracker.sh"
@@ -17,56 +22,6 @@ source "$(dirname "${BASH_SOURCE[0]}")/learner.sh"
 
 EVOLUTION_LOG="${LOG_DIR}/evolution.log"
 RESULTS_TSV="${LOG_DIR}/optimization_results.tsv"
-
-sed_i() {
-    if [[ "$(uname)" == "Darwin" ]]; then
-        sed -i '' "$@"
-    else
-        sed -i "$@"
-    fi
-}
-
-replace_section_content() {
-    local skill_file="$1"
-    local section_header="$2"
-    local new_content="$3"
-    
-    if [[ ! -f "$skill_file" ]]; then
-        echo "$new_content" > "$skill_file"
-        return 0
-    fi
-    
-    local section_pattern
-    section_pattern=$(echo "$section_header" | sed 's/[][.*\/^$]/\\&/g')
-    
-    if grep -q "^## $section_pattern" "$skill_file"; then
-        local start_line
-        start_line=$(grep -n "^## $section_pattern" "$skill_file" | head -1 | cut -d: -f1)
-        
-        local end_line
-        local remaining_lines
-        remaining_lines=$(tail -n +$((start_line + 1)) "$skill_file" | grep -n "^## ")
-        
-        if [[ -n "$remaining_lines" ]]; then
-            end_line=$(echo "$remaining_lines" | head -1 | cut -d: -f1)
-            end_line=$((start_line + end_line - 1))
-        else
-            end_line=$(wc -l < "$skill_file")
-        fi
-        
-        head -n $((start_line - 1)) "$skill_file" > "${skill_file}.tmp"
-        echo "## $section_header" >> "${skill_file}.tmp"
-        echo "" >> "${skill_file}.tmp"
-        echo "$new_content" >> "${skill_file}.tmp"
-        tail -n +$((end_line + 1)) "$skill_file" >> "${skill_file}.tmp" 2>/dev/null || true
-        mv "${skill_file}.tmp" "$skill_file"
-    else
-        echo "" >> "$skill_file"
-        echo "## $section_header" >> "$skill_file"
-        echo "" >> "$skill_file"
-        echo "$new_content" >> "$skill_file"
-    fi
-}
 
 DIMENSIONS=(
     "System Prompt:20"
@@ -666,10 +621,17 @@ request_human_review() {
     
     log_evolution "$(basename "$skill_file" .md)" "human_review_requested" "$reason"
     
-    jq -n \
-        --arg reason "$reason" \
-        --arg skill "$(basename "$skill_file")" \
-        '{status: "HUMAN_REVIEW_REQUIRED", reason: $reason, skill_file: $skill}'
+    echo ""
+    echo "========================================"
+    echo "HUMAN REVIEW REQUIRED"
+    echo "========================================"
+    echo "Skill: $(basename "$skill_file")"
+    echo "Reason: $reason"
+    echo ""
+    echo "Press ENTER to continue after reviewing..."
+    read -r reply
+    
+    echo "Continuing..."
 }
 
 git_commit_optimization() {

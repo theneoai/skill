@@ -2,6 +2,7 @@
 # rollback.sh - 回滚机制
 
 source "$(dirname "${BASH_SOURCE[0]}")/../lib/bootstrap.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/resource_manager.sh"
 require constants errors
 
 # ============================================================================

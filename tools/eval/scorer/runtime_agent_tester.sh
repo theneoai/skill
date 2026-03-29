@@ -97,8 +97,14 @@ run_agent_runtime_eval() {
                 local mode_result
                 mode_result=$(cross_test_mode_routing "$skill_file" "$test_input" "$expected_mode")
                 # Extract returned mode from response
-                local returned_mode="${mode_result#single:}"
-                returned_mode="${returned_mode#cross:*}"
+                local returned_mode
+                if [[ "$mode_result" == single:* ]]; then
+                    returned_mode="${mode_result#single:}"
+                elif [[ "$mode_result" == cross:* ]]; then
+                    returned_mode="${mode_result#cross:*}"
+                else
+                    returned_mode="$mode_result"
+                fi
                 # Check if returned mode contains expected mode
                 if [[ "$returned_mode" == *"$expected_mode"* ]]; then
                     ((mode_correct++))
@@ -246,9 +252,9 @@ EOF
     # Print summary
     echo "" >&2
     echo "=== Agent-Based Runtime Results ===" >&2
-    echo "Trigger Accuracy: $(echo "$trigger_accuracy * 100" | bc)%" >&2
+    echo "Trigger Accuracy: $(echo "scale=2; $trigger_accuracy * 100" | bc)%" >&2
     echo "F1 Score: $f1" >&2
-    echo "Mode Routing Accuracy: $(echo "$mode_accuracy * 100" | bc)%" >&2
+    echo "Mode Routing Accuracy: $(echo "scale=2; $mode_accuracy * 100" | bc)%" >&2
     echo "Identity Consistency: $([ $identity_confused -eq 0 ] && echo "PASS" || echo "FAIL")" >&2
     echo "Actionability Score: $actionability_final/70" >&2
     echo "Knowledge Accuracy: $knowledge_final/50" >&2

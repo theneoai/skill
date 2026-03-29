@@ -14,11 +14,12 @@ Your task is to evaluate a SKILL.md file or section and provide:
 3. **Runtime Quality** (300pts): Correct tool usage, proper error handling, edge case coverage
 4. **Certification** (400pts): End-to-end functionality, goal achievement, safety guardrails
 
-## Tier Thresholds
+## Tier Thresholds (1000-point scale)
+- PLATINUM: ≥950
 - GOLD: ≥900
 - SILVER: ≥800
-- BRONZE: ≥600
-- FAIL: <600
+- BRONZE: ≥700
+- FAIL: <700
 
 ## Feedback Requirements
 - Be specific about what needs improvement

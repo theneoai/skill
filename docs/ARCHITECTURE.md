@@ -108,16 +108,16 @@ For fast feedback during development:
 | Text | §1.x quality | 350 |
 | Runtime | §2 trigger patterns | 50 |
 
-**Thresholds**: GOLD ≥475 | SILVER ≥425 | BRONZE ≥350
+**Thresholds (500-point scale → 1000-point)**: PLATINUM ≥500 (≥950) | GOLD ≥450 (≥900) | SILVER ≥400 (≥800) | BRONZE ≥350 (≥700)
 
 ## Certification Tiers
 
 | Tier | Score | F1 | MRR | Variance |
 |------|-------|-----|-----|----------|
-| PLATINUM | ≥950 | ≥0.95 | ≥0.90 | <10 |
-| GOLD | ≥900 | ≥0.95 | ≥0.90 | <15 |
-| SILVER | ≥800 | ≥0.92 | ≥0.87 | <20 |
-| BRONZE | ≥700 | ≥0.90 | ≥0.85 | <30 |
+| PLATINUM | ≥950 | ≥0.92 | ≥0.88 | <10 |
+| GOLD | ≥900 | ≥0.90 | ≥0.85 | <15 |
+| SILVER | ≥800 | ≥0.87 | ≥0.82 | <20 |
+| BRONZE | ≥700 | ≥0.85 | ≥0.80 | <30 |
 
 ## Multi-LLM Deliberation
 
@@ -132,7 +132,7 @@ All critical decisions use multiple LLM providers (Anthropic, OpenAI, Kimi) for 
 | Priority | Trigger | Condition |
 |----------|---------|-----------|
 | 1 | Manual | `force=true` |
-| 2 | Threshold | Score < 475 |
+| 2 | Threshold | Score < 570 (600-point scale) or < 950 (1000-point scale) |
 | 3 | Scheduled | 24h since last check |
 | 4 | Usage | F1 < 0.85 or Rate < 0.80 |
 

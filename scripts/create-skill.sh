@@ -13,7 +13,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-source "${PROJECT_ROOT}/engine/lib/bootstrap.sh"
+source "${PROJECT_ROOT}/tools/lib/bootstrap.sh"
 
 show_usage() {
     cat <<EOF
@@ -21,7 +21,7 @@ Usage: $(basename "$0") "skill description" [options] [output_path] [tier]
 
 Options:
     -e, --extends PARENT   Inherit from parent skill (optional)
-    -t, --tier TIER        Target tier: GOLD, SILVER, BRONZE (default: BRONZE)
+    -t, --tier TIER        Target tier: PLATINUM, GOLD, SILVER, BRONZE (default: BRONZE)
     -h, --help             Show this help
 
 Examples:

@@ -59,7 +59,7 @@ gemini extensions install https://github.com/theneoai/skill
 | **9-Step Loop** | READ → ANALYZE → CURATION → PLAN → IMPLEMENT → VERIFY → HUMAN_REVIEW → LOG → COMMIT |
 | **Multi-LLM** | Cross-validation with kimi-code, minimax, openai |
 | **Lean Eval** | ~0s, ~$0 (heuristic-based) |
-| **4-Tier Cert** | GOLD ≥ 475, SILVER ≥ 425, BRONZE ≥ 350 |
+| **4-Tier Cert** | GOLD ≥ 900, SILVER ≥ 800, BRONZE ≥ 700 (1000pts) |
 
 ## Documentation
 

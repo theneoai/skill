@@ -197,17 +197,6 @@ run_worker() {
         fi
         
         release_file_lock "$skill_lock"
-        local improved_score
-        improved_score=$(get_score "${PROJECT_ROOT}/SKILL.md")
-        
-        if [[ "$(echo "$improved_score > $new_score" | bc -l)" == "1" ]]; then
-            new_score=$improved_score
-            log "WORKER $worker_id: Round $current_round - Improved! Score: $new_score"
-            update_worker_state "$worker_id" "$current_round" "$new_score" "$delta"
-        else
-            # 恢复原文件
-            git checkout "${PROJECT_ROOT}/SKILL.md" 2>/dev/null || true
-        fi
         
         echo "$new_score" >> "${WORKER_STATE_DIR}/scores_worker_${worker_id}.txt"
         last_score=$new_score

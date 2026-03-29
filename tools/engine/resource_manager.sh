@@ -65,8 +65,8 @@ cleanup_usage_files() {
     cutoff_date=$(date -v-${max_days}d +%Y%m%d 2>/dev/null || date -d "-${max_days} days" +%Y%m%d)
     
     local cleaned=0
-    for file in "$usage_dir"/*.jsonl 2>/dev/null; do
-        [[ -f "$file" ]] || continue
+    for file in "$usage_dir"/*.jsonl; do
+        [[ -f "$file" ]] || continue 2>/dev/null || true
         
         local filename
         filename=$(basename "$file")
@@ -97,8 +97,8 @@ cleanup_logs() {
     local cleaned=0
     local compressed=0
     
-    for file in "$log_dir"/*.log 2>/dev/null; do
-        [[ -f "$file" ]] || continue
+    for file in "$log_dir"/*.log; do
+        [[ -f "$file" ]] || continue 2>/dev/null || true
         
         local filename
         filename=$(basename "$file")
@@ -117,8 +117,8 @@ cleanup_logs() {
         fi
     done
     
-    for file in "$log_dir"/*.log.gz 2>/dev/null; do
-        [[ -f "$file" ]] || continue
+    for file in "$log_dir"/*.log.gz; do
+        [[ -f "$file" ]] || continue 2>/dev/null || true
         
         local gz_date
         gz_date=$(stat -f "%Sm" -t "%Y%m%d" "$file" 2>/dev/null || stat -c "%y" "$file" | cut -d' ' -f1 | tr -d '-')

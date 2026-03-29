@@ -99,7 +99,7 @@ log_warn() {
     echo -e "${YELLOW}[WARN]${NC} $*" >&2
 }
 
-log_error() {
+log_error_color() {
     echo -e "${RED}[ERROR]${NC} $*" >&2
 }
 

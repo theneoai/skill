@@ -7,11 +7,30 @@
 #   _actions.sh  - 操作决策
 #   _parallel.sh  - 并行执行
 
-source "$(dirname "${BASH_SOURCE[0]}")/lib/bootstrap.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/orchestrator/state.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/orchestrator/workflow.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/orchestrator/actions.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/orchestrator/parallel.sh"
+# Resolve symlinks to get actual script directory
+resolve_script_dir() {
+    local source="${BASH_SOURCE[0]}"
+    local target_dir="$(dirname "$source")"
+    while [[ -L "$source" ]]; do
+        local link="$(readlink "$source")"
+        if [[ "$link" = /* ]]; then
+            source="$link"
+        else
+            source="$target_dir/$link"
+        fi
+        target_dir="$(dirname "$source")"
+    done
+    dirname "$source"
+}
+
+SCRIPT_DIR="$(resolve_script_dir)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+source "$SCRIPT_DIR/lib/bootstrap.sh"
+source "$SCRIPT_DIR/orchestrator/state.sh"
+source "$SCRIPT_DIR/orchestrator/workflow.sh"
+source "$SCRIPT_DIR/orchestrator/actions.sh"
+source "$SCRIPT_DIR/orchestrator/parallel.sh"
 
 # ============================================================================
 # 主入口
@@ -24,7 +43,7 @@ orchestrate() {
     
     local parent_skill_path=""
     
-    if [[ -n "$PARENT_SKILL" ]]; then
+    if [[ -n "$parent_skill" ]]; then
         if [[ -z "$PROJECT_ROOT" ]]; then
             echo "ERROR: PROJECT_ROOT must be set" >&2
             return 1

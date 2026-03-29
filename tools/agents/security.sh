@@ -176,19 +176,29 @@ audit_security() {
         results_json=$(echo "$results_json" | jq ". + [$item_result]")
     done
     
+    local rec="APPROVED"
+    if [[ "$overall_status" == "FAIL" ]]; then
+        if [[ "$p0_count" -gt 0 ]]; then
+            rec="BLOCK_DEPLOYMENT"
+        elif [[ "$p1_count" -gt 0 ]]; then
+            rec="REVIEW_REQUIRED"
+        fi
+    fi
+    
     jq -n \
         --arg status "$overall_status" \
         --argjson p0 "$p0_count" \
         --argjson p1 "$p1_count" \
         --argjson p2 "$p2_count" \
         --argjson results "$results_json" \
+        --arg recommendation "$rec" \
         '{
             security_status: $status,
             p0_violations: $p0,
             p1_violations: $p1,
             p2_violations: $p2,
             items_checked: $results,
-            recommendation: if $status == "FAIL" and $p0 > 0 then "BLOCK_DEPLOYMENT" elif $status == "FAIL" and $p1 > 0 then "REVIEW_REQUIRED" else "APPROVED" end
+            recommendation: $recommendation
         }'
 }
 

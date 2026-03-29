@@ -13,6 +13,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+source "${PROJECT_ROOT}/tools/lib/bootstrap.sh"
+
 show_usage() {
     cat <<EOF
 Usage: $(basename "$0") <skill_file> [mode]
@@ -29,9 +31,9 @@ EOF
 }
 
 main() {
-    if [[ $# -lt 1 ]]; then
+    if [[ $# -lt 1 ]] || [[ "$1" == "--help" || "$1" == "-h" ]]; then
         show_usage
-        exit 1
+        exit 0
     fi
 
     local skill_file="$1"
@@ -44,7 +46,7 @@ main() {
 
     skill_file="$(cd "$(dirname "$skill_file")" && pwd)/$(basename "$skill_file")"
 
-    cd "${PROJECT_ROOT}/eval"
+    cd "${PROJECT_ROOT}/tools/eval"
     ./main.sh --skill "$skill_file" --${mode}
 }
 

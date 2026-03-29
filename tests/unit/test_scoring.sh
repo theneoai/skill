@@ -8,6 +8,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 TOOLS_LIB="${PROJECT_ROOT}/tools/lib"
 
 source "${TOOLS_LIB}/bootstrap.sh"
+source "${TOOLS_LIB}/constants.sh"
 source "${TOOLS_LIB}/scoring.sh"
 
 TEST_COUNT=0
@@ -67,13 +68,13 @@ assert_match() {
 
 get_tier_from_score() {
     local score="$1"
-    if [[ $score -ge $TIER_PLATINUM ]]; then
+    if [[ $score -ge $PLATINUM_MIN ]]; then
         echo "PLATINUM"
-    elif [[ $score -ge $TIER_GOLD ]]; then
+    elif [[ $score -ge $GOLD_MIN ]]; then
         echo "GOLD"
-    elif [[ $score -ge $TIER_SILVER ]]; then
+    elif [[ $score -ge $SILVER_MIN ]]; then
         echo "SILVER"
-    elif [[ $score -ge $TIER_BRONZE ]]; then
+    elif [[ $score -ge $BRONZE_MIN ]]; then
         echo "BRONZE"
     else
         echo "NONE"
@@ -82,17 +83,17 @@ get_tier_from_score() {
 
 is_gold() {
     local score="$1"
-    [[ $score -ge $TIER_GOLD ]] && echo "1" || echo "0"
+    [[ $score -ge $GOLD_MIN ]] && echo "1" || echo "0"
 }
 
 is_silver() {
     local score="$1"
-    [[ $score -ge $TIER_SILVER ]] && [[ $score -lt $TIER_GOLD ]] && echo "1" || echo "0"
+    [[ $score -ge $SILVER_MIN ]] && [[ $score -lt $GOLD_MIN ]] && echo "1" || echo "0"
 }
 
 is_bronze() {
     local score="$1"
-    [[ $score -ge $TIER_BRONZE ]] && [[ $score -lt $TIER_SILVER ]] && echo "1" || echo "0"
+    [[ $score -ge $BRONZE_MIN ]] && [[ $score -lt $SILVER_MIN ]] && echo "1" || echo "0"
 }
 
 test_scoring_phase_max_001() {
@@ -123,26 +124,26 @@ test_scoring_total_max_002() {
 
 test_scoring_tier_thresholds_001() {
     echo "  Testing tier thresholds"
-    assert_eq "950" "$TIER_PLATINUM" "TIER_PLATINUM is 950"
+    assert_eq "950" "$PLATINUM_MIN" "PLATINUM_MIN is 950"
 }
 
 test_scoring_tier_thresholds_002() {
-    assert_eq "900" "$TIER_GOLD" "TIER_GOLD is 900"
+    assert_eq "900" "$GOLD_MIN" "GOLD_MIN is 900"
 }
 
 test_scoring_tier_thresholds_003() {
-    assert_eq "800" "$TIER_SILVER" "TIER_SILVER is 800"
+    assert_eq "800" "$SILVER_MIN" "SILVER_MIN is 800"
 }
 
 test_scoring_tier_thresholds_004() {
-    assert_eq "700" "$TIER_BRONZE" "TIER_BRONZE is 700"
+    assert_eq "700" "$BRONZE_MIN" "BRONZE_MIN is 700"
 }
 
 test_scoring_lean_conversion_001() {
     echo "  Testing lean to standard conversion"
     local converted
     converted=$(echo "600 * $LEAN_TO_STANDARD" | bc -l)
-    assert_match "^99[89]\." "$converted" "600 * 1.667 ≈ 1000"
+    assert_match "^100[01]\." "$converted" "600 * 1.667 ≈ 1000"
 }
 
 test_scoring_lean_conversion_002() {

@@ -25,8 +25,29 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+resolve_project_root() {
+    local script_path="${BASH_SOURCE[0]}"
+    local current_dir
+    
+    if [[ "$script_path" = /* ]]; then
+        current_dir="$(dirname "$script_path")"
+    else
+        current_dir="$(cd "$(dirname "$script_path")" && pwd)"
+    fi
+    
+    while [[ "$current_dir" != "/" && "$current_dir" != "" ]]; do
+        if [[ -f "$current_dir/SKILL.md" ]] || [[ -d "$current_dir/tools" ]]; then
+            echo "$current_dir"
+            return 0
+        fi
+        current_dir="$(dirname "$current_dir")"
+    done
+    
+    echo "$(dirname "$script_path")/.." >&2
+    return 1
+}
+
+PROJECT_ROOT="$(resolve_project_root)"
 
 source "${PROJECT_ROOT}/tools/lib/bootstrap.sh"
 require constants concurrency errors integration
@@ -36,6 +57,32 @@ source "${PROJECT_ROOT}/tools/lib/agent_executor.sh"
 source "${PROJECT_ROOT}/tools/lib/scoring.sh"
 
 LEAN_LOG="${LOG_DIR}/lean.log"
+
+show_usage() {
+    cat <<EOF
+Usage: $(basename "$0") <skill_file> [tier]
+
+Options:
+    <skill_file>   Path to skill file to evaluate
+    tier          Target tier (PLATINUM|GOLD|SILVER|BRONZE, default: BRONZE)
+
+Examples:
+    $(basename "$0") ./SKILL.md
+    $(basename "$0") ./SKILL.md GOLD
+
+Lean Evaluation (~0s):
+    - Parse: YAML frontmatter + section structure (100pts max)
+    - Text:  Heuristic quality scoring (350pts max)
+    - Runtime: Trigger pattern validation (50pts max)
+    - Total: 500pts -> normalized to 1000pts
+
+Thresholds (1000pts normalized):
+    PLATINUM >= 950
+    GOLD     >= 900
+    SILVER   >= 800
+    BRONZE   >= 700
+EOF
+}
 
 get_provider_strength() {
     local provider="$1"
@@ -442,6 +489,11 @@ certify() {
 # ============================================================================
 
 main() {
+    if [[ $# -eq 0 ]] || [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+        show_usage
+        exit 0
+    fi
+    
     local skill_file="$1"
     local target_tier="${2:-BRONZE}"
     

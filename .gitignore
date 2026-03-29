@@ -34,3 +34,20 @@ temp/
 # OS
 .DS_Store
 Thumbs.db
+
+# Skill optimization
+snapshots/
+eval_results/
+tmp/
+
+# Test artifacts
+test_skill*.md
+测试技能*.md
+测试技能.md
+创建子技能.md
+创建一个代码审查技能.md
+快速测试技能.md
+test skill.md
+create a child skill.md
+create a test_skill*
+create a child skill*

@@ -88,13 +88,14 @@ Lean, fast, cost-effective skill evaluation (~1 second)
 6. CERTIFY: Tier determination
 ```
 
-### Fast Path Thresholds (500-point scale)
+### Fast Path Thresholds (500-point scale → 1000-point scale)
 
-| Tier | Parse | Text | Runtime | Total |
-|------|-------|------|---------|-------|
-| GOLD | 80+ | 280+ | 40+ | 475+ (95%) |
-| SILVER | 70+ | 245+ | 35+ | 425+ (85%) |
-| BRONZE | 60+ | 210+ | 30+ | 350+ (70%) |
+| Tier | Parse | Text | Runtime | Total | 1000-pt Equiv |
+|------|-------|------|---------|-------|----------------|
+| PLATINUM | 90+ | 315+ | 45+ | 500+ (100%) | 950+ |
+| GOLD | 80+ | 280+ | 40+ | 450+ (90%) | 900+ |
+| SILVER | 70+ | 245+ | 35+ | 400+ (80%) | 800+ |
+| BRONZE | 60+ | 210+ | 30+ | 350+ (70%) | 700+ |
 
 ### When to Escalate to Full Eval
 - Score near threshold boundary

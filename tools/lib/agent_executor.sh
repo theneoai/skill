@@ -73,8 +73,6 @@ extract_json_from_response() {
     fi
     
     # Remove markdown code block markers if present
-    # Use tr to remove newlines first, then remove code block markers
-    text=$(echo "$text" | tr -d '\n')
     text=$(echo "$text" | sed 's/```json//g' | sed 's/```//g')
     
     # If text is a JSON string (starts with "), parse it to get the inner JSON object
@@ -175,11 +173,11 @@ call_openai() {
             '{model: $model, messages: [{role: "system", content: $system}, {role: "user", content: $user}], temperature: 0.3}')" 2>/dev/null)
     
     if [[ -z "$response" ]] || echo "$response" | jq -e '.error // empty' >/dev/null 2>&1; then
-        echo "ERROR: OpenAI API call failed"
+        echo '{"status": "FAIL", "severity": "UNKNOWN", "findings": "OpenAI API call failed"}'
         return 1
     fi
     
-    echo "$response" | jq -r '.choices[0].message.content' 2>/dev/null || echo "ERROR: Parse failed"
+    echo "$response" | jq -r '.choices[0].message.content' 2>/dev/null || return 1
 }
 
 # Anthropic API
@@ -201,7 +199,7 @@ call_anthropic() {
             '{model: $model, max_tokens: $max_tokens, system: $system, messages: [{role: "user", content: $user}]}')" 2>/dev/null)
     
     if [[ -z "$response" ]] || echo "$response" | jq -e '.error // empty' >/dev/null 2>&1; then
-        echo "ERROR: Anthropic API call failed"
+        echo '{"status": "FAIL", "severity": "UNKNOWN", "findings": "Anthropic API call failed"}'
         return 1
     fi
     
@@ -229,12 +227,12 @@ call_kimi_code() {
         -d "$json_data" 2>/dev/null)
     
     if [[ -z "$response" ]] || echo "$response" | jq -e '.error // empty' >/dev/null 2>&1; then
-        echo "ERROR: Kimi Code API call failed"
+        echo '{"status": "FAIL", "severity": "UNKNOWN", "findings": "Kimi Code API call failed"}'
         return 1
     fi
     
     # Return raw text (higher level will parse if needed)
-    echo "$response" | jq -r '.content[0].text' 2>/dev/null || echo "ERROR: Parse failed"
+    echo "$response" | jq -r '.content[0].text' 2>/dev/null || return 1
 }
 
 # Kimi Code API - returns parsed JSON
@@ -258,7 +256,7 @@ call_kimi_code_json() {
         -d "$json_data" 2>/dev/null)
     
     if [[ -z "$response" ]] || echo "$response" | jq -e '.error // empty' >/dev/null 2>&1; then
-        echo "ERROR: Kimi Code API call failed"
+        echo '{"status": "FAIL", "severity": "UNKNOWN", "findings": "Kimi Code API call failed"}'
         return 1
     fi
     
@@ -282,11 +280,11 @@ call_kimi() {
             '{model: $model, messages: [{role: "system", content: $system}, {role: "user", content: $user}], temperature: 0.3}')" 2>/dev/null)
     
     if [[ -z "$response" ]] || echo "$response" | jq -e '.error // empty' >/dev/null 2>&1; then
-        echo "ERROR: Kimi API call failed"
+        echo '{"status": "FAIL", "severity": "UNKNOWN", "findings": "Kimi API call failed"}'
         return 1
     fi
     
-    echo "$response" | jq -r '.choices[0].message.content' 2>/dev/null || echo "ERROR: Parse failed"
+    echo "$response" | jq -r '.choices[0].message.content' 2>/dev/null || return 1
 }
 
 # MiniMax API
@@ -307,11 +305,11 @@ call_minimax() {
             '{model: $model, messages: [{role: "system", content: $system}, {role: "user", content: $user}], temperature: 0.3, stream: false}')" 2>/dev/null)
     
     if [[ -z "$response" ]] || echo "$response" | jq -e '.error // empty' >/dev/null 2>&1; then
-        echo "ERROR: MiniMax API call failed"
+        echo '{"status": "FAIL", "severity": "UNKNOWN", "findings": "MiniMax API call failed"}'
         return 1
     fi
     
-    echo "$response" | jq -r '.choices[0].message.content' 2>/dev/null || echo "ERROR: Parse failed"
+    echo "$response" | jq -r '.choices[0].message.content' 2>/dev/null || return 1
 }
 
 # Cross-evaluate using multiple providers
@@ -328,7 +326,7 @@ cross_evaluate() {
     first_provider=$(echo "$providers" | cut -d' ' -f1)
     
     if [[ "$first_provider" == "none" ]] || [[ -z "$first_provider" ]]; then
-        echo "ERROR: No provider available"
+        echo '{"status": "FAIL", "severity": "UNKNOWN", "findings": "No LLM provider available"}'
         return
     fi
     
@@ -387,7 +385,7 @@ cross_test_mode_routing() {
 
 User input: \"$test_input\"
 
-Modes: CREATE, EVALUATE, RESTORE, TUNE, SECURITY
+Modes: CREATE, EVALUATE, RESTORE, OPTIMIZE, SECURITY
 
 Respond with ONLY the mode name:"
 

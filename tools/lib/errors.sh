@@ -69,8 +69,6 @@ handle_error() {
         retry)
             local max_retries
             max_retries=$(echo "$recovery" | cut -d: -f2)
-            local delay_type="${recovery#*:}"
-            delay_type="${delay_type%%:*}"
             local delays="${recovery##*:}"
             IFS=',' read -ra delay_array <<< "$delays"
             

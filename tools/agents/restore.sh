@@ -18,17 +18,23 @@ sed_i() {
 
 restore_skill() {
     local skill_file="$1"
+    echo "DEBUG restore_skill: skill_file=$skill_file, pwd=$(pwd), \$-=${-}" >&2
     
     if [[ ! -f "$skill_file" ]]; then
         echo '{"error": "Skill file not found"}'
         return 1
     fi
+    echo "DEBUG restore_skill: file exists" >&2
     
     local content
+    echo "DEBUG restore_skill: about to read file" >&2
     content=$(cat "$skill_file")
+    echo "DEBUG restore_skill: read content, length=${#content}" >&2
     
     local old_score
-    old_score=$(evaluate_skill "$skill_file" "fast" | jq -r '.total_score // 0')
+    echo "DEBUG restore_skill: about to call evaluate_skill" >&2
+    old_score=$(evaluate_skill "$skill_file" "fast" | jq -r '.total_score // 0' 2>&1)
+    echo "DEBUG restore_skill: evaluate_skill returned, old_score=$old_score" >&2
     
     echo "=== DIAGNOSIS PHASE ==="
     local diagnosis
@@ -214,7 +220,7 @@ cross_validate_issues() {
                 {provider: "openai", issues: $count2},
                 {provider: "kimi", issues: $count3}
             ],
-            confidence: if $issues | length > 0 then 0.9 else 0.5 end
+            confidence: ($issues | if length > 0 then 0.9 else 0.5 end)
         }'
 }
 
@@ -361,5 +367,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
         exit 1
     fi
     
+    echo "DEBUG: About to call restore_skill with $1" >&2
     restore_skill "$1"
+    echo "DEBUG: restore_skill returned" >&2
 fi

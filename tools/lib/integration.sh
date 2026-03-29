@@ -18,19 +18,40 @@ evaluate_skill() {
     fi
     
     local original_dir="$(pwd)"
+    local abs_skill_file
+    if [[ "$skill_file" != /* ]]; then
+        abs_skill_file="$(cd "$(dirname "$skill_file")" && pwd)/$(basename "$skill_file")"
+    else
+        abs_skill_file="$skill_file"
+    fi
     cd "$EVAL_DIR" || return 1
     
     local result
-    result=$(./main.sh --skill "$skill_file" --${mode} 2>/dev/null)
+    local tmpfile="/tmp/eval_result_$$"
+    echo "DEBUG integration: pwd=$(pwd), EVAL_DIR=$EVAL_DIR, \$-=${-}, PATH=$PATH" >&2
+    echo "DEBUG integration: Running main.sh with skill=$abs_skill_file" >&2
+    echo "DEBUG integration: which main.sh: $(which main.sh 2>/dev/null || echo 'not in PATH')" >&2
+    echo "DEBUG integration: main.sh exists: $(test -f ./main.sh && echo 'yes' || echo 'no')" >&2
+    bash ./main.sh --skill "$abs_skill_file" --${mode} --ci >"$tmpfile" 2>&1
     local exit_code=$?
+    result=$(cat "$tmpfile")
+    rm -f "$tmpfile"
+    echo "DEBUG integration: main.sh exit_code=$exit_code, result_len=${#result}" >&2
+    echo "DEBUG integration: result_first_100=${result:0:100}" >&2
     
     cd "$original_dir" || return 1
     
     if [[ $exit_code -ne 0 ]]; then
+        echo "DEBUG integration: main.sh failed, returning 1" >&2
         return 1
     fi
     
-    echo "$result"
+    local json
+    json=$(echo "$result" | sed -n '/^{/,/^}/p')
+    if [[ -z "$json" ]]; then
+        return 1
+    fi
+    echo "$json"
 }
 
 evaluate_partial() {
