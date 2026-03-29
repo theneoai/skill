@@ -424,13 +424,13 @@ certify() {
     
     log_lean "CERTIFY: Total=$total (normalized: $normalized_total)"
     
-    if [[ $normalized_total -ge $TIER_PLATINUM ]]; then
+    if [[ $normalized_total -ge $LEAN_TIER_PLATINUM ]]; then
         echo "PLATINUM"
-    elif [[ $normalized_total -ge $TIER_GOLD ]]; then
+    elif [[ $normalized_total -ge $LEAN_TIER_GOLD_NORM ]]; then
         echo "GOLD"
-    elif [[ $normalized_total -ge $TIER_SILVER ]]; then
+    elif [[ $normalized_total -ge $LEAN_TIER_SILVER_NORM ]]; then
         echo "SILVER"
-    elif [[ $normalized_total -ge $TIER_BRONZE ]]; then
+    elif [[ $normalized_total -ge $LEAN_TIER_BRONZE_NORM ]]; then
         echo "BRONZE"
     else
         echo "NOT_CERTIFIED"

@@ -36,14 +36,86 @@ ${evaluator_feedback:-No feedback yet. This is the first section.}
 
 "
     
-    local response
-    response=$(agent_call_llm "$system_prompt" "$prompt" "auto" "kimi-code")
+    local r1 r2
+    r1=$(agent_call_llm "$system_prompt" "$prompt" "auto" "kimi-code")
+    r2=$(agent_call_llm "$system_prompt" "$prompt" "auto" "minimax")
     
-    if [[ $? -ne 0 ]] || [[ -z "$response" ]] || [[ "$response" == ERROR:* ]]; then
+    local status1 status2
+    status1=$(echo "$r1" | jq -r '.status // "ERROR"')
+    status2=$(echo "$r2" | jq -r '.status // "ERROR"')
+    
+    local content1 content2
+    content1=$(echo "$r1" | jq -r '.content // ""')
+    content2=$(echo "$r2" | jq -r '.content // ""')
+    
+    if [[ "$status1" != "success" ]] && [[ "$status2" != "success" ]]; then
         return 1
     fi
     
-    jq -n --arg content "$response" '{content: $content}'
+    if [[ "$status1" != "success" ]]; then
+        jq -n --arg content "$content2" '{content: $content, deliberation: "single_llm"}'
+        return 0
+    fi
+    
+    if [[ "$status2" != "success" ]]; then
+        jq -n --arg content "$content1" '{content: $content, deliberation: "single_llm"}'
+        return 0
+    fi
+    
+    if [[ -z "$content1" ]] || [[ "$content1" == "null" ]]; then
+        jq -n --arg content "$content2" '{content: $content, deliberation: "single_llm"}'
+        return 0
+    fi
+    
+    if [[ -z "$content2" ]] || [[ "$content2" == "null" ]]; then
+        jq -n --arg content "$content1" '{content: $content, deliberation: "single_llm"}'
+        return 0
+    fi
+    
+    if [[ "$content1" == "$content2" ]]; then
+        jq -n --arg content "$content1" '{content: $content, deliberation: "unanimous"}'
+        return 0
+    fi
+    
+    local deliberation_prompt="Compare two proposed sections for §${section_num} and determine the better one.
+
+Proposal A:
+$content1
+
+Proposal B:
+$content2
+
+User request: ${user_prompt}
+
+Respond with JSON:
+{\"chosen\": \"A\" or \"B\", \"reason\": \"brief explanation\"}"
+    
+    local decision
+    decision=$(agent_call_llm_json "$(cat <<'EOF'
+You are a skill architecture expert. Select the better section implementation.
+EOF
+)" "$deliberation_prompt" "auto" "kimi")
+    
+    if [[ $? -eq 0 ]] && [[ -n "$decision" ]] && [[ "$decision" != "null" ]]; then
+        local chosen
+        chosen=$(echo "$decision" | jq -r '.chosen')
+        local reason
+        reason=$(echo "$decision" | jq -r '.reason')
+        if [[ "$chosen" == "A" ]]; then
+            jq -n --arg content "$content1" --arg reason "$reason" '{content: $content, deliberation: "deliberated", reason: $reason}'
+        else
+            jq -n --arg content "$content2" --arg reason "$reason" '{content: $content, deliberation: "deliberated", reason: $reason}'
+        fi
+    else
+        local len1 len2
+        len1=${#content1}
+        len2=${#content2}
+        if [[ $len1 -ge $len2 ]]; then
+            jq -n --arg content "$content1" '{content: $content, deliberation: "conflict_length_fallback"}'
+        else
+            jq -n --arg content "$content2" '{content: $content, deliberation: "conflict_length_fallback"}'
+        fi
+    fi
 }
 
 creator_init_skill_file() {

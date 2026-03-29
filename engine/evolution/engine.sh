@@ -252,11 +252,13 @@ evolve_skill() {
         local impl_verified
         impl_verified=$(multi_llm_verify_implementation "$skill_file" "$plan")
         
-        if [[ "$impl_verified" == "false" ]]; then
-            echo "  ⚠ Implementation verification failed, rolling back"
+        if [[ "$impl_verified" == "false" ]] || [[ "$impl_verified" == ERROR:* ]]; then
+            echo "  ⚠ Implementation verification failed: ${impl_verified:-unknown error}"
             rollback_to_snapshot "$skill_file" "pre_round_$current_round"
             continue
         fi
+        
+        echo "  ✓ Implementation verified"
         
         echo ""
         echo "=== STEP 6: VERIFY - RE-EVALUATE (Multi-LLM) ==="

@@ -48,6 +48,12 @@ readonly LEAN_TIER_GOLD=570
 readonly LEAN_TIER_SILVER=510
 readonly LEAN_TIER_BRONZE=420
 
+# lean-orchestrator 等级阈值 (转换到1000分制后用于比较)
+readonly LEAN_TIER_PLATINUM=950    # 570 * 1.667 ≈ 950 (matches 1000-point PLATINUM)
+readonly LEAN_TIER_GOLD_NORM=950   # 570 * 1.667 ≈ 950
+readonly LEAN_TIER_SILVER_NORM=850 # 510 * 1.667 ≈ 850
+readonly LEAN_TIER_BRONZE_NORM=700 # 420 * 1.667 ≈ 700
+
 # ============================================================================
 # 导出
 # ============================================================================
@@ -56,3 +62,4 @@ export PARSE_MAX TEXT_MAX RUNTIME_MAX CERTIFY_MAX
 export TOTAL_ACTUAL_MAX TOTAL_DISPLAY_MAX
 export TIER_PLATINUM TIER_GOLD TIER_SILVER TIER_BRONZE
 export LEAN_TO_STANDARD LEAN_TIER_GOLD LEAN_TIER_SILVER LEAN_TIER_BRONZE
+export LEAN_TIER_PLATINUM LEAN_TIER_GOLD_NORM LEAN_TIER_SILVER_NORM LEAN_TIER_BRONZE_NORM

@@ -59,7 +59,7 @@ User Input → Mode Router → [CREATE|EVALUATE|RESTORE|SECURITY] → OPTIMIZE
 | restorer | engine/agents/restorer.sh | Skill repair |
 
 **Constraints**:
-- Score thresholds: GOLD≥570, SILVER≥510, BRONZE≥420 (Lean 600-point scale)
+- Score thresholds: PLATINUM≥950, GOLD≥900, SILVER≥800, BRONZE≥700 (1000-point scale)
 - Auto-rollback on score regression
 - HUMAN_REVIEW when score < 8.0 after 10 rounds
 
@@ -232,12 +232,13 @@ confidence = primary_match×0.5 + secondary×0.2 + context×0.2 + no_negative×0
 | Tier match | Score ≥ threshold | Warning |
 | Security scan | CWE-based Security pass | Block P0 |
 
-**Score Thresholds (Lean 600pts)**:
+**Score Thresholds (1000-point scale, Unified)**:
 | Tier | Min Score | F1 | MRR |
 |------|-----------|-----|-----|
-| GOLD | 570 | ≥0.90 | ≥0.85 |
-| SILVER | 510 | ≥0.87 | ≥0.82 |
-| BRONZE | 420 | ≥0.85 | ≥0.80 |
+| PLATINUM | 950 | ≥0.92 | ≥0.88 |
+| GOLD | 900 | ≥0.90 | ≥0.85 |
+| SILVER | 800 | ≥0.87 | ≥0.82 |
+| BRONZE | 700 | ≥0.85 | ≥0.80 |
 
 ---
 
