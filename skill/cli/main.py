@@ -21,11 +21,35 @@ def evaluate(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
 ) -> None:
     """Evaluate a skill or prompt using multi-dimensional assessment."""
+    from skill.agents.evaluator import evaluate_skill
+
+    path = Path(target)
+    if not path.exists():
+        typer.secho(f"Error: File not found: {target}", fg=typer.colors.RED)
+        raise typer.Exit(1)
+
     typer.echo(f"Evaluating: {target}")
+    result = evaluate_skill(str(path))
+
+    if "error" in result:
+        typer.secho(f"Error: {result['error']}", fg=typer.colors.RED)
+        raise typer.Exit(1)
+
+    score = result.get("total_score", 0)
+    tier = result.get("tier", "UNKNOWN")
+    typer.secho(f"Score: {score}", fg=typer.colors.GREEN)
+    typer.echo(f"Tier:  {tier}")
+
+    if verbose and "suggestions" in result:
+        typer.echo("\nSuggestions:")
+        for s in result["suggestions"]:
+            typer.echo(f"  - {s}")
+
     if output:
-        typer.echo(f"Output will be saved to: {output}")
-    if verbose:
-        typer.echo("Verbose mode enabled")
+        import json
+
+        Path(output).write_text(json.dumps(result, indent=2), encoding="utf-8")
+        typer.echo(f"Results saved to: {output}")
 
 
 @app.command()
@@ -34,13 +58,23 @@ def create(
     target_tier: str = typer.Option(
         "BRONZE", "--target", "-t", help="Target tier: GOLD, SILVER, BRONZE"
     ),
+    output: str | None = typer.Option(None, "--output", "-o", help="Output SKILL.md path"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview without execution"),
 ) -> None:
     """Create a new skill from a prompt."""
-    typer.echo(f"Creating skill from: {prompt}")
+    from skill.agents.creator import init_skill_file
+
+    typer.echo(f"Creating skill: {prompt}")
     typer.echo(f"Target tier: {target_tier}")
+
     if dry_run:
-        typer.echo("Dry run mode - no changes will be made")
+        typer.echo("Dry run mode — no files will be written.")
+        return
+
+    output_path = Path(output) if output else Path.cwd() / "SKILL.md"
+
+    init_skill_file(str(output_path), prompt)
+    typer.secho(f"Skill created: {output_path}", fg=typer.colors.GREEN)
 
 
 @app.command()
@@ -49,8 +83,26 @@ def evolve(
     iterations: int = typer.Option(1, "--iterations", "-n", help="Number of evolution iterations"),
 ) -> None:
     """Evolve an existing skill."""
-    typer.echo(f"Evolving skill: {skill_file}")
-    typer.echo(f"Iterations: {iterations}")
+    from skill.engine.decider import EvolutionDecider
+    from skill.engine.storage import storage_get_last_score, storage_get_eval_count
+
+    path = Path(skill_file)
+    if not path.exists():
+        typer.secho(f"Error: File not found: {skill_file}", fg=typer.colors.RED)
+        raise typer.Exit(1)
+
+    skill_name = path.stem
+    typer.echo(f"Evolving skill: {skill_file} ({iterations} iteration(s))")
+
+    decider = EvolutionDecider()
+    for i in range(iterations):
+        score = storage_get_last_score(skill_name)
+        eval_count = storage_get_eval_count(skill_name)
+        decision = decider.should_evolve(skill_name, score, eval_count)
+        typer.echo(f"  Iteration {i + 1}: decision={decision.decision}, reason={decision.reason}")
+        if decision.decision == "no_action":
+            typer.echo("  No evolution needed.")
+            break
 
 
 @app.command()
@@ -106,6 +158,7 @@ def parse(
 def validate(
     skill_file: str = typer.Argument(..., help="Path to SKILL.md file to validate"),
     strict: bool = typer.Option(False, "--strict", help="Enable strict validation"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show warnings"),
 ) -> None:
     """Validate a SKILL.md file."""
     try:

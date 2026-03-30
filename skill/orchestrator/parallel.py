@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import re
+import shlex
 import shutil
 import subprocess
+import sys
 import tempfile
 import threading
 from pathlib import Path
@@ -17,31 +19,40 @@ class ParallelOrchestrator:
         result_file2: str = "",
     ) -> bool:
         if not cmd1 or not cmd2:
-            print("Error: Commands cannot be empty", file=__import__("sys").stderr)
+            print("Error: Commands cannot be empty", file=sys.stderr)
             return False
 
+        # Reject shell metacharacters as an additional safety layer even
+        # though we run with shell=False below.
         dangerous_pattern = r"[;&|`$]"
         if re.search(dangerous_pattern, cmd1) or re.search(dangerous_pattern, cmd2):
-            print("Error: Dangerous characters in parallel commands", file=__import__("sys").stderr)
+            print("Error: Dangerous characters in parallel commands", file=sys.stderr)
             return False
 
-        p1 = None
-        p2 = None
+        try:
+            args1 = shlex.split(cmd1)
+            args2 = shlex.split(cmd2)
+        except ValueError as exc:
+            print(f"Error: Could not parse command: {exc}", file=sys.stderr)
+            return False
+
+        p1: subprocess.Popen | None = None
+        p2: subprocess.Popen | None = None
 
         if result_file1:
             with open(result_file1, "w") as f:
-                p1 = subprocess.Popen(cmd1, shell=True, stdout=f, stderr=subprocess.DEVNULL)
+                p1 = subprocess.Popen(args1, shell=False, stdout=f, stderr=subprocess.DEVNULL)
         else:
             p1 = subprocess.Popen(
-                cmd1, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                args1, shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
 
         if result_file2:
             with open(result_file2, "w") as f:
-                p2 = subprocess.Popen(cmd2, shell=True, stdout=f, stderr=subprocess.DEVNULL)
+                p2 = subprocess.Popen(args2, shell=False, stdout=f, stderr=subprocess.DEVNULL)
         else:
             p2 = subprocess.Popen(
-                cmd2, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                args2, shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
 
         p1.wait()

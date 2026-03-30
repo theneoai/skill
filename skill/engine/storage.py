@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fcntl
 import json
 import os
 from pathlib import Path
@@ -27,51 +28,46 @@ def ensure_directory(path: str) -> None:
     Path(path).mkdir(parents=True, exist_ok=True)
 
 
-def storage_get_eval_count(skill_name: str) -> int:
-    """Get count of evaluations for a skill."""
-    if not Path(USAGE_LOG).exists():
-        return 0
+def _iter_skill_entries(skill_name: str) -> list[dict[str, Any]]:
+    """Return all parsed log entries matching *skill_name*.
 
-    count = 0
+    Uses JSON parsing (not string matching) so entries with extra whitespace or
+    different key ordering are handled correctly.
+    """
+    if not Path(USAGE_LOG).exists():
+        return []
+
+    entries: list[dict[str, Any]] = []
     with open(USAGE_LOG) as f:
         for line in f:
-            if f'"skill_name":"{skill_name}"' in line:
-                count += 1
-    return count
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+                if entry.get("skill_name") == skill_name:
+                    entries.append(entry)
+            except json.JSONDecodeError:
+                continue
+    return entries
+
+
+def storage_get_eval_count(skill_name: str) -> int:
+    """Get count of evaluations for a skill."""
+    return len(_iter_skill_entries(skill_name))
 
 
 def storage_get_last_score(skill_name: str) -> float:
     """Get last score for a skill."""
-    if not Path(USAGE_LOG).exists():
+    entries = _iter_skill_entries(skill_name)
+    if not entries:
         return 0
-
-    last_score = 0
-    with open(USAGE_LOG) as f:
-        for line in f:
-            if f'"skill_name":"{skill_name}"' in line:
-                try:
-                    entry = json.loads(line)
-                    last_score = entry.get("score", 0)
-                except json.JSONDecodeError:
-                    continue
-    return last_score
+    return entries[-1].get("score", 0)
 
 
 def storage_get_all_scores(skill_name: str) -> list[dict[str, Any]]:
     """Get all score entries for a skill."""
-    if not Path(USAGE_LOG).exists():
-        return []
-
-    scores = []
-    with open(USAGE_LOG) as f:
-        for line in f:
-            if f'"skill_name":"{skill_name}"' in line:
-                try:
-                    entry = json.loads(line)
-                    scores.append(entry)
-                except json.JSONDecodeError:
-                    continue
-    return scores
+    return _iter_skill_entries(skill_name)
 
 
 def storage_log_usage(
@@ -80,7 +76,7 @@ def storage_log_usage(
     tier: str,
     iterations: int,
 ) -> None:
-    """Log usage entry."""
+    """Log usage entry with an exclusive file lock to prevent data races."""
     ensure_directory(str(Path(USAGE_LOG).parent))
     entry = {
         "timestamp": get_timestamp(),
@@ -90,7 +86,11 @@ def storage_log_usage(
         "iterations": iterations,
     }
     with open(USAGE_LOG, "a") as f:
-        f.write(json.dumps(entry) + "\n")
+        fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            f.write(json.dumps(entry) + "\n")
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
 
 
 def storage_calculate_threshold(eval_count: int) -> int:
