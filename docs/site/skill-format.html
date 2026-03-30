@@ -459,52 +459,54 @@
                     <div class="dot red"></div>
                     <div class="dot yellow"></div>
                     <div class="dot green"></div>
-                    <span class="title">skill/SKILL.md</span>
+                    <span class="title">example-skill/SKILL.md</span>
                 </div>
                 <pre><span class="comment"># Universal Skill Metadata</span>
-<span class="section">name:</span> skill
-<span class="section">version:</span> <span class="string">2.15.0</span>
+<span class="section">name:</span>          <span class="string">example-skill</span>
+<span class="section">version:</span>       <span class="string">"1.0.0"</span>
 <span class="section">description:</span>
-  <span class="section">en:</span> <span class="string">"Full lifecycle AI skill engineering system..."</span>
-  <span class="section">zh:</span> <span class="string">"全生命周期AI技能工程系统..."</span>
+  <span class="section">en:</span>  <span class="string">"A sample skill demonstrating the SKILL.md format"</span>
+  <span class="section">zh:</span>  <span class="string">"示例技能，展示 SKILL.md 格式"</span>
 
-<span class="section">license:</span> MIT
+<span class="section">license:</span>       MIT
 <span class="section">author:</span>
-  <span class="section">name:</span> theneoai
-  <span class="section">email:</span> lucas_hsueh@hotmail.com
-<span class="section">created:</span> <span class="string">2024-01-15</span>
-<span class="section">updated:</span> <span class="string">2026-03-30</span>
+  <span class="section">name:</span>   <span class="string">Your Name</span>
+  <span class="section">email:</span>  <span class="string">you@example.com</span>
+<span class="section">created:</span>   <span class="string">2024-01-15</span>
+<span class="section">updated:</span>   <span class="string">2024-01-15</span>
 
 <span class="section">tags:</span>
-  - lifecycle
-  - quality-assurance
-  - security
-  - autonomous
-  - multi-agent
-  - evaluation
-  - error-recovery
+  - <span class="string">lifecycle</span>
+  - <span class="string">evaluation</span>
 
 <span class="section">interface:</span>
-  <span class="section">input:</span> user-natural-language
-  <span class="section">output:</span> structured-skill
-  <span class="section">modes:</span> [create, evaluate, restore, security, optimize]
+  <span class="section">input:</span>  <span class="string">user-natural-language</span>
+  <span class="section">output:</span> <span class="string">structured-skill</span>
+  <span class="section">modes:</span>  <span class="string">[create, evaluate]</span>
 
 <span class="section">extends:</span>
   <span class="section">evaluation:</span>
-    <span class="section">metrics:</span> [f1, mrr]
-    <span class="section">thresholds:</span> {f1: 0.90, mrr: 0.85}
+    <span class="section">metrics:</span>    <span class="string">[f1, mrr]</span>
+    <span class="section">thresholds:</span> <span class="string">{f1: 0.90, mrr: 0.85}</span>
   <span class="section">security:</span>
-    <span class="section">standard:</span> CWE
-    <span class="section">scan-on-delivery:</span> true
+    <span class="section">standard:</span>        <span class="string">CWE</span>
+    <span class="section">scan-on-delivery:</span> <span class="string">true</span>
 <span class="pipe">---</span>
 
-<span class="section">## §1.1 Identity</span>
+## §1.1 Identity
 
-<span class="keyword">Name:</span> skill
-<span class="keyword">Role:</span> Agent Skill Engineering Expert
-<span class="keyword">Purpose:</span> Creates, evaluates, restores, secures, and optimizes skills...
+**Name:**    example-skill
+**Role:**    Sample Skill
+**Purpose:** Demonstrates the SKILL.md format structure
 
-<span class="comment"># ... additional sections ...</span></pre>
+## §1.2 Usage
+
+Send a description of what you need, and this skill will generate
+a properly formatted SKILL.md file for your AI agent.
+
+## §6.0 Triggers
+
+**CREATE** | **EVALUATE**</pre>
             </div>
         </section>
 
