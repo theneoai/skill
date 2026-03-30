@@ -32,8 +32,9 @@ class TrajectoryCollector:
         return session_id
 
     def record_action(self, session_id: str, action: dict[str, Any]) -> None:
-        if session_id in self._active_sessions:
-            self._active_sessions[session_id].actions.append(action)
+        if session_id not in self._active_sessions:
+            raise ValueError(f"Session {session_id} not found")
+        self._active_sessions[session_id].actions.append(action)
 
     def end_collection(self, session_id: str, outcome: str) -> TrajectoryEntry:
         if session_id in self._active_sessions:
