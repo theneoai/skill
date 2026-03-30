@@ -60,8 +60,11 @@ class SkillMetadata(BaseSkillMetadata):
 
 REQUIRED_FIELDS = {"name", "description"}
 STRING_FIELDS = {"license", "version", "type"}
-DICT_OR_STRING_FIELDS = {"description", "author"}
+DICT_OR_STRING_FIELDS = {"description", "author", "description_i18n"}
 LIST_FIELDS = {"tags"}
+
+# Fields that are known but intentionally not in the core schema
+_KNOWN_EXTRA_FIELDS = {"description_i18n"}
 
 
 def extract_frontmatter(content: str) -> tuple[dict, str]:

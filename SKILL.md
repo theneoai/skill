@@ -1,8 +1,8 @@
 ---
-# Universal Skill Metadata (ISO 23026 / industry standard)
 name: skill
-version: 2.15.0
-description:
+version: "2.15.0"
+description: "Full lifecycle AI skill engineering system: create, evaluate, restore, secure, and optimize AI skills with multi-LLM deliberation and CWE-based security audit."
+description_i18n:
   en: "Full lifecycle AI skill engineering system: create, evaluate, restore, secure, optimize. Supports bilingual triggers (EN/ZH), multi-LLM deliberation, cross-validation, auto-evolution, lean evaluation, and CWE-based security audit."
   zh: "全生命周期AI技能工程系统：创建、评估、恢复、安全、优化。支持中英双语触发、多LLM deliberation、交叉验证、自动进化、Lean评估、CWE安全审计。"
 
@@ -10,10 +10,10 @@ license: MIT
 author:
   name: theneoai
   email: lucas_hsueh@hotmail.com
-created: 2024-01-15
-updated: 2026-03-30
+created: "2024-01-15"
+updated: "2026-03-30"
+type: manager
 
-# Universal Classification Tags (tool-agnostic)
 tags:
   - lifecycle
   - quality-assurance
@@ -23,30 +23,15 @@ tags:
   - evaluation
   - error-recovery
 
-# Universal Interface Contract
 interface:
   input: user-natural-language
   output: structured-skill
   modes: [create, evaluate, restore, security, optimize]
 
-# Implementation Extensions (tool-specific)
 extends:
   evaluation:
     metrics: [f1, mrr]
     thresholds: {f1: 0.90, mrr: 0.85}
-    external:
-      - id: openai-evals
-        name: OpenAI Evals API
-        url: https://platform.openai.com/docs/guides/evals
-        metrics: [accuracy, string_match, pattern_match]
-      - id: langsmith
-        name: LangSmith Evaluation
-        url: https://docs.smith.langchain.com/evaluation
-        metrics: [relevance, groundedness, safety]
-      - id: lm-harness
-        name: LM Evaluation Harness
-        url: https://github.com/EleutherAI/lm-evaluation-harness
-        metrics: [perplexity, accuracy]
   security:
     standard: CWE
     scan-on-delivery: true
@@ -87,11 +72,13 @@ extends:
 
 **Architecture**: Multi-LLM Orchestrated Skill Lifecycle Manager
 
+```
 User Input → Mode Router → [CREATE|EVALUATE|RESTORE|SECURITY|OPTIMIZE] → DELIVER
                               ↓
                      LOONGFLOW (Plan-Execute-Summarize)
                               ↓
                      ERROR RECOVERY LAYER
+```
 
 **LoongFlow**: Plan-Execute-Summarize cognitive orchestration replacing 9-Step Loop
 **See**: `skill/orchestrator/loongflow.py` for implementation
@@ -124,13 +111,14 @@ User Input → Mode Router → [CREATE|EVALUATE|RESTORE|SECURITY|OPTIMIZE] → D
 
 ## §1.4 Mode Router Decision Tree
 
+```
 User Input
     │
     ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │ PARSE INPUT                                                     │
-│ 1. Extract keywords (bilingual)                                │
-│ 2. Detect language (ZH/EN/mixed)                               │
+│ 1. Extract keywords (bilingual)                                 │
+│ 2. Detect language (ZH/EN/mixed)                                │
 │ 3. Identify intent confidence                                   │
 └─────────────────────────────────────────────────────────────────┘
     │
@@ -138,32 +126,32 @@ User Input
 ┌─────────────────────────────────────────────────────────────────┐
 │ MODE CLASSIFICATION                                             │
 │                                                                 │
-│ CREATE keywords:  [创建, create, build, 新建, new, 开发]         │
-│ EVALUATE keywords: [评估, evaluate, test, 测试, score, 评分]    │
-│ RESTORE keywords:  [恢复, restore, repair, fix, 修复, 还原]     │
-│ SECURITY keywords: [安全, security, audit, scan, 审计, 检查]    │
-│ OPTIMIZE keywords: [优化, optimize, improve, enhance, 提升,     │
-│                     refactor, 重构, 迭代]                        │
+│ CREATE   keywords: [创建, create, build, 新建, new, 开发]        │
+│ EVALUATE keywords: [评估, evaluate, test, 测试, score, 评分]     │
+│ RESTORE  keywords: [恢复, restore, repair, fix, 修复, 还原]      │
+│ SECURITY keywords: [安全, security, audit, scan, 审计, 检查]     │
+│ OPTIMIZE keywords: [优化, optimize, improve, enhance, 提升]      │
 │                                                                 │
 │ Mode = highest keyword match count with confidence ≥0.70        │
-│ Default = CREATE if ambiguous input                            │
+│ Default = CREATE if ambiguous input                             │
 └─────────────────────────────────────────────────────────────────┘
     │
     ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │ CONFIDENCE ROUTING                                              │
 │                                                                 │
-│ confidence ≥0.85 → AUTO-ROUTE to detected mode                  │
-│ confidence 0.70-0.84 → CONFIRM before route                    │
-│ confidence <0.70 → ESCALATE to HUMAN_REVIEW                    │
+│ confidence ≥0.85  → AUTO-ROUTE to detected mode                 │
+│ confidence 0.70-0.84 → CONFIRM before route                     │
+│ confidence <0.70  → ESCALATE to HUMAN_REVIEW                    │
 │                                                                 │
-│ GRACEFUL DEGRADATION (confidence <0.70 + user insists):        │
+│ GRACEFUL DEGRADATION (confidence <0.70 + user insists):         │
 │ - Log explicit user override with timestamp                     │
-│ - Apply reduced confidence mode: single-LLM deliberation       │
+│ - Apply reduced confidence mode: single-LLM deliberation        │
 │ - Increase checkpoint strictness by 50%                         │
 │ - Require additional human sign-off before DELIVER              │
-│ - Flag skill with TEMP_CERT flag for 72hr review window        │
+│ - Flag skill with TEMP_CERT flag for 72hr review window         │
 └─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -197,6 +185,7 @@ User Input
 **Consensus**: UNANIMOUS | MAJORITY | SPLIT | UNRESOLVED
 
 **Consensus Matrix Example**:
+
 ```
 | Item          | LLM-1  | LLM-2  | LLM-3  | Consensus |
 |---------------|--------|--------|--------|-----------|
@@ -287,6 +276,7 @@ Mode: CREATE | Confidence: 0.85 | Language: EN
 ```
 
 **Output**:
+
 ```
 skill: weather-query | version: 1.0.0 | status: CERTIFIED
 quality: { f1: 0.95, mrr: 0.91 }
@@ -326,7 +316,7 @@ changes_applied: 3 | status: CERTIFIED (upgraded)
 
 ---
 
-## §6. Self-Evolution
+## §7.0 Self-Evolution
 
 ### Evolution Triggers
 
@@ -345,9 +335,9 @@ changes_applied: 3 | status: CERTIFIED (upgraded)
 
 ```
 IF trigger_accuracy < 0.85 → Update keyword weights
-IF error_rate > 10% → Flag for immediate review
+IF error_rate > 10%        → Flag for immediate review
 IF F1 < 0.90 OR MRR < 0.85 → Queue for OPTIMIZE
-IF staleness detected → Send notification
+IF staleness detected       → Send notification
 ```
 
 **Done**: Usage tracker updated, triggers evaluated every 7 days, F1/MRR re-measured, trigger accuracy ≥ 0.90

@@ -322,10 +322,17 @@ class SkillMetadata:
         if not self.name or not self.name.strip():
             errors.append("name is required and cannot be empty")
 
-        if not self.description or not self.description.strip():
+        if not self.description:
             errors.append("description is required and cannot be empty")
-        elif isinstance(self.description, str) and len(self.description.strip()) < 10:
-            errors.append("description must be at least 10 characters")
+        elif isinstance(self.description, str):
+            if not self.description.strip():
+                errors.append("description is required and cannot be empty")
+            elif len(self.description.strip()) < 10:
+                errors.append("description must be at least 10 characters")
+        elif isinstance(self.description, dict):
+            # Bilingual description — require at least one non-empty value
+            if not any(v for v in self.description.values() if isinstance(v, str) and v.strip()):
+                errors.append("description dict must have at least one non-empty language value")
 
         if not self.version or not self.version.strip():
             errors.append("version is required and cannot be empty")
