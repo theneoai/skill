@@ -649,6 +649,208 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        /* Pretext Demo */
+        .pretext-demo {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 3rem 0;
+        }
+
+        .pretext-demo-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .pretext-demo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .pretext-demo-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .pretext-demo-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .pretext-workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .pretext-workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .pretext-input-panel {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .pretext-input-panel label {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .pretext-textarea {
+            width: 100%;
+            min-height: 120px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .pretext-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .pretext-canvas-wrap {
+            position: relative;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        .pretext-canvas-wrap label {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        #pretext-canvas {
+            width: 100%;
+            height: 200px;
+            border-radius: 8px;
+        }
+
+        .pretext-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .pretext-stat {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .pretext-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .pretext-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .pretext-no-reflow {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #22c55e;
+        }
+
+        .pretext-no-reflow .icon {
+            font-size: 1rem;
+        }
+
+        .font-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .font-selector select {
+            flex: 1;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.5rem;
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+
+        .font-selector select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .width-slider {
+            margin-top: 0.75rem;
+        }
+
+        .width-slider label {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .width-slider input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .width-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -661,13 +863,14 @@
             <li><a href="#architecture">Architecture</a></li>
             <li><a href="#format">Format</a></li>
             <li><a href="#modes">Modes</a></li>
+            <li><a href="#pretext">Pretext Lab</a></li>
         </ul>
     </nav>
 
     <section class="hero">
         <div class="hero-content">
             <div class="hero-badge">Now Pure Python</div>
-            <a href="https://github.com/pretext-project/pretext" target="_blank" class="hero-badge" style="margin-left: 0.5rem; background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); text-decoration: none;">
+            <a href="https://github.com/chenglou/pretext" target="_blank" class="hero-badge" style="margin-left: 0.5rem; background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3); text-decoration: none;">
                 <span style="color: #22c55e;">♥</span>
                 <span style="color: #22c55e;">Powered by</span>
                 <span style="color: #22c55e; font-weight: 600;">pretext</span>
@@ -962,6 +1165,72 @@
         </div>
     </section>
 
+    <section class="section" id="pretext">
+        <div class="section-header">
+            <div class="section-label">Powered by Pretext</div>
+            <h2 class="section-title">Text Measurement Lab</h2>
+            <p class="section-desc">No DOM reflow. Pure arithmetic. Lightning fast text measurement.</p>
+        </div>
+
+        <div class="pretext-demo">
+            <div class="pretext-demo-header">
+                <div class="pretext-demo-icon">📐</div>
+                <div>
+                    <div class="pretext-demo-title">@chenglou/pretext</div>
+                    <div class="pretext-demo-subtitle">16k stars · Zero DOM measurements · All languages</div>
+                </div>
+            </div>
+
+            <div class="pretext-workspace">
+                <div class="pretext-input-panel">
+                    <div class="font-selector">
+                        <select id="font-select">
+                            <option value="16px Inter, sans-serif">Inter</option>
+                            <option value="16px JetBrains Mono, monospace">JetBrains Mono</option>
+                            <option value="18px Georgia, serif">Georgia</option>
+                            <option value="16px Arial, sans-serif">Arial</option>
+                        </select>
+                    </div>
+                    <label>Type anywhere. Watch lines render instantly:</label>
+                    <textarea class="pretext-textarea" id="pretext-input">Skill Engineering: Create, Evaluate, Optimize.
+全生命周期AI技能工程系统
+🚀 Multi-LLM Deliberation
+🎯 Precise Text Measurement
+⚡ Zero Reflow</textarea>
+
+                    <div class="width-slider">
+                        <label><span>Width</span><span id="width-value">300px</span></label>
+                        <input type="range" id="width-slider" min="150" max="500" value="300">
+                    </div>
+                </div>
+
+                <div class="pretext-canvas-wrap">
+                    <label>Canvas render (no DOM touch):</label>
+                    <canvas id="pretext-canvas"></canvas>
+                    <div class="pretext-no-reflow">
+                        <span class="icon">✓</span>
+                        <span>No getBoundingClientRect · No offsetHeight · Pure math</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pretext-stats">
+                <div class="pretext-stat">
+                    <div class="pretext-stat-value" id="stat-height">0</div>
+                    <div class="pretext-stat-label">Height (px)</div>
+                </div>
+                <div class="pretext-stat">
+                    <div class="pretext-stat-value" id="stat-lines">0</div>
+                    <div class="pretext-stat-label">Line Count</div>
+                </div>
+                <div class="pretext-stat">
+                    <div class="pretext-stat-value" id="stat-time">0</div>
+                    <div class="pretext-stat-label">Prepare (ms)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-links">
@@ -999,6 +1268,154 @@
                 }
             });
         });
+
+        // Pretext Demo - Canvas-based text measurement (mimics @chenglou/pretext)
+        (function() {
+            const input = document.getElementById('pretext-input');
+            const canvas = document.getElementById('pretext-canvas');
+            const ctx = canvas.getContext('2d');
+            const fontSelect = document.getElementById('font-select');
+            const widthSlider = document.getElementById('width-slider');
+            const widthValue = document.getElementById('width-value');
+            const statHeight = document.getElementById('stat-height');
+            const statLines = document.getElementById('stat-lines');
+            const statTime = document.getElementById('stat-time');
+
+            let currentFont = '16px Inter, sans-serif';
+            let currentWidth = 300;
+            const lineHeight = 24;
+
+            function resizeCanvas() {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width - 32;
+                canvas.height = 200;
+            }
+
+            function measureText(text, font) {
+                ctx.font = font;
+                return ctx.measureText(text).width;
+            }
+
+            function wrapText(text, maxWidth, font) {
+                const lines = [];
+                const paragraphs = text.split('\n');
+
+                for (const paragraph of paragraphs) {
+                    if (paragraph.trim() === '') {
+                        lines.push('');
+                        continue;
+                    }
+
+                    const words = paragraph.split(' ');
+                    let currentLine = '';
+
+                    for (const word of words) {
+                        const testLine = currentLine ? currentLine + ' ' + word : word;
+                        const metrics = ctx.font = font; ctx.measureText(testLine);
+
+                        if (metrics.width > maxWidth && currentLine) {
+                            lines.push(currentLine);
+                            currentLine = word;
+                        } else {
+                            currentLine = testLine;
+                        }
+                    }
+                    if (currentLine) lines.push(currentLine);
+                }
+                return lines;
+            }
+
+            function render() {
+                const start = performance.now();
+
+                resizeCanvas();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Background
+                ctx.fillStyle = '#0a0a0f';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Grid lines (subtle)
+                ctx.strokeStyle = 'rgba(99, 102, 241, 0.05)';
+                ctx.lineWidth = 1;
+                for (let y = 0; y < canvas.height; y += lineHeight) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+
+                const lines = wrapText(input.value, currentWidth, currentFont);
+                let y = 20;
+
+                ctx.font = currentFont;
+                ctx.textBaseline = 'top';
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+
+                    // Line highlight (alternating)
+                    if (i % 2 === 0) {
+                        ctx.fillStyle = 'rgba(99, 102, 241, 0.03)';
+                        ctx.fillRect(0, y - 4, canvas.width, lineHeight);
+                    }
+
+                    // Line number
+                    ctx.fillStyle = 'rgba(99, 102, 241, 0.4)';
+                    ctx.font = '10px JetBrains Mono, monospace';
+                    ctx.fillText(String(i + 1).padStart(2, '0'), 4, y);
+
+                    // Reset font for text
+                    ctx.font = currentFont;
+
+                    // Text with subtle shadow
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.fillText(line, 28, y);
+
+                    // Width indicator for last line
+                    if (i === lines.length - 1 && line) {
+                        const metrics = ctx.measureText(line);
+                        ctx.strokeStyle = 'rgba(34, 197, 94, 0.3)';
+                        ctx.beginPath();
+                        ctx.moveTo(28 + metrics.width, y);
+                        ctx.lineTo(28 + metrics.width, y + 18);
+                        ctx.stroke();
+                    }
+
+                    y += lineHeight;
+                }
+
+                // Draw width boundary line
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(28 + currentWidth, 0);
+                ctx.lineTo(28 + currentWidth, canvas.height);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Stats
+                const height = lines.length * lineHeight + 20;
+                const prepTime = (performance.now() - start).toFixed(2);
+
+                statHeight.textContent = Math.round(height);
+                statLines.textContent = lines.length;
+                statTime.textContent = prepTime;
+            }
+
+            input.addEventListener('input', render);
+            fontSelect.addEventListener('change', () => {
+                currentFont = fontSelect.value;
+                render();
+            });
+            widthSlider.addEventListener('input', () => {
+                currentWidth = parseInt(widthSlider.value);
+                widthValue.textContent = currentWidth + 'px';
+                render();
+            });
+
+            render();
+        })();
     </script>
 </body>
 </html>
