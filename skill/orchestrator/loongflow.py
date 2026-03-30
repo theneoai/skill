@@ -21,6 +21,14 @@ class LoongFlowOrchestrator:
     def __init__(self, memory: EvolutionMemory) -> None:
         self.memory = memory
         self.collector = TrajectoryCollector()
+        self.optimizer = None
+        self.error_recovery = None
+
+    def set_agent_optimizer(self, optimizer) -> None:
+        self.optimizer = optimizer
+
+    def set_error_recovery(self, road) -> None:
+        self.error_recovery = road
 
     def plan(self, task: str) -> CognitiveGraph:
         graph = CognitiveGraph()
@@ -33,7 +41,14 @@ class LoongFlowOrchestrator:
         return graph
 
     def execute(self, graph: CognitiveGraph) -> ExecutionResult:
-        return ExecutionResult(success=True, output={})
+        try:
+            return ExecutionResult(success=True, output={})
+        except Exception as e:
+            if hasattr(self, "error_recovery") and self.error_recovery is not None:
+                decision = self.error_recovery.suggest_recovery(type(e).__name__, {})
+                if decision.value == "abort":
+                    raise
+            raise
 
     def summarize(self, result: ExecutionResult, graph: CognitiveGraph) -> MemoryUpdate:
         entry = MemoryEntry(

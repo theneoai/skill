@@ -7,6 +7,7 @@ from skill.agents.trajectory import TrajectoryCollector
 
 if TYPE_CHECKING:
     from typing import Literal
+    from skill.agents.boad import AgentSpec
 
 
 class AgentAction:
@@ -53,3 +54,12 @@ class YoutuAgent:
         key = (task_type, action)
         current = self._q_table.get(key, 0.0)
         self._q_table[key] = current + self._alpha * (reward - current)
+
+    def select_agent_with_ucb1(self, optimizer, tier: str) -> "AgentSpec":
+        from skill.agents.boad import AgentTier
+
+        tier_enum = AgentTier[tier.upper()]
+        agents = optimizer.agents.get(tier_enum, [])
+        if not agents:
+            raise ValueError(f"No agents for tier {tier}")
+        return optimizer.select_agent(task="")
