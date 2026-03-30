@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SKILL.md - Skill Format Specification</title>
+    <title>SKILL.md Format - Skill Engineering</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -14,12 +14,15 @@
             --bg-tertiary: #1a1a24;
             --accent: #6366f1;
             --accent-light: #818cf8;
+            --accent-secondary: #8b5cf6;
             --text: #f8fafc;
             --text-muted: #64748b;
+            --text-secondary: #94a3b8;
             --border: rgba(99, 102, 241, 0.2);
             --green: #22c55e;
             --yellow: #eab308;
             --red: #ef4444;
+            --cyan: #06b6d4;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,24 +31,35 @@
             font-family: 'Inter', sans-serif;
             background: var(--bg-primary);
             color: var(--text);
-            line-height: 1.6;
+            line-height: 1.7;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 3rem 2rem;
         }
 
         header {
-            padding: 4rem 0;
-            text-align: center;
+            padding: 3rem 0 2rem;
             border-bottom: 1px solid var(--border);
-            margin-bottom: 4rem;
+            margin-bottom: 3rem;
+        }
+
+        .badge {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.3rem 0.6rem;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--accent-light);
+            margin-bottom: 1rem;
         }
 
         h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 1rem;
             background: linear-gradient(135deg, var(--text), var(--accent));
@@ -54,158 +68,214 @@
         }
 
         header p {
-            color: var(--text-muted);
+            color: var(--text-secondary);
             max-width: 600px;
-            margin: 0 auto;
+            font-size: 1.05rem;
         }
 
-        .schema-section {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            margin-bottom: 2rem;
-            overflow: hidden;
-        }
-
-        .schema-header {
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 2.5rem 0 1rem;
+            color: var(--text);
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 1.25rem 1.5rem;
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
+            gap: 0.5rem;
         }
 
-        .schema-header:hover {
-            background: rgba(99, 102, 241, 0.1);
-        }
-
-        .schema-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--accent), #8b5cf6);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        h2 .icon {
             font-size: 1.2rem;
         }
 
-        .schema-title {
-            font-size: 1.25rem;
+        h3 {
+            font-size: 1.1rem;
             font-weight: 600;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--accent-light);
         }
 
-        .schema-type {
-            margin-left: auto;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            padding: 0.35rem 0.75rem;
-            background: rgba(99, 102, 241, 0.15);
+        .frontmatter {
+            background: var(--bg-secondary);
             border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--accent-light);
-        }
-
-        .schema-content {
-            padding: 1.5rem;
-        }
-
-        .field {
-            display: flex;
-            gap: 1rem;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            transition: background 0.2s;
-        }
-
-        .field:hover {
-            background: var(--bg-tertiary);
-        }
-
-        .field-name {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-            color: var(--accent-light);
-            min-width: 150px;
-        }
-
-        .field-type {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            margin-left: 0.5rem;
-        }
-
-        .field-type.string { background: rgba(34, 197, 94, 0.2); color: var(--green); }
-        .field-type.number { background: rgba(234, 179, 8, 0.2); color: var(--yellow); }
-        .field-type.list { background: rgba(99, 102, 241, 0.2); color: var(--accent-light); }
-        .field-type.map { background: rgba(239, 68, 68, 0.2); color: var(--red); }
-
-        .field-desc {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .field-required {
-            color: var(--red);
-            font-size: 0.75rem;
-            margin-left: 0.5rem;
-        }
-
-        .example-block {
-            background: var(--bg-tertiary);
             border-radius: 12px;
             padding: 1.5rem;
-            margin-top: 1rem;
+            margin: 1.5rem 0;
+            border-left: 3px solid var(--accent);
+        }
+
+        .frontmatter pre {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.85rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .frontmatter .key { color: var(--accent-light); }
+        .frontmatter .string { color: var(--green); }
+        .frontmatter .comment { color: var(--text-muted); font-style: italic; }
+        .frontmatter .number { color: var(--yellow); }
+        .frontmatter .array { color: var(--cyan); }
+
+        .code-block {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            margin: 1rem 0;
             overflow-x: auto;
         }
 
-        .example-block .comment { color: var(--text-muted); }
-        .example-block .key { color: var(--accent-light); }
-        .example-block .value { color: var(--green); }
+        .code-block pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
 
-        .nav-tabs {
-            display: flex;
+        .code-block .comment { color: var(--text-muted); }
+        .code-block .section { color: var(--accent-secondary); font-weight: 600; }
+        .code-block .keyword { color: var(--accent-light); }
+        .code-block .string { color: var(--green); }
+        .code-block .number { color: var(--yellow); }
+        .code-block .pipe { color: var(--text-muted); }
+
+        .field-list {
+            display: grid;
             gap: 0.5rem;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1rem;
+            margin: 1rem 0;
         }
 
-        .nav-tab {
-            padding: 0.75rem 1.25rem;
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-muted);
-            cursor: pointer;
+        .field-item {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .field-item:hover {
+            border-color: var(--border);
+        }
+
+        .field-item .name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-light);
+            min-width: 160px;
+        }
+
+        .field-item .type {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent-light);
+            height: fit-content;
+            align-self: center;
+        }
+
+        .field-item .desc {
+            color: var(--text-secondary);
             font-size: 0.9rem;
-            transition: all 0.2s;
         }
 
-        .nav-tab:hover {
-            border-color: var(--accent);
-            color: var(--text);
+        .field-item .required {
+            font-size: 0.7rem;
+            color: var(--red);
+            margin-left: auto;
+            align-self: center;
         }
 
-        .nav-tab.active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: white;
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
         }
 
-        .tab-content {
-            display: none;
+        @media (max-width: 640px) {
+            .two-col { grid-template-columns: 1fr; }
+            .field-item { flex-wrap: wrap; }
+            .field-item .name { min-width: auto; }
         }
 
-        .tab-content.active {
-            display: block;
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        .mode-chip {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--accent-light);
+            text-align: center;
+        }
+
+        .example-skill {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin: 2rem 0;
+            overflow: hidden;
+        }
+
+        .example-skill-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .example-skill-header .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .example-skill-header .dot.red { background: var(--red); }
+        .example-skill-header .dot.yellow { background: var(--yellow); }
+        .example-skill-header .dot.green { background: var(--green); }
+
+        .example-skill-header .title {
+            margin-left: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .example-skill pre {
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+
+        .note {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .note strong {
+            color: var(--cyan);
         }
 
         footer {
@@ -216,192 +286,251 @@
             color: var(--text-muted);
             font-size: 0.85rem;
         }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
+            <div class="badge">v2.15.0</div>
             <h1>SKILL.md Format</h1>
-            <p>YAML-based skill specification format for AI skill lifecycle management. Each skill is defined by a structured YAML document with sections, triggers, and evaluation criteria.</p>
+            <p>YAML-based skill specification format for AI skill lifecycle management. Each skill is defined by structured YAML frontmatter followed by markdown sections.</p>
         </header>
 
-        <nav class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('schema')">Schema</button>
-            <button class="nav-tab" onclick="showTab('example')">Example</button>
-            <button class="nav-tab" onclick="showTab('validation')">Validation</button>
-        </nav>
+        <section>
+            <h2><span class="icon">📋</span> YAML Frontmatter</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Required metadata block at the top of every SKILL.md file, delimited by <code style="color: var(--accent-light);">---</code> lines.</p>
 
-        <div id="schema" class="tab-content active">
-            <div class="schema-section">
-                <div class="schema-header">
-                    <div class="schema-icon">📋</div>
-                    <div class="schema-title">Universal Metadata</div>
-                    <div class="schema-type">required</div>
+            <div class="field-list">
+                <div class="field-item">
+                    <span class="name">name</span>
+                    <span class="type">string</span>
+                    <span class="desc">Unique skill identifier in kebab-case</span>
+                    <span class="required">required</span>
                 </div>
-                <div class="schema-content">
-                    <div class="field">
-                        <div class="field-name">name<span class="field-required">*</span></div>
-                        <div class="field-desc">Unique skill identifier (kebab-case)</div>
+                <div class="field-item">
+                    <span class="name">version</span>
+                    <span class="type">string</span>
+                    <span class="desc">Semantic version (e.g., "1.0.0", "2.15.0")</span>
+                    <span class="required">required</span>
+                </div>
+                <div class="field-item">
+                    <span class="name">description</span>
+                    <span class="type">map</span>
+                    <span class="desc">Bilingual description: <code style="color: var(--text-muted);">{en: string, zh: string}</code></span>
+                    <span class="required">required</span>
+                </div>
+                <div class="field-item">
+                    <span class="name">license</span>
+                    <span class="type">string</span>
+                    <span class="desc">SPDX identifier (e.g., MIT, Apache-2.0)</span>
+                </div>
+                <div class="field-item">
+                    <span class="name">author</span>
+                    <span class="type">map</span>
+                    <span class="desc"><code style="color: var(--text-muted);">{name: string, email?: string}</code></span>
+                </div>
+                <div class="field-item">
+                    <span class="name">created</span>
+                    <span class="type">string</span>
+                    <span class="desc">ISO 8601 date (YYYY-MM-DD)</span>
+                </div>
+                <div class="field-item">
+                    <span class="name">updated</span>
+                    <span class="type">string</span>
+                    <span class="desc">ISO 8601 date (YYYY-MM-DD)</span>
+                </div>
+                <div class="field-item">
+                    <span class="name">tags</span>
+                    <span class="type">list</span>
+                    <span class="desc">Universal taxonomy for classification</span>
+                </div>
+                <div class="field-item">
+                    <span class="name">interface</span>
+                    <span class="type">map</span>
+                    <span class="desc"><code style="color: var(--text-muted);">{input, output, modes[]}</code></span>
+                </div>
+                <div class="field-item">
+                    <span class="name">extends</span>
+                    <span class="type">map</span>
+                    <span class="desc">Implementation-specific extensions (evaluation, security, evolution)</span>
+                </div>
+            </div>
+
+            <div class="note">
+                <strong>Tags Taxonomy:</strong> lifecycle, quality-assurance, security, autonomous, multi-agent, evaluation, error-recovery
+            </div>
+        </section>
+
+        <section>
+            <h2><span class="icon">🏷️</span> Mode Interface</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Skills declare supported modes via the <code style="color: var(--accent-light);">interface.modes</code> field:</p>
+            <div class="mode-grid">
+                <div class="mode-chip">CREATE</div>
+                <div class="mode-chip">EVALUATE</div>
+                <div class="mode-chip">LEAN</div>
+                <div class="mode-chip">RESTORE</div>
+                <div class="mode-chip">SECURITY</div>
+                <div class="mode-chip">OPTIMIZE</div>
+            </div>
+        </section>
+
+        <section>
+            <h2><span class="icon">🔧</span> extends — Implementation Extensions</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Tool-specific configuration for evaluation, security scanning, and evolution.</p>
+
+            <div class="two-col">
+                <div>
+                    <h3>evaluation</h3>
+                    <div class="code-block">
+<pre><span class="comment"># Example</span>
+<span class="keyword">evaluation</span>:
+  <span class="keyword">metrics</span>: [<span class="string">f1</span>, <span class="string">mrr</span>]
+  <span class="keyword">thresholds</span>:
+    <span class="keyword">f1</span>: <span class="number">0.90</span>
+    <span class="keyword">mrr</span>: <span class="number">0.85</span></pre>
                     </div>
-                    <div class="field">
-                        <div class="field-name">version<span class="field-required">*</span></div>
-                        <div class="field-desc">Semantic version (semver.org)</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">description<span class="field-required">*</span></div>
-                        <div class="field-desc">Bilingual: {en: string, zh: string}</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">license</div>
-                        <div class="field-desc">SPDX identifier (e.g., MIT, Apache-2.0)</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">author</div>
-                        <div class="field-desc">{name: string, email?: string}</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">created</div>
-                        <div class="field-desc">ISO 8601 date (YYYY-MM-DD)</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">updated</div>
-                        <div class="field-desc">ISO 8601 date (YYYY-MM-DD)</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">tags</div>
-                        <div class="field-desc">Universal taxonomy: lifecycle, quality-assurance, security, autonomous, multi-agent, evaluation, error-recovery</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">interface</div>
-                        <div class="field-desc">{input, output, modes[]}</div>
+                </div>
+                <div>
+                    <h3>security</h3>
+                    <div class="code-block">
+<pre><span class="keyword">security</span>:
+  <span class="keyword">standard</span>: <span class="string">CWE</span>
+  <span class="keyword">scan-on-delivery</span>: <span class="number">true</span></pre>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <div class="schema-section">
-                <div class="schema-header">
-                    <div class="schema-icon">📑</div>
-                    <div class="schema-title">extends (Implementation-Specific)</div>
-                    <div class="schema-type">optional</div>
+        <section>
+            <h2><span class="icon">📄</span> Markdown Sections</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">After the frontmatter, content is organized into numbered sections (§1.1, §1.2, etc.):</p>
+
+            <div class="field-list">
+                <div class="field-item">
+                    <span class="name">§1.1 Identity</span>
+                    <span class="desc">Name, role, purpose, design patterns, core principles, red lines</span>
                 </div>
-                <div class="schema-content">
-                    <div class="field">
-                        <div class="field-name">extends.evaluation</div>
-                        <div class="field-desc">Metrics and thresholds</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">extends.security</div>
-                        <div class="field-desc">Security standard and scan config</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">extends.evolution</div>
-                        <div class="field-desc">Evolution triggers and logic</div>
-                    </div>
-                    <div class="example-block">
-<span class="comment"># Universal + Implementation Extension Example</span>
-<span class="key">extends</span>:
-  <span class="key">evaluation</span>:
-    <span class="key">metrics</span>: <span class="value">[f1, mrr]</span>
-    <span class="key">thresholds</span>: <span class="value">{f1: 0.90, mrr: 0.85}</span>
-  <span class="key">security</span>:
-    <span class="key">standard</span>: <span class="value">CWE</span>
-    <span class="key">scan-on-delivery</span>: <span class="value">true</span>
-                    </div>
+                <div class="field-item">
+                    <span class="name">§1.2 Framework</span>
+                    <span class="desc">Architecture overview and mode routing</span>
                 </div>
-            </div>
-        </div>
-
-        <div id="example" class="tab-content">
-            <div class="schema-section">
-                <div class="schema-header">
-                    <div class="schema-icon">📝</div>
-                    <div class="schema-title">Example: Code Review Skill</div>
+                <div class="field-item">
+                    <span class="name">§1.3 LOOP</span>
+                    <span class="desc">Plan-Execute-Summarize phases and exit conditions</span>
                 </div>
-                <div class="schema-content">
-                    <div class="example-block">
-<span class="key">name</span>: <span class="value">code-review-skill</span>
-<span class="key">version</span>: <span class="value">"1.0.0"</span>
-<span class="key">description</span>: <span class="value">"Performs comprehensive code review with security focus"</span>
-
-<span class="comment"># Skill sections</span>
-<span class="key">sections</span>:
-  <span class="key">introduction</span>:
-    <span class="key">description</span>: <span class="value">"Automated code review assistant"</span>
-    <span class="key">content</span>: <span class="value">|</span>
-      I review code for bugs, security issues, and best practices.
-      I provide actionable feedback with severity ratings.
-
-  <span class="key">usage</span>:
-    <span class="key">description</span>: <span class="value">"How to invoke this skill"</span>
-    <span class="key">content</span>: <span class="value">|</span>
-      Attach code files and say "review this code"
-      or "analyze for security issues"
-
-<span class="comment"># Trigger patterns</span>
-<span class="key">triggers</span>:
-  <span class="key">patterns</span>:
-    - <span class="value">"review.*code"</span>
-    - <span class="value">"analyze.*security"</span>
-    - <span class="value">"check.*bugs"</span>
-
-<span class="comment"># Evaluation criteria</span>
-<span class="key">evaluation</span>:
-  <span class="key">criteria</span>:
-    - <span class="key">name</span>: <span class="value">"finding_accuracy"</span>
-      <span class="key">weight</span>: <span class="value">0.4</span>
-    - <span class="key">name</span>: <span class="value">"clarity"</span>
-      <span class="key">weight</span>: <span class="value">0.3</span>
-    - <span class="key">name</span>: <span class="value">"coverage"</span>
-      <span class="key">weight</span>: <span class="value">0.3</span>
-  <span class="key">threshold</span>: <span class="value">750</span>
-                    </div>
+                <div class="field-item">
+                    <span class="name">§2.0 Multi-LLM Deliberation</span>
+                    <span class="desc">LLM roles, consensus protocol, error recovery</span>
+                </div>
+                <div class="field-item">
+                    <span class="name">§3.0 Inversion Pattern</span>
+                    <span class="desc">Requirements elicitation methodology</span>
+                </div>
+                <div class="field-item">
+                    <span class="name">§4.0 Audit Trail</span>
+                    <span class="desc">Required fields and storage specification</span>
+                </div>
+                <div class="field-item">
+                    <span class="name">§5.0 Security Red Lines</span>
+                    <span class="desc">CWE violations and ABORT protocol</span>
+                </div>
+                <div class="field-item">
+                    <span class="name">§6.0 Usage Examples</span>
+                    <span class="desc">Example inputs/outputs for each mode</span>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div id="validation" class="tab-content">
-            <div class="schema-section">
-                <div class="schema-header">
-                    <div class="schema-icon">✅</div>
-                    <div class="schema-title">Validation Rules</div>
+        <section>
+            <h2><span class="icon">✨</span> Example: skill Skill</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">The actual SKILL.md for the skill framework itself:</p>
+
+            <div class="example-skill">
+                <div class="example-skill-header">
+                    <div class="dot red"></div>
+                    <div class="dot yellow"></div>
+                    <div class="dot green"></div>
+                    <span class="title">skill/SKILL.md</span>
                 </div>
-                <div class="schema-content">
-                    <div class="field">
-                        <div class="field-name">Required Fields</div>
-                        <div class="field-desc">name, version, and description are mandatory.</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">Version Format</div>
-                        <div class="field-desc">Must be valid semantic version (e.g., "1.0.0", "2.1.3").</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">Evaluation Weights</div>
-                        <div class="field-desc">All criteria weights must sum to 1.0 (tolerance: 0.01).</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">Section Names</div>
-                        <div class="field-desc">Must be lowercase with hyphens (kebab-case).</div>
-                    </div>
-                    <div class="field">
-                        <div class="field-name">Trigger Patterns</div>
-                        <div class="field-desc">Must be valid regex or plain strings.</div>
-                    </div>
-                </div>
+                <pre><span class="comment"># Universal Skill Metadata</span>
+<span class="section">name:</span> skill
+<span class="section">version:</span> <span class="string">2.15.0</span>
+<span class="section">description:</span>
+  <span class="section">en:</span> <span class="string">"Full lifecycle AI skill engineering system..."</span>
+  <span class="section">zh:</span> <span class="string">"全生命周期AI技能工程系统..."</span>
+
+<span class="section">license:</span> MIT
+<span class="section">author:</span>
+  <span class="section">name:</span> theneoai
+  <span class="section">email:</span> lucas_hsueh@hotmail.com
+<span class="section">created:</span> <span class="string">2024-01-15</span>
+<span class="section">updated:</span> <span class="string">2026-03-30</span>
+
+<span class="section">tags:</span>
+  - lifecycle
+  - quality-assurance
+  - security
+  - autonomous
+  - multi-agent
+  - evaluation
+  - error-recovery
+
+<span class="section">interface:</span>
+  <span class="section">input:</span> user-natural-language
+  <span class="section">output:</span> structured-skill
+  <span class="section">modes:</span> [create, evaluate, restore, security, optimize]
+
+<span class="section">extends:</span>
+  <span class="section">evaluation:</span>
+    <span class="section">metrics:</span> [f1, mrr]
+    <span class="section">thresholds:</span> {f1: 0.90, mrr: 0.85}
+  <span class="section">security:</span>
+    <span class="section">standard:</span> CWE
+    <span class="section">scan-on-delivery:</span> true
+<span class="pipe">---</span>
+
+<span class="section">## §1.1 Identity</span>
+
+<span class="keyword">Name:</span> skill
+<span class="keyword">Role:</span> Agent Skill Engineering Expert
+<span class="keyword">Purpose:</span> Creates, evaluates, restores, secures, and optimizes skills...
+
+<span class="comment"># ... additional sections ...</span></pre>
             </div>
-        </div>
+        </section>
+
+        <section>
+            <h2><span class="icon">📏</span> Quality Thresholds</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Skills must meet these measurable quality gates for certification:</p>
+
+            <div class="code-block">
+<pre><span class="keyword">evaluation</span>:
+  <span class="keyword">metrics</span>: [f1, mrr]
+  <span class="keyword">thresholds</span>:
+    <span class="keyword">f1</span>: <span class="number">0.90</span>   <span class="comment"># Minimum 90% F1 score</span>
+    <span class="keyword">mrr</span>: <span class="number">0.85</span>   <span class="comment"># Minimum 85% MRR</span>
+
+<span class="comment"># Tier Certification (1000-point scale)</span>
+<span class="comment"># GOLD    >= 900</span>
+<span class="comment"># SILVER  >= 800</span>
+<span class="comment"># BRONZE  >= 700</span>
+<span class="comment"># PASSING >= 600</span></pre>
+            </div>
+        </section>
 
         <footer>
-            <p>See <a href="index.html" style="color: var(--accent);">documentation</a> for full framework details.</p>
+            <p>See <a href="index.html">documentation home</a> for framework details.</p>
+            <p style="margin-top: 0.5rem;">Skill Engineering Framework · MIT License</p>
         </footer>
     </div>
-
-    <script>
-        function showTab(id) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            event.target.classList.add('active');
-        }
-    </script>
 </body>
 </html>
