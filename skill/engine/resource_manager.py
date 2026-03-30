@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import gzip
+import os
 import re
 import shutil
-import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -14,6 +14,31 @@ from typing import Any
 DEFAULT_MAX_SNAPSHOTS = 10
 DEFAULT_MAX_USAGE_DAYS = 30
 DEFAULT_MAX_LOG_DAYS = 14
+
+
+def _dir_size(path: Path) -> int:
+    """Return total byte size of *path* recursively (cross-platform, no shell)."""
+    if not path.exists():
+        return 0
+    total = 0
+    for entry in os.scandir(path):
+        try:
+            if entry.is_file(follow_symlinks=False):
+                total += entry.stat().st_size
+            elif entry.is_dir(follow_symlinks=False):
+                total += _dir_size(Path(entry.path))
+        except OSError:
+            pass
+    return total
+
+
+def _format_bytes(n: int) -> str:
+    """Format byte count into a human-readable string (e.g. '1.2MB')."""
+    for unit in ("B", "KB", "MB", "GB", "TB"):
+        if n < 1024:
+            return f"{n:.1f}{unit}"
+        n //= 1024  # type: ignore[assignment]
+    return f"{n:.1f}PB"
 
 
 class ResourceManager:
@@ -159,26 +184,12 @@ class ResourceManager:
         return result
 
     def get_disk_usage(self, skill_name: str | None = None) -> dict[str, str]:
-        result = {}
-
-        def get_size(path: Path) -> str:
-            if not path.exists():
-                return "N/A"
-            try:
-                size = subprocess.check_output(
-                    ["du", "-sh", str(path)],
-                    stderr=subprocess.DEVNULL,
-                    text=True,
-                )
-                return size.split()[0]
-            except (subprocess.SubprocessError, IndexError):
-                return "N/A"
-
         snapshot_path = self.snapshot_dir
         if skill_name:
             snapshot_path = snapshot_path / skill_name
-        result["snapshots"] = get_size(snapshot_path)
-        result["usage"] = get_size(self.usage_dir)
-        result["logs"] = get_size(self.log_dir)
 
-        return result
+        return {
+            "snapshots": _format_bytes(_dir_size(snapshot_path)),
+            "usage": _format_bytes(_dir_size(self.usage_dir)),
+            "logs": _format_bytes(_dir_size(self.log_dir)),
+        }

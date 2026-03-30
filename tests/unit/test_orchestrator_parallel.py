@@ -46,12 +46,13 @@ class TestParallelOrchestrator:
 
     def test_execute_first_command_fails(self):
         orchestrator = ParallelOrchestrator()
-        result = orchestrator.execute("exit 1", "echo success")
+        # /bin/false is a portable command that always exits with code 1
+        result = orchestrator.execute("/bin/false", "echo success")
         assert result is False
 
     def test_execute_second_command_fails(self):
         orchestrator = ParallelOrchestrator()
-        result = orchestrator.execute("echo success", "exit 1")
+        result = orchestrator.execute("echo success", "/bin/false")
         assert result is False
 
     def test_run_parallel_evaluation(self):

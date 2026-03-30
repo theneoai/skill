@@ -27,15 +27,20 @@ class GEPAScorer:
 
     Evaluates complete execution trajectories and computes trajectory-level
     reward scores with convergence indicators.
+
+    Args:
+        model: Optional model identifier for scoring.
+        gamma: Discount factor in [0, 1] for discounted cumulative reward.
+            When ``gamma=1.0`` (default) the score equals the plain sum of
+            step rewards (no discounting).  Values below 1 down-weight later
+            steps, which is useful when early decisions matter more.
     """
 
-    def __init__(self, model: str | None = None) -> None:
-        """Initialize GEPA scorer.
-
-        Args:
-            model: Optional model identifier for scoring.
-        """
+    def __init__(self, model: str | None = None, gamma: float = 1.0) -> None:
+        if not 0.0 <= gamma <= 1.0:
+            raise ValueError(f"gamma must be in [0, 1], got {gamma}")
         self.model = model
+        self.gamma = gamma
 
     def score_trajectory(self, trajectory: Trajectory) -> GEPAResult:
         """Score a complete execution trajectory.
@@ -60,13 +65,29 @@ class GEPAScorer:
     def aggregate_step_rewards(self, rewards: list[float]) -> float:
         """Aggregate step rewards into a trajectory-level score.
 
+        Uses discounted cumulative reward (DCR) when ``self.gamma < 1``:
+
+        .. math::
+            G = \\sum_{t=0}^{T-1} \\gamma^t \\cdot r_t
+
+        When ``gamma == 1`` this reduces to a plain sum, preserving backward
+        compatibility with the original implementation.
+
         Args:
             rewards: List of step-level reward values.
 
         Returns:
             Aggregated trajectory score.
         """
-        return sum(rewards)
+        if self.gamma == 1.0:
+            return sum(rewards)
+
+        total = 0.0
+        discount = 1.0
+        for r in rewards:
+            total += discount * r
+            discount *= self.gamma
+        return total
 
     def _compute_convergence(self, step_scores: list[float]) -> float:
         """Compute convergence indicator based on step score variance."""
@@ -78,7 +99,7 @@ class GEPAScorer:
 
         mean = sum(step_scores) / len(step_scores)
         variance = sum((s - mean) ** 2 for s in step_scores) / len(step_scores)
-        max_variance = mean * (1 - mean) if mean > 0 and mean < 1 else 0.0
+        max_variance = mean * (1 - mean) if 0.0 < mean < 1.0 else 0.0
 
         if max_variance == 0:
             return 1.0

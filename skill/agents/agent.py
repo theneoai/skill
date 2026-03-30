@@ -5,11 +5,34 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import time
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
 PROMPT_DIR = Path(__file__).parent.parent / "prompts"
+
+# Environment variable names for configuration
+_ENV_API_KEY = "SKILL_API_KEY"
+_ENV_OPENAI_API_KEY = "OPENAI_API_KEY"
+_ENV_BASE_URL = "SKILL_API_BASE_URL"
+_ENV_OPENAI_BASE_URL = "OPENAI_BASE_URL"
+_ENV_MODEL = "SKILL_MODEL"
+_ENV_OPENAI_MODEL = "OPENAI_MODEL"
+_DEFAULT_BASE_URL = "https://api.openai.com"
+_DEFAULT_MODEL = "gpt-4o-mini"
+_REQUEST_TIMEOUT = 30  # seconds
+_MAX_RETRIES = 3
+
+# Provider → default model mapping
+_PROVIDER_MODELS: dict[str, str] = {
+    "kimi": "moonshot-v1-8k",
+    "minimax": "abab6.5s-chat",
+    "openai": "gpt-4o-mini",
+    "anthropic": "claude-haiku-4-5-20251001",
+}
 
 
 @dataclass
@@ -59,19 +82,103 @@ def load_prompt(prompt_name: str) -> str:
     return ""
 
 
+def _resolve_model(model: str, provider: str) -> str:
+    """Resolve the effective model name from model/provider hints and env vars."""
+    if model not in ("auto", ""):
+        return model
+    env_model = os.environ.get(_ENV_MODEL) or os.environ.get(_ENV_OPENAI_MODEL)
+    if env_model:
+        return env_model
+    if provider not in ("auto", "") and provider in _PROVIDER_MODELS:
+        return _PROVIDER_MODELS[provider]
+    return _DEFAULT_MODEL
+
+
 def get_llm_response(system_prompt: str, user_prompt: str, model: str, provider: str) -> dict:
-    """Get response from LLM.
+    """Get response from LLM via an OpenAI-compatible chat completions endpoint.
+
+    Configuration via environment variables:
+      SKILL_API_KEY / OPENAI_API_KEY   — API key (required)
+      SKILL_API_BASE_URL / OPENAI_BASE_URL — base URL (default: https://api.openai.com)
+      SKILL_MODEL / OPENAI_MODEL       — model override
 
     Args:
         system_prompt: System prompt for the LLM.
         user_prompt: User prompt for the LLM.
-        model: Model to use.
-        provider: Provider to use.
+        model: Model name, or ``"auto"`` to resolve from env/provider.
+        provider: Provider hint (``"openai"``, ``"kimi"``, ``"minimax"``, …).
 
     Returns:
-        Dictionary with status and content.
+        ``{"status": "success", "content": str}`` on success,
+        ``{"status": "error", "content": "", "error": str}`` on failure.
     """
-    return {"status": "error", "content": ""}
+    api_key = os.environ.get(_ENV_API_KEY) or os.environ.get(_ENV_OPENAI_API_KEY, "")
+    if not api_key:
+        return {
+            "status": "error",
+            "content": "",
+            "error": (
+                f"No API key configured. Set {_ENV_API_KEY} or {_ENV_OPENAI_API_KEY}."
+            ),
+        }
+
+    base_url = (
+        os.environ.get(_ENV_BASE_URL)
+        or os.environ.get(_ENV_OPENAI_BASE_URL)
+        or _DEFAULT_BASE_URL
+    ).rstrip("/")
+    endpoint = f"{base_url}/v1/chat/completions"
+    resolved_model = _resolve_model(model, provider)
+
+    payload = json.dumps(
+        {
+            "model": resolved_model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": 0.7,
+            "max_tokens": 4096,
+        }
+    ).encode("utf-8")
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+    }
+
+    for attempt in range(_MAX_RETRIES):
+        try:
+            req = urllib.request.Request(
+                endpoint, data=payload, headers=headers, method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=_REQUEST_TIMEOUT) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                content: str = data["choices"][0]["message"]["content"]
+                return {"status": "success", "content": content}
+
+        except urllib.error.HTTPError as exc:
+            # Retry on transient server/rate-limit errors
+            if exc.code in (429, 500, 502, 503, 504) and attempt < _MAX_RETRIES - 1:
+                time.sleep(2 ** attempt)
+                continue
+            body = exc.read().decode("utf-8", errors="replace")
+            return {
+                "status": "error",
+                "content": "",
+                "error": f"HTTP {exc.code}: {body}",
+            }
+
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            if attempt < _MAX_RETRIES - 1:
+                time.sleep(2 ** attempt)
+                continue
+            return {"status": "error", "content": "", "error": str(exc)}
+
+        except (KeyError, IndexError, json.JSONDecodeError) as exc:
+            return {"status": "error", "content": "", "error": f"Parse error: {exc}"}
+
+    return {"status": "error", "content": "", "error": "Max retries exceeded"}
 
 
 def call_llm(

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from unittest.mock import patch, MagicMock
+
 import pytest
 from typer.testing import CliRunner
 
@@ -31,25 +34,47 @@ class TestEvaluateCommand:
         result = self.runner.invoke(app, ["evaluate"])
         assert result.exit_code != 0
 
-    def test_evaluate_with_target(self):
-        """Test evaluate with a target argument."""
-        result = self.runner.invoke(app, ["evaluate", "test_skill"])
-        assert result.exit_code == 0
-        assert "Evaluating: test_skill" in result.output
+    def test_evaluate_nonexistent_file(self):
+        """Test evaluate exits with error when file does not exist."""
+        result = self.runner.invoke(app, ["evaluate", "nonexistent_skill.md"])
+        assert result.exit_code == 1
+        assert "not found" in result.output.lower() or "error" in result.output.lower()
 
-    def test_evaluate_with_output_option(self):
-        """Test evaluate with output option."""
-        result = self.runner.invoke(
-            app, ["evaluate", "test_skill", "--output", "results.json"]
-        )
+    def test_evaluate_with_target(self, tmp_path):
+        """Test evaluate with a valid skill file."""
+        skill_md = tmp_path / "SKILL.md"
+        skill_md.write_text("# Test\n")
+        fake_result = {"total_score": 42, "tier": "BRONZE"}
+        with patch("skill.agents.evaluator.evaluate_skill", return_value=fake_result):
+            result = self.runner.invoke(app, ["evaluate", str(skill_md)])
         assert result.exit_code == 0
-        assert "Output will be saved to: results.json" in result.output
+        assert "Evaluating" in result.output
+        assert "42" in result.output
 
-    def test_evaluate_with_verbose_option(self):
-        """Test evaluate with verbose option."""
-        result = self.runner.invoke(app, ["evaluate", "test_skill", "--verbose"])
+    def test_evaluate_with_output_option(self, tmp_path):
+        """Test evaluate saves results to output file."""
+        skill_md = tmp_path / "SKILL.md"
+        skill_md.write_text("# Test\n")
+        out_file = tmp_path / "results.json"
+        fake_result = {"total_score": 70, "tier": "SILVER"}
+        with patch("skill.agents.evaluator.evaluate_skill", return_value=fake_result):
+            result = self.runner.invoke(
+                app, ["evaluate", str(skill_md), "--output", str(out_file)]
+            )
         assert result.exit_code == 0
-        assert "Verbose mode enabled" in result.output
+        assert out_file.exists()
+        saved = json.loads(out_file.read_text())
+        assert saved["total_score"] == 70
+
+    def test_evaluate_with_verbose_option(self, tmp_path):
+        """Test evaluate with verbose option does not crash."""
+        skill_md = tmp_path / "SKILL.md"
+        skill_md.write_text("# Test\n")
+        fake_result = {"total_score": 50, "tier": "BRONZE", "suggestions": ["Improve X"]}
+        with patch("skill.agents.evaluator.evaluate_skill", return_value=fake_result):
+            result = self.runner.invoke(app, ["evaluate", str(skill_md), "--verbose"])
+        assert result.exit_code == 0
+        assert "Improve X" in result.output
 
 
 class TestCreateCommand:
@@ -63,24 +88,32 @@ class TestCreateCommand:
         result = self.runner.invoke(app, ["create"])
         assert result.exit_code != 0
 
-    def test_create_with_prompt(self):
+    def test_create_with_prompt(self, tmp_path):
         """Test create with a prompt argument."""
-        result = self.runner.invoke(app, ["create", "Create a test skill"])
+        out_file = tmp_path / "SKILL.md"
+        with patch("skill.agents.creator.init_skill_file", return_value=True):
+            result = self.runner.invoke(
+                app, ["create", "Create a test skill", "--output", str(out_file)]
+            )
         assert result.exit_code == 0
-        assert "Creating skill from: Create a test skill" in result.output
-        assert "Target tier: BRONZE" in result.output
+        assert "Creating skill" in result.output
+        assert "BRONZE" in result.output
 
-    def test_create_with_target_option(self):
+    def test_create_with_target_option(self, tmp_path):
         """Test create with target tier option."""
-        result = self.runner.invoke(app, ["create", "prompt", "--target", "GOLD"])
+        out_file = tmp_path / "SKILL.md"
+        with patch("skill.agents.creator.init_skill_file", return_value=True):
+            result = self.runner.invoke(
+                app, ["create", "prompt", "--target", "GOLD", "--output", str(out_file)]
+            )
         assert result.exit_code == 0
-        assert "Target tier: GOLD" in result.output
+        assert "GOLD" in result.output
 
     def test_create_with_dry_run(self):
         """Test create with dry-run option."""
         result = self.runner.invoke(app, ["create", "prompt", "--dry-run"])
         assert result.exit_code == 0
-        assert "Dry run mode" in result.output
+        assert "Dry run" in result.output
 
 
 class TestEvolveCommand:
@@ -94,18 +127,31 @@ class TestEvolveCommand:
         result = self.runner.invoke(app, ["evolve"])
         assert result.exit_code != 0
 
-    def test_evolve_with_skill_file(self):
-        """Test evolve with a skill file argument."""
+    def test_evolve_nonexistent_file(self):
+        """Test evolve exits with error when file does not exist."""
         result = self.runner.invoke(app, ["evolve", "skill.md"])
-        assert result.exit_code == 0
-        assert "Evolving skill: skill.md" in result.output
-        assert "Iterations: 1" in result.output
+        assert result.exit_code == 1
+        assert "not found" in result.output.lower() or "error" in result.output.lower()
 
-    def test_evolve_with_iterations_option(self):
-        """Test evolve with iterations option."""
-        result = self.runner.invoke(app, ["evolve", "skill.md", "--iterations", "5"])
+    def test_evolve_with_skill_file(self, tmp_path):
+        """Test evolve with a valid skill file."""
+        skill_md = tmp_path / "SKILL.md"
+        skill_md.write_text("# Test\n")
+        with patch("skill.engine.storage.storage_get_last_score", return_value=0.0), \
+             patch("skill.engine.storage.storage_get_eval_count", return_value=0):
+            result = self.runner.invoke(app, ["evolve", str(skill_md)])
         assert result.exit_code == 0
-        assert "Iterations: 5" in result.output
+        assert "Evolving skill" in result.output
+
+    def test_evolve_with_iterations_option(self, tmp_path):
+        """Test evolve with iterations option."""
+        skill_md = tmp_path / "SKILL.md"
+        skill_md.write_text("# Test\n")
+        with patch("skill.engine.storage.storage_get_last_score", return_value=0.0), \
+             patch("skill.engine.storage.storage_get_eval_count", return_value=0):
+            result = self.runner.invoke(app, ["evolve", str(skill_md), "--iterations", "5"])
+        assert result.exit_code == 0
+        assert "5 iteration" in result.output
 
 
 class TestVersionCommand:
