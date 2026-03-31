@@ -56,10 +56,10 @@ Skill Framework MVP - Production Ready
 
 ### 🔗 Links
 
-- [Repository](https://github.com/theneoai/skill-framework)
-- [Documentation](https://github.com/theneoai/skill-framework#readme)
-- [Examples](https://github.com/theneoai/skill-framework/tree/main/examples)
-- [Contributing](https://github.com/theneoai/skill-framework/blob/main/.github/CONTRIBUTING.md)
+- [Repository](https://github.com/theneoai/skill-writer)
+- [Documentation](https://github.com/theneoai/skill-writer#readme)
+- [Examples](https://github.com/theneoai/skill-writer/tree/main/examples)
+- [Contributing](https://github.com/theneoai/skill-writer/blob/main/.github/CONTRIBUTING.md)
 
 ---
 
@@ -85,4 +85,4 @@ Skill Framework MVP - Production Ready
 ### Security
 - Security improvements
 
-[1.0.0]: https://github.com/theneoai/skill-framework/releases/tag/v1.0.0
+[1.0.0]: https://github.com/theneoai/skill-writer/releases/tag/v1.0.0
