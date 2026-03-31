@@ -257,9 +257,11 @@ Proceed with RUN? [y/n]
 
 - [ ] All workflow steps listed with names, actions, tools, and rollback actions
 - [ ] Parallel steps identified and dependencies mapped
-- [ ] Human checkpoints defined for all destructive steps
-- [ ] Retry logic specified (max retries, backoff)
-- [ ] Rollback sequence covers all mutating steps
-- [ ] DRY-RUN mode implemented
-- [ ] F1 ≥ 0.90 confirmed by EVALUATE mode
-- [ ] CWE-78 (command injection) mitigated
+- [ ] Human checkpoints defined for ALL destructive steps (no exceptions)
+- [ ] Retry logic specified: max retries + backoff (1s, 2s, 4s)
+- [ ] Rollback sequence covers ALL mutating steps
+- [ ] DRY-RUN mode implemented and tested
+- [ ] LEAN eval score ≥ 350 and no `{{PLACEHOLDER}}` remaining
+- [ ] Full EVALUATE score ≥ 700 (BRONZE) confirmed
+- [ ] Security scan P0 clear: CWE-78 (command injection), CWE-798 (credentials)
+- [ ] If TEMP_CERT issued: add `TEMP_CERT: true` to YAML, re-evaluate within 72 h

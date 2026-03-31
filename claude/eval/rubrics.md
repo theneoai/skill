@@ -1,247 +1,237 @@
 # Evaluation Rubrics
 
-> **Purpose**: Scoring rubrics used by EVALUATE mode in `claude/skill-framework.md §4`
-> **Metrics**: F1, MRR, Trigger Accuracy, Structure Score
+> **Purpose**: 4-phase 1000-point scoring pipeline used by EVALUATE mode.
+> **Load**: When §8 (EVALUATE Mode) of `claude/skill-framework.md` is accessed.
+> **Main doc**: `claude/skill-framework.md §8`
 
 ---
 
-## Overall Score Calculation
+## §1  Pipeline Overview
 
 ```
-Overall Score = weighted_sum(dimension scores)
+Total: 1000 points
 
-Dimensions and weights:
-  Trigger Coverage    25%  →  TriggerScore (0–100)
-  Structure           20%  →  StructureScore (0–100)
-  Output Clarity      20%  →  OutputScore (0–100)
-  Security Baseline   20%  →  SecurityScore (0–100)
-  Quality Gates       15%  →  QualityGateScore (0–100)
+Phase 1 — Parse & Validate   (0–100 pts)   Heuristic, no LLM
+Phase 2 — Text Quality       (0–300 pts)   Static analysis, LLM-1
+Phase 3 — Runtime Testing    (0–400 pts)   Benchmark tests, LLM-2
+Phase 4 — Certification      (0–200 pts)   Variance + security + gates, LLM-3
 
-Overall = 0.25*T + 0.20*S + 0.20*O + 0.20*Sec + 0.15*Q
-
-Certification tiers:
-  GOLD    ≥ 90
-  SILVER  ≥ 80
-  BRONZE  ≥ 70
-  FAIL    < 70
+Variance formula:  variance = | phase2/3 − phase3/4 |
 ```
 
 ---
 
-## Dimension 1 — Trigger Coverage (25%)
+## §2  Certification Tiers
 
-**What**: Do trigger keywords cover all modes, in both EN and ZH?
+| Tier | Min Score | Max Variance | Phase 2 Min | Phase 3 Min |
+|------|-----------|-------------|------------|------------|
+| **PLATINUM** | ≥ 950 | < 10 | ≥ 270 | ≥ 360 |
+| **GOLD** | ≥ 900 | < 15 | ≥ 255 | ≥ 340 |
+| **SILVER** | ≥ 800 | < 20 | ≥ 225 | ≥ 300 |
+| **BRONZE** | ≥ 700 | < 30 | ≥ 195 | ≥ 265 |
+| **FAIL** | < 700 | any | — | — |
 
-| Check | Points |
-|-------|--------|
-| Primary EN trigger present for each mode | +10 per mode (max 30) |
-| Primary ZH trigger present for each mode | +10 per mode (max 30) |
-| Secondary / context triggers present | +5 per mode (max 20) |
-| Negative / anti-trigger patterns defined | +10 |
-| Confidence scoring formula documented | +10 |
-
-**Score**: sum / max_possible × 100
-
-**F1 Mapping**:
-- TriggerScore ≥ 90 → F1 = 0.93–1.00
-- TriggerScore 80–89 → F1 = 0.90–0.92
-- TriggerScore 70–79 → F1 = 0.85–0.89 (FAIL threshold)
-- TriggerScore < 70 → F1 < 0.85 (auto-route to OPTIMIZE)
-
-**MRR Mapping**:
-- Primary trigger at rank 1 per mode → MRR = 1.0 for that mode
-- Primary trigger at rank 2 → MRR = 0.5
-- Primary trigger at rank ≥ 3 → MRR = 0.33
+**Variance interpretation**: High variance means the artifact "looks good on paper but
+fails runtime" (Phase2 >> Phase3) or "passes tests but is poorly written" (Phase3 >> Phase2).
+Both indicate quality inconsistency and cap the certification tier.
 
 ---
 
-## Dimension 2 — Structure Completeness (20%)
+## §3  Phase 1 — Parse & Validate (0–100 pts)
 
-**What**: Are all required sections present and non-empty?
+Heuristic checks only. Fast, no LLM.
 
-### Required Sections Checklist
+| Check | Points | Notes |
+|-------|--------|-------|
+| YAML frontmatter present | 10 | Must have at least `name`, `version` |
+| `name` field present and non-empty | 5 | |
+| `version` field follows semver | 5 | Pattern: `N.N.N` |
+| `interface.modes` array present | 5 | |
+| `tags` array with ≥ 2 entries | 5 | |
+| ≥ 3 `## §N` sections | 10 | Identity, Loop, at least one mode |
+| Identity section present (name/role/purpose) | 10 | |
+| Red Lines / 严禁 section present | 10 | |
+| Quality Gates section with numeric thresholds | 15 | Thresholds must be numbers |
+| No `{{PLACEHOLDER}}` tokens remaining | 15 | Any remaining = hard deduction |
+| No TODO / FIXME markers | 5 | Advisory |
+| File size reasonable (< 500 lines) | 5 | > 500 lines: advisory warning |
 
-| Section | Required For | Points |
-|---------|-------------|--------|
-| `§ Identity` (name, role, purpose) | All types | 15 |
-| `§ Loop / Phase sequence` | All types | 10 |
-| `§ Mode definitions` (one per mode) | All types | 10 per mode |
-| `§ Quality Gates` (thresholds stated) | All types | 15 |
-| `§ Security Baseline` | All types | 15 |
-| `§ Usage Examples` (≥ 2) | All types | 10 |
-| `§ Red Lines` | All types | 10 |
-| YAML frontmatter (name, version, tags, interface) | All types | 15 |
-
-**Score**: present_sections / total_required × 100
-
-### Per-Type Additional Checks
-
-| Type | Extra Required Section | Points |
-|------|----------------------|--------|
-| api-integration | API spec (base_url, auth_method, endpoints) | +10 |
-| data-pipeline | Pipeline stages diagram, schema definitions | +10 |
-| workflow-automation | Workflow steps table, rollback actions | +10 |
+**Hard deduction**: If `{{PLACEHOLDER}}` found → Phase1 score capped at 60, WARNING issued.
 
 ---
 
-## Dimension 3 — Output Clarity (20%)
+## §4  Phase 2 — Text Quality (0–300 pts)
 
-**What**: Is the output format for each mode clearly defined?
+Static analysis across 6 sub-dimensions. Scored by LLM-1.
 
-| Check | Points |
-|-------|--------|
-| Output format specified per mode (e.g. JSON, text, table) | 20 per mode |
-| Exit criteria stated per mode | 15 per mode |
-| Error output format specified | 15 |
-| Example output shown in Usage Examples | 15 |
-| Output schema or field list present (data/API types) | 15 |
+| Sub-Dimension | Max | Weight | What to Check |
+|---------------|-----|--------|--------------|
+| **System Design** | 60 | 20% | Clear identity, role hierarchy, design pattern named |
+| **Domain Knowledge** | 60 | 20% | Template-specific accuracy (API fields, pipeline stages, workflow steps) |
+| **Workflow Definition** | 60 | 20% | Phase sequence complete, exit criteria per phase, loop gates explicit |
+| **Error Handling** | 45 | 15% | Recovery paths named, escalation triggers defined, timeout values set |
+| **Examples** | 45 | 15% | ≥ 2 examples, both EN and ZH or bilingual triggers, output shown |
+| **Metadata Quality** | 30 | 10% | YAML complete, version semver, author, dates, description bilingual |
 
-**Score**: sum / max_possible × 100
+### Scoring Rubric per Sub-Dimension
 
----
+| Score Band | Meaning |
+|------------|---------|
+| 90–100% | Exceptional: specific, measurable, complete, no vagueness |
+| 75–89% | Good: mostly complete, minor gaps in specificity |
+| 60–74% | Adequate: structure present but some sections thin or vague |
+| 40–59% | Weak: significant gaps, missing key elements |
+| 0–39% | Poor: section missing or essentially content-free |
 
-## Dimension 4 — Security Baseline (20%)
+### LLM-1 Scoring Instructions
 
-**What**: Does the skill explicitly address the four CWE red lines?
-
-| Check | Points | Auto-fail? |
-|-------|--------|-----------|
-| CWE-798: no hardcoded credentials, env-var pattern documented | 25 | YES — 0 points if violated |
-| CWE-89: input sanitization mentioned for query parameters | 25 | YES |
-| CWE-79: output escaping mentioned for rendered content | 25 | NO |
-| CWE-94: eval/exec prohibition mentioned or not applicable | 25 | NO |
-| Additional CWE coverage (e.g. CWE-22, CWE-78) | +5 each (max 20) | — |
-
-**Score** (base 100):
-- All 4 base checks pass → score = 100 − penalties
-- Any auto-fail check violated → SecurityScore = 0 → ABORT
-
-**Penalty Table**:
-
-| Finding | Deduction |
-|---------|-----------|
-| Auto-fail CWE pattern present in skill text | −100 (ABORT) |
-| CWE section missing entirely | −40 |
-| CWE section present but content is boilerplate only (no specifics) | −15 |
-| Specific field names not listed for CWE-89/CWE-79 | −10 |
+For each sub-dimension, LLM-1 produces:
+```json
+{
+  "sub_dimension": "<name>",
+  "score": 0,
+  "max": 60,
+  "evidence": "<what was found>",
+  "gaps": ["<specific gap 1>", "<specific gap 2>"],
+  "severity": "ERROR|WARNING|INFO"
+}
+```
 
 ---
 
-## Dimension 5 — Quality Gate Definitions (15%)
+## §5  Phase 3 — Runtime Testing (0–400 pts)
 
-**What**: Are quality thresholds stated explicitly and measurably?
+Executed against benchmark test cases (`claude/eval/benchmarks.md`). Scored by LLM-2.
 
-| Check | Points |
-|-------|--------|
-| F1 threshold stated (numeric) | 20 |
-| MRR threshold stated (numeric) | 20 |
-| Trigger accuracy threshold stated | 15 |
-| Thresholds meet framework minimums (F1 ≥ 0.90, MRR ≥ 0.85) | 20 |
-| Measurement method referenced (rubrics, benchmarks) | 15 |
-| OPTIMIZE / escalation action on threshold breach documented | 10 |
+| Test Category | Max | What Is Tested |
+|---------------|-----|----------------|
+| **Trigger Routing Accuracy** | 120 | Mode router predicts correct mode for positive cases |
+| **Bilingual Trigger Coverage** | 80 | Both EN and ZH inputs route correctly |
+| **Negative/Edge Cases** | 60 | Ambiguous inputs handled; negatives filtered; fallback activated |
+| **Output Contract** | 60 | Each mode's output format matches stated spec |
+| **Error Handling Runtime** | 50 | Error cases produce correct recovery output |
+| **Security Boundary Tests** | 30 | Injection/traversal inputs rejected gracefully |
 
-**Score**: sum / 100
-
----
-
-## F1 Score Formula
+### F1 and MRR Computation
 
 ```
-For a skill evaluation over a test set:
-
-  For each test case:
-    predicted_mode = mode router output
-    actual_mode    = ground truth label
-
+F1 = 2 × precision × recall / (precision + recall)
   precision = TP / (TP + FP)
   recall    = TP / (TP + FN)
-  F1        = 2 * precision * recall / (precision + recall)
 
-  Where TP = correct mode prediction, FP = wrong mode predicted,
-        FN = correct mode not predicted
+MRR = (1/N) × Σ (1 / rank_of_first_correct_mode)
+  rank = 1 if correct mode is top prediction
+  rank = 2 if second
+  rank = 0 (excluded from sum) if correct mode not in top 3
+
+Trigger accuracy = correct_triggers / total_trigger_test_cases
+```
+
+### Phase 3 Score Mapping
+
+```
+trigger_routing: correct% × 120
+bilingual:       (EN_correct + ZH_correct) / (EN_total + ZH_total) × 80
+negative_cases:  correct_negatives / total_negatives × 60
+output_contract: correct_format% × 60
+error_handling:  correct_recovery% × 50
+security_boundary: all_rejected ? 30 : rejected/total × 30
+```
+
+### LLM-2 Test Execution
+
+LLM-2 runs each test case and records:
+```json
+{
+  "test_id": "CF-C-01",
+  "input": "create a new skill for querying databases",
+  "expected_mode": "CREATE",
+  "predicted_mode": "CREATE",
+  "confidence": 0.92,
+  "correct": true,
+  "rank": 1
+}
 ```
 
 ---
 
-## MRR Score Formula
+## §6  Phase 4 — Certification (0–200 pts)
 
-```
-For N test cases, each with a ranked list of candidate modes:
+Scored by LLM-3 (Arbiter). Integrates all previous phases.
 
-  MRR = (1/N) * Σ (1 / rank_of_first_correct_mode)
+| Check | Max | How Scored |
+|-------|-----|-----------|
+| **Variance gate** | 40 | variance<10→40, <15→30, <20→20, <30→10, ≥30→0 |
+| **Security scan** | 60 | P0 clear→40, P1 clear→20; P0 violation→0+ABORT; each P1→−10 |
+| **F1 gate** | 40 | F1≥0.90→40, ≥0.85→25, ≥0.80→10, <0.80→0 |
+| **MRR gate** | 30 | MRR≥0.85→30, ≥0.80→20, ≥0.75→10, <0.75→0 |
+| **Consistency** | 30 | All 3 LLMs agree on tier→30, MAJORITY→20, SPLIT→10, UNRESOLVED→0 |
 
-  rank_of_first_correct_mode:
-    = 1 if correct mode is top prediction
-    = 2 if correct mode is second prediction
-    = 0 (excluded) if correct mode not in top-3
-
-  MRR ≥ 0.85 required for CERTIFIED status
-```
-
----
-
-## Trigger Accuracy Formula
-
-```
-trigger_accuracy = correct_triggers / total_trigger_attempts
-
-  correct_trigger: user input → correct mode in ≤ 1 clarification turn
-  total_trigger_attempts: all test inputs in claude/eval/benchmarks.md
-
-  trigger_accuracy ≥ 0.90 required
-```
+**Phase 4 hard rules**:
+- P0 security violation → Phase 4 = 0, overall = FAIL, status = ABORT
+- F1 < 0.80 → Phase 4 capped at 80 points regardless of other scores
+- LLM-3 UNRESOLVED consensus → Phase 4 capped at 120 points
 
 ---
 
-## Evaluation Report Format
+## §7  LEAN Fast Path
+
+Before running Phase 1–4, apply LEAN heuristics (§6 of skill-framework.md).
+
+**Quick-Pass**: If lean_score ≥ 450 (GOLD proxy):
+- Run only Phase 1 + security scan
+- If Phase 1 ≥ 90 AND security CLEAR → issue LEAN_CERT, skip Phase 2–4
+- Schedule full Phase 2–4 within 24 h
+
+**Full Pipeline**: If lean_score 300–449 OR any quick-pass check fails → run all 4 phases.
+
+---
+
+## §8  Evaluation Report Template
 
 ```
 SKILL EVALUATION REPORT
 =======================
-Skill: <name> v<version>
-Evaluated: <ISO-8601 timestamp>
-Evaluator: skill-framework v1.0.0
+Skill:      <name> v<version>
+Evaluated:  <ISO-8601>
+Evaluator:  skill-framework v2.0.0
 
-DIMENSION SCORES
-  Trigger Coverage:    XX / 100  (weight 25%)
-  Structure:           XX / 100  (weight 20%)
-  Output Clarity:      XX / 100  (weight 20%)
-  Security Baseline:   XX / 100  (weight 20%)
-  Quality Gates:       XX / 100  (weight 15%)
+PHASE SCORES
+  Phase 1 — Parse & Validate:   XX / 100
+  Phase 2 — Text Quality:       XX / 300
+    System Design:     XX/60   Error Handling: XX/45
+    Domain Knowledge:  XX/60   Examples:       XX/45
+    Workflow:          XX/60   Metadata:       XX/30
+  Phase 3 — Runtime Testing:    XX / 400
+    Trigger Routing:   XX/120  Output Contract:   XX/60
+    Bilingual:         XX/80   Error Handling RT: XX/50
+    Negative/Edge:     XX/60   Security Boundary: XX/30
+  Phase 4 — Certification:      XX / 200
+    Variance Gate:    XX/40    F1 Gate:    XX/40
+    Security Scan:    XX/60    MRR Gate:   XX/30
+    Consensus:        XX/30
 
-COMPUTED METRICS
-  F1:               0.XX  threshold 0.90  [PASS|FAIL]
-  MRR:              0.XX  threshold 0.85  [PASS|FAIL]
-  Trigger Accuracy: 0.XX  threshold 0.90  [PASS|FAIL]
-  Overall Score:    XX    tier [GOLD|SILVER|BRONZE|FAIL]
+TOTAL SCORE:     XXX / 1000
+VARIANCE:        X.XX  (threshold for tier: <N)
+F1:              0.XX  (threshold: ≥ 0.90)  [PASS|FAIL]
+MRR:             0.XX  (threshold: ≥ 0.85)  [PASS|FAIL]
+TRIGGER ACC:     0.XX  (threshold: ≥ 0.90)  [PASS|FAIL]
 
 SECURITY SCAN
-  CWE-798: [CLEAR|VIOLATION]
-  CWE-89:  [CLEAR|VIOLATION]
-  CWE-79:  [CLEAR|VIOLATION]
-  CWE-94:  [CLEAR|N/A]
+  P0: [CLEAR | VIOLATION: <cwe> at <location>]
+  P1: [CLEAR | <count> warnings, −<N> pts]
+
+CONSENSUS MATRIX
+  | Dimension       | LLM-1  | LLM-2  | LLM-3  | Consensus   |
+  |-----------------|--------|--------|--------|-------------|
+  | ...             | ...    | ...    | ...    | ...         |
 
 ISSUES
-  ERROR:   <list of blocking issues>
-  WARNING: <list of advisory issues>
-  INFO:    <list of informational notes>
+  ERROR:   <blocking issues — must fix before delivery>
+  WARNING: <advisory issues — document or fix>
+  INFO:    <informational notes>
 
-VERDICT
-  CERTIFIED | TEMP_CERT | HUMAN_REVIEW | ABORT
-  Next action: <recommendation>
+CERTIFICATION TIER:  PLATINUM | GOLD | SILVER | BRONZE | FAIL
+STATUS:              CERTIFIED | TEMP_CERT | LEAN_CERT | HUMAN_REVIEW | ABORT
+NEXT ACTION:         <recommendation>
 ```
-
----
-
-## Quick-Pass Heuristics (Fast Path)
-
-Before full scoring, apply these heuristics. If all pass, confidence in PASS is high:
-
-1. YAML frontmatter present with `name`, `version`, `interface` → +quick_pass
-2. At least 3 mode sections (`§N`) → +quick_pass
-3. "Red Lines" or "严禁" present → +quick_pass
-4. At least 2 code-block examples → +quick_pass
-5. "Quality Gates" table with numeric thresholds → +quick_pass
-
-If 5/5 quick_pass → skip detailed scoring, run security scan only.
-If < 3/5 quick_pass → run full dimensional scoring.

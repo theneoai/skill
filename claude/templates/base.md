@@ -152,9 +152,12 @@ Output: {{EXAMPLE_2_OUTPUT}}
 ## Checklist before delivery
 
 - [ ] All `{{PLACEHOLDER}}` tokens replaced
-- [ ] At least 2 usage examples present
-- [ ] Quality gates section complete with measurable thresholds
-- [ ] Security baseline section present
-- [ ] Red Lines section present
-- [ ] F1 ≥ 0.90 confirmed by EVALUATE mode
-- [ ] No CWE violations found
+- [ ] At least 2 usage examples present (EN + ZH triggers shown)
+- [ ] Quality gates section complete with numeric thresholds (F1 ≥ 0.90, MRR ≥ 0.85)
+- [ ] Security baseline section present with specific field names per CWE
+- [ ] Red Lines section present with ≥ 3 specific prohibitions
+- [ ] LEAN eval score ≥ 350 (lean_score/500)
+- [ ] Full EVALUATE score ≥ 700 (BRONZE) confirmed
+- [ ] No P0 CWE violations (see `claude/refs/security-patterns.md`)
+- [ ] If confidence < 0.70 on delivery: add `TEMP_CERT: true` to YAML frontmatter
+      and schedule 72 h re-evaluation window

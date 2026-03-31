@@ -1,229 +1,319 @@
 # Optimization Strategies
 
-> **Purpose**: Strategy catalog used by OPTIMIZE mode in `claude/skill-framework.md §5`
-> **Load**: When a skill fails one or more quality gates (F1 < 0.90, MRR < 0.85, or trigger_accuracy < 0.90)
-> **Usage**: Match the lowest-scoring dimension → apply the corresponding strategy
+> **Purpose**: 7-dimension strategy catalog for the 9-step OPTIMIZE loop.
+> **Load**: When §9 (OPTIMIZE Mode) of `claude/skill-framework.md` is accessed.
+> **Main doc**: `claude/skill-framework.md §9`
 
 ---
 
-## Strategy Selection Matrix
+## §1  7-Dimension Scoring Reference
 
-```
-Lowest-scoring dimension → apply strategy
-  Trigger Coverage    < 80  → S1: Expand Keyword Set
-  Structure Score     < 80  → S2: Fill Missing Sections
-  Output Clarity      < 80  → S3: Clarify Output Contracts
-  Security Baseline   < 80  → S4: Harden Security Baseline
-  Quality Gates       < 80  → S5: Add Measurable Thresholds
-  All dimensions fail       → S6: Full Structural Rebuild
-  Single metric barely fails → S7: Targeted Metric Boost
-```
+The OPTIMIZE loop always targets the **lowest-scoring dimension first**.
 
-Apply strategies in order: fix lowest-scoring dimension first, re-evaluate, then proceed to next.
-Max 3 optimization cycles before escalating to HUMAN_REVIEW.
+| Dim | Name | Weight | What It Covers | Strategy |
+|-----|------|--------|---------------|----------|
+| D1 | System Design | 20% | Identity, role hierarchy, design patterns, Red Lines | S2 |
+| D2 | Domain Knowledge | 20% | Template accuracy, API/schema specificity | S3 |
+| D3 | Workflow Definition | 20% | Phase sequence, exit criteria, loop gates | S4 |
+| D4 | Error Handling | 15% | Recovery paths, escalation triggers, timeouts | S5 |
+| D5 | Examples | 15% | Count, bilingual, output shown, realistic | S1+S3 |
+| D6 | Metadata | 10% | YAML completeness, versioning, tags, dates | S6 |
+| D7 | Long-Context | 10% | Section cross-refs, chunking, reference integrity | S7 |
+
+**Tie-break**: When two dimensions score equally, prioritize by weight (higher weight first).
 
 ---
 
-## S1 — Expand Keyword Set
+## §2  The 9-Step Loop
 
-**Trigger**: Trigger Coverage < 80 OR trigger_accuracy < 0.90
+```
+Round N (repeat up to 20 rounds, or until convergence):
 
-**Symptoms**:
-- Users report the skill routes to the wrong mode
-- Many benchmark cases in `claude/eval/benchmarks.md` predict wrong mode
-- MRR low because correct mode ranks 2nd or 3rd
+  Step 1  READ       Score all 7 dimensions. Record to score_history[N].
+  Step 2  ANALYZE    LLM-1 and LLM-2 each propose 3 targeted fixes for lowest dim.
+  Step 3  CURATE     Every 10 rounds: consolidate learning, prune context (§3).
+  Step 4  PLAN       LLM-3 selects best fix; records decision in dim_history[N].
+  Step 5  IMPLEMENT  Apply one atomic change. Single dimension focus. No rewrites.
+  Step 6  VERIFY     Re-score. IF regressed → rollback. IF no improvement → try fix #2.
+  Step 7  HUMAN_REVIEW  Trigger if total_score < 560 (FAIL×0.8) after round 10.
+  Step 8  LOG        Record: round, dimension, delta, confidence, strategy_used.
+  Step 9  COMMIT     Git commit every 10 rounds with tag [optimize-round-N score=XXX].
 
-**Strategy**:
+  After every round → check convergence (claude/refs/convergence.md)
+    IF converged → STOP → certify at current tier
+```
 
-1. **Audit existing triggers**: List all current primary/secondary EN and ZH keywords.
-2. **Gap analysis**: Compare against failing benchmark cases — what words appeared in failures?
-3. **Expand primary triggers**: Add 2–3 new primary keywords per failing mode.
-4. **Add ZH triggers**: If any mode has EN triggers but no ZH equivalent, add them.
-5. **Add secondary/context triggers**: Add 3–5 contextual phrases that co-occur with the mode.
-6. **Add negative patterns**: If false positives exist, add negative keywords to exclude.
-7. **Update confidence formula**: Verify weights still sum correctly.
+**Rollback rule (Step 6)**: If re-score shows regression > 5 pts → discard change,
+restore previous version, try the second-best fix from LLM-2's list.
+If all 3 proposed fixes regress → switch strategy to next-lowest dimension.
+
+---
+
+## §3  Curation Protocol (Every 10 Rounds)
+
+**Purpose**: Prevent context window bloat; refocus on highest-leverage improvements.
+
+```
+CURATE:
+  1. Summarize: "Rounds 1–10 improved D3 by +38pts, D1 by +12pts, D5 unchanged."
+  2. Rank strategies by delta produced: [S4: +38, S2: +12, S1: +0]
+  3. Prune: discard individual round details; keep only summary + score_history list
+  4. Re-prioritize: next 10 rounds → lead with highest-delta strategy
+  5. Reset: clear LLM context for rounds 1–10; load only summary + current skill
+  6. Log: {"curation_round": N, "context_reduced_pct": 40, "top_strategy": "S4"}
+```
+
+---
+
+## §4  Strategy Catalog
+
+### S1 — Expand Trigger Keywords
+
+**Target dimension**: D5 (Examples), D3 (Workflow) when trigger accuracy < 0.90
+**Estimated delta**: +15 to +30 pts
+
+**Steps**:
+1. List all current primary/secondary EN and ZH keywords per mode.
+2. Find failing benchmark cases — which words appeared in failures?
+3. Add 3+ new primary keywords per failing mode.
+4. Add ZH equivalents for every EN primary that lacks one.
+5. Add 3–5 secondary/context triggers per mode.
+6. Add negative patterns for the top 2 misroute pairs.
+7. Verify confidence formula weights still sum correctly.
 
 **Example**:
 ```
-Before:  CREATE keywords: [create, build, new]
-After:   CREATE keywords: [create, build, new, generate, scaffold, develop, make, add]
-         ZH: [创建, 新建, 生成, 开发, 构建, 制作]
+Before: CREATE keywords: [create, build, new]
+After:  CREATE keywords: [create, build, new, generate, scaffold, develop, make, add]
+        ZH: [创建, 新建, 生成, 开发, 构建, 制作, 添加]
 ```
 
-**Exit Gate**: trigger_accuracy ≥ 0.90 on benchmarks after expansion.
+**Estimated F1 gain**: +0.03–0.06 per 3 new primary keywords.
 
 ---
 
-## S2 — Fill Missing Sections
+### S2 — Strengthen System Design
 
-**Trigger**: Structure Score < 80
+**Target dimension**: D1 (System Design)
+**Estimated delta**: +10 to +25 pts
 
-**Symptoms**:
-- EVALUATE report lists missing required sections
-- Skill lacks `§ Quality Gates`, `§ Security Baseline`, or `§ Usage Examples`
-- YAML frontmatter incomplete
+**Steps**:
+1. Check Identity section: name, role, purpose all present?
+2. Check design patterns named (Tool Wrapper, Generator, Reviewer, Inversion, Pipeline)?
+3. Check Red Lines section: ≥ 3 specific, measurable prohibitions?
+4. If any Red Line is vague ("don't do bad things") → replace with CWE or measurable threshold.
+5. Add LoongFlow reference if not present.
+6. Verify role hierarchy is explicit (who can override whom).
 
-**Strategy**:
-
-1. **Run structural checklist** from `claude/eval/rubrics.md §2`.
-2. **Identify every missing section** with a point value.
-3. **Prioritize**: Fill highest-point missing sections first.
-4. **Use template as reference**: Copy the corresponding section from `claude/templates/<type>.md`.
-5. **Customize**: Replace template placeholders with skill-specific content.
-6. **Verify no duplicate sections**: Merge if a section exists partially.
-
-**Section Priority Order** (by point value):
-1. YAML frontmatter (15 pts) — if incomplete
-2. `§ Identity` (15 pts)
-3. `§ Quality Gates` (15 pts)
-4. `§ Security Baseline` (15 pts)
-5. `§ Loop / Phase sequence` (10 pts)
-6. `§ Usage Examples` (10 pts)
-7. `§ Red Lines` (10 pts)
-
-**Exit Gate**: Structure Score ≥ 80 after additions.
+**Red Line quality check**:
+```
+BAD:  "严禁 unsafe operations"
+GOOD: "严禁 hardcoded credentials (CWE-798) — use env var AUTH_TOKEN"
+```
 
 ---
 
-## S3 — Clarify Output Contracts
+### S3 — Deepen Domain Knowledge
 
-**Trigger**: Output Clarity < 80
+**Target dimension**: D2 (Domain Knowledge), D5 (Examples)
+**Estimated delta**: +15 to +35 pts
 
-**Symptoms**:
-- Exit criteria not stated for one or more modes
-- Output format not specified (missing schema, field list, or example)
-- Users report unpredictable skill output
+**Steps by skill type**:
 
-**Strategy**:
+**api-integration**:
+- List all endpoint paths with HTTP methods and purpose.
+- Name the specific auth env var (e.g. `OPENWEATHER_API_KEY`).
+- List response fields that will be extracted.
+- Add realistic field values in examples.
 
-1. **Audit each mode section** — check for:
-   - Output format explicitly named (JSON / text / markdown-table / etc.)
-   - Exit criteria with measurable condition
-   - At least one example output block
-2. **Add output block per mode**:
-   ```
-   **Output**:
-   ​```
-   field_1: <type and description>
-   field_2: <type and description>
-   ​```
-   ```
-3. **Add exit criteria** per mode: "Exit when: <condition>."
-4. **Update Usage Examples** — add at least one example per missing mode.
-5. **For API/data types**: Add JSON schema fragment or table of fields.
+**data-pipeline**:
+- Define input schema with field names and types.
+- Define output schema with field names and types.
+- Specify null handling strategy explicitly.
+- Add quarantine threshold (e.g. ≤ 5%).
 
-**Exit Gate**: Output Clarity ≥ 80; each mode has output format + exit criteria + example.
+**workflow-automation**:
+- Fill in the workflow steps table completely (all N steps).
+- Add rollback action for each mutating step.
+- Mark destructive steps explicitly.
+- Add estimated duration per step.
 
----
-
-## S4 — Harden Security Baseline
-
-**Trigger**: Security Baseline < 80 OR any CWE violation (ABORT)
-
-**ABORT path** (CWE violation detected):
-1. STOP — do not deliver skill.
-2. LOG violation to `.skill-audit/framework.jsonl`.
-3. IDENTIFY: which CWE, which line/pattern, which field.
-4. FIX:
-   - CWE-798: Replace hardcoded value with `os.environ.get("VAR_NAME")` or document env-var name.
-   - CWE-89: Add sanitization note; specify which fields must be parameterized.
-   - CWE-79: Add escaping note; specify output context (HTML, Markdown).
-   - CWE-94: Remove eval/exec; replace with safe alternative or restrict to trusted input.
-5. RESCAN — run security scan again before resuming.
-6. REQUIRE human sign-off if scan was triggered by ABORT.
-
-**Non-ABORT path** (security section boilerplate, not enough specificity):
-1. Add CWE section with specific field names:
-   ```
-   - CWE-798: `AUTH_TOKEN` loaded from env var `SERVICE_API_KEY` — never inline
-   - CWE-89: Fields `user_id`, `query_term` parameterized before SQL construction
-   ```
-2. Add input validation rules for user-facing fields.
-3. Add output escaping rules for rendered fields.
-
-**Exit Gate**: SecurityScore = 100 (all auto-fail checks clear, specific field names listed).
+**base**:
+- Add domain-specific vocabulary to trigger keywords.
+- Replace generic "output" descriptions with typed field lists.
 
 ---
 
-## S5 — Add Measurable Thresholds
+### S4 — Tighten Workflow Definition
 
-**Trigger**: Quality Gates score < 80
+**Target dimension**: D3 (Workflow Definition)
+**Estimated delta**: +20 to +40 pts
 
-**Symptoms**:
-- No numeric F1/MRR thresholds in skill
-- Thresholds below framework minimums (F1 < 0.90, MRR < 0.85)
-- No reference to measurement method
-
-**Strategy**:
-
-1. **Add / update Quality Gates table**:
-   ```markdown
-   | Metric | Threshold | Measured By |
-   |--------|-----------|-------------|
-   | F1 | ≥ 0.90 | claude/eval/rubrics.md |
-   | MRR | ≥ 0.85 | claude/eval/rubrics.md |
-   | Trigger Accuracy | ≥ 0.90 | claude/eval/benchmarks.md |
+**Steps**:
+1. For each mode section, check: does it have a Phase/Step table?
+2. Add exit criteria per phase if missing:
    ```
-2. **Add OPTIMIZE trigger** — what happens when threshold is missed:
+   BAD:  "3. Execute the task"
+   GOOD: "3. EXECUTE | action: call API | exit: HTTP 2xx received"
    ```
-   IF F1 < 0.90 → auto-route to OPTIMIZE, strategy S1 (trigger expansion)
-   ```
-3. **Add certification tiers** referencing `claude/eval/rubrics.md`.
+3. Add hard checkpoint markers at destructive or irreversible steps.
+4. Define loop exit conditions explicitly (SUCCESS, FAIL, HUMAN_REVIEW).
+5. Add parallel step annotations where steps can run concurrently.
+6. Verify that every "IF error" path leads somewhere (recovery or escalation).
 
-**Exit Gate**: QualityGateScore = 100; all thresholds ≥ minimums, measurement method cited.
+**Phase table template** (copy per mode):
+```markdown
+| # | Phase | Description | Exit Criteria |
+|---|-------|-------------|---------------|
+| 1 | PARSE | ... | ... |
+| 2 | PLAN  | ... | ... |
+| 3 | EXECUTE | ... | ... |
+| 4 | VERIFY | ... | ... |
+| 5 | DELIVER | ... | ... |
+```
 
 ---
 
-## S6 — Full Structural Rebuild
+### S5 — Harden Error Handling
 
-**Trigger**: Overall Score < 70 (FAIL tier) after two optimization cycles
+**Target dimension**: D4 (Error Handling)
+**Estimated delta**: +15 to +30 pts
 
-**When to use**: The skill is so incomplete or incorrect that targeted fixes are less efficient than
-rebuilding from the appropriate template.
+**Steps**:
+1. List all failure modes relevant to the skill type.
+2. For each failure: specify trigger condition, recovery action, escalation path.
+3. Set explicit timeout values (e.g. "API timeout: 10 s → retry once → surface error").
+4. Add retry logic with max retries and backoff (exponential: 1s, 2s, 4s).
+5. Add error output contract per mode.
+6. For workflow skills: define rollback sequence for each step.
 
-**Strategy**:
+**Error catalog by type**:
 
-1. **Extract salvageable content**: Identity description, domain knowledge, any examples.
-2. **Select fresh template** from `claude/templates/` matching the skill type.
-3. **Run CREATE mode** (§3 of skill-framework.md) with the extracted content as pre-filled answers.
-4. **Port salvaged content** into new template draft.
-5. **Run EVALUATE** immediately after generation.
-6. **Do not increment version** if the original was never delivered — treat as v1.0.0.
-
-**Exit Gate**: New skill passes EVALUATE with F1 ≥ 0.90.
+| Error Type | Recovery Pattern |
+|-----------|----------------|
+| HTTP 4xx | Parse error → human-readable message |
+| HTTP 429 | Read `Retry-After` header → wait → retry (max 3) |
+| HTTP 5xx | Backoff retry (1s, 2s, 4s) → HUMAN_REVIEW after 3 fails |
+| Timeout | Retry once → if fails again → surface error |
+| Validation fail | Quarantine record → continue with remaining |
+| Security violation | ABORT immediately → log → notify |
+| LLM timeout | Degrade to majority vote or baseline check |
 
 ---
 
-## S7 — Targeted Metric Boost
+### S6 — Complete Metadata
 
-**Trigger**: A single metric just barely fails (within 0.03 of threshold).
+**Target dimension**: D6 (Metadata)
+**Estimated delta**: +8 to +15 pts
 
-**When to use**: Quick fix to cross the threshold — avoid heavy-handed changes.
+**Steps**:
+1. Verify YAML frontmatter has: `name`, `version`, `description`, `description_i18n` (EN+ZH),
+   `license`, `author`, `created`, `updated`, `type`, `tags`, `interface`.
+2. Check `version` follows semver: `N.N.N`.
+3. Check `tags` has ≥ 3 relevant tags.
+4. Check `description_i18n.zh` is a real Chinese translation, not just `"todo"`.
+5. Update `updated` date to today.
+6. Check `interface.modes` matches actual modes in the skill body.
+7. Add `extends` block if skill references rubrics/security:
+   ```yaml
+   extends:
+     evaluation:
+       metrics: [f1, mrr]
+       thresholds: {f1: 0.90, mrr: 0.85}
+     security:
+       standard: CWE
+       scan-on-delivery: true
+   ```
+
+---
+
+### S7 — Fix Long-Context Integrity
+
+**Target dimension**: D7 (Long-Context)
+**Estimated delta**: +10 to +20 pts
+
+**Steps**:
+1. Scan all `§N` section references in the skill — do they point to real sections?
+2. Scan all `claude/refs/`, `claude/eval/`, `claude/templates/` references — do files exist?
+3. Add cross-references where a section mentions another without linking.
+4. If skill > 400 lines: add a Progressive Disclosure table at the top listing sections
+   and which ones are loaded on demand.
+5. If any section is a stub (< 3 lines), either fill it or mark as "See: `<ref-file>`".
+6. Check chunk integrity: if the skill was processed in chunks, verify all sections merged
+   correctly and cross-references are consistent.
+
+**Progressive Disclosure table template**:
+```markdown
+| Section | Loaded When | Size |
+|---------|------------|------|
+| §1 Identity | Always | Full |
+| §2 Mode Router | Always | Full |
+| §3 CREATE | On CREATE trigger | Full |
+| §N Details | On demand | Lazy |
+| claude/refs/deliberation.md | §4 accessed | External |
+```
+
+---
+
+### S8 — Full Structural Rebuild
+
+**When to use**: Overall score < 560 after 2 cycles, OR multiple dimensions all < 50%.
+Targeted fixes are less efficient than a clean rebuild.
+
+**Steps**:
+1. Extract salvageable content: identity description, domain knowledge, any good examples.
+2. Select fresh template from `claude/templates/` matching the skill type.
+3. Run CREATE mode (§5 of skill-framework.md) with extracted content as pre-filled answers.
+4. Port salvaged content into new template draft.
+5. Run LEAN eval immediately. If LEAN PASS → full EVALUATE.
+6. Version: if original never delivered → keep v1.0.0. If delivered → bump minor: v1.1.0.
+
+**Exit gate**: New skill passes EVALUATE at BRONZE or higher.
+
+---
+
+### S9 — Targeted Metric Boost (Within 0.03 of Threshold)
+
+**When to use**: A single metric barely fails (within 0.03 of threshold). Surgical fix only.
 
 **F1 boost** (F1 between 0.87–0.89):
-- Add 2 primary triggers per mode that showed false negatives.
-- Remove ambiguous triggers causing false positives.
-- Estimated F1 gain per fix: +0.01–0.02.
+- Add 2 primary triggers per mode with false negatives (use benchmark failure log).
+- Remove 1–2 ambiguous triggers causing false positives.
+- Expected gain: +0.01–0.02 F1.
 
 **MRR boost** (MRR between 0.82–0.84):
-- Ensure the single most common trigger phrase is listed as the first primary keyword.
-- Reduce number of modes if one mode is essentially never used (raises MRR of remaining modes).
+- Ensure the single most common trigger phrase is the **first** listed primary keyword per mode.
+- Reduce number of modes if one mode is essentially never used.
+- Expected gain: +0.02–0.04 MRR.
 
-**Trigger accuracy boost** (accuracy between 0.87–0.89):
-- Add clarification prompts for the 2–3 most-confused mode pairs.
+**Trigger accuracy boost** (accuracy 0.87–0.89):
+- Add clarification prompts for the 2 most-confused mode pairs.
 - Add negative patterns for the most common misroutes.
-
-**Exit Gate**: Metric crosses threshold; no other metric degraded by > 0.02.
 
 ---
 
-## Cycle Budget
+## §5  Strategy Selection Matrix
+
+```
+Lowest-scoring dimension → apply strategy
+  D1 System Design     → S2
+  D2 Domain Knowledge  → S3
+  D3 Workflow          → S4
+  D4 Error Handling    → S5
+  D5 Examples          → S1 (trigger) or S3 (content)
+  D6 Metadata          → S6
+  D7 Long-Context      → S7
+  All < 50%            → S8 (rebuild)
+  Single metric fails  → S9 (targeted boost)
+```
+
+**Cycle budget**:
 
 | Cycle | Allowed Strategies | Outcome if Still Failing |
 |-------|--------------------|--------------------------|
-| 1 | S1, S2, S3, S4, S5, S7 | Proceed to Cycle 2 |
-| 2 | S1–S7 | Proceed to Cycle 3 |
-| 3 | S6 (rebuild) or S7 (targeted) | If still failing → HUMAN_REVIEW |
+| 1 | S1–S7, S9 | Proceed to Cycle 2 |
+| 2 | S1–S7, S9 | Proceed to Cycle 3 |
+| 3 | S8 (rebuild) or S9 | If still FAIL → HUMAN_REVIEW |
 
-After 3 cycles without passing all gates, log to audit trail with status `HUMAN_REVIEW`
-and present the evaluation report to the user with specific failing dimensions.
+After 3 cycles at FAIL, or after round 20, stop and escalate.
+Log to audit trail: `{"outcome": "HUMAN_REVIEW", "optimize_cycles": 3}`.

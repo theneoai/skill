@@ -190,9 +190,11 @@ Errors: none
 
 ## Checklist before delivery
 
-- [ ] `{{AUTH_ENV_VAR}}` documented — no credential values written anywhere
-- [ ] All HTTP error codes handled (4xx, 429, 5xx, timeout)
-- [ ] Rate limit respected in BATCH mode
-- [ ] Response fields sanitized before output
-- [ ] F1 ≥ 0.90 confirmed by EVALUATE mode
-- [ ] Security scan: CWE-798 clear
+- [ ] `{{AUTH_ENV_VAR}}` documented in Security Baseline — no credential values written
+- [ ] All HTTP error codes handled: 4xx, 429, 5xx, timeout
+- [ ] Rate limit respected in BATCH mode; BATCH_LIMIT set
+- [ ] Response fields sanitized before output (CWE-79)
+- [ ] LEAN eval score ≥ 350 and no `{{PLACEHOLDER}}` remaining
+- [ ] Full EVALUATE score ≥ 700 (BRONZE) confirmed
+- [ ] Security scan P0 clear: CWE-798, CWE-89, CWE-78 (see `claude/refs/security-patterns.md`)
+- [ ] If TEMP_CERT issued: add `TEMP_CERT: true` to YAML, re-evaluate within 72 h

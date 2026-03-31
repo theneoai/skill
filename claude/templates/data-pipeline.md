@@ -232,10 +232,13 @@ Quarantine rate: 0.6% ≤ 5% → PASS
 
 ## Checklist before delivery
 
-- [ ] Input schema and output schema both defined concretely
+- [ ] Input schema and output schema both defined concretely (field names + types)
 - [ ] Every transformation step specifies input type → output type
-- [ ] Null handling strategy chosen and documented
-- [ ] Quarantine threshold set and enforced
-- [ ] Record count safety limit (`MAX_RECORDS`) set
+- [ ] Null handling strategy chosen and documented (drop/fill/pass/error)
+- [ ] Quarantine threshold set (`MAX_QUARANTINE_PCT`) and enforced
+- [ ] Record count safety limit (`MAX_RECORDS`) set with user confirmation gate
 - [ ] PII fields identified and masking policy documented
-- [ ] F1 ≥ 0.90 confirmed by EVALUATE mode
+- [ ] LEAN eval score ≥ 350 and no `{{PLACEHOLDER}}` remaining
+- [ ] Full EVALUATE score ≥ 700 (BRONZE) confirmed
+- [ ] Security scan P0 clear: CWE-89 (query construction), CWE-22 (output path)
+- [ ] If TEMP_CERT issued: add `TEMP_CERT: true` to YAML, re-evaluate within 72 h
