@@ -73,3 +73,15 @@ htmlcov/
 # Build artifacts
 *.min.js
 *.min.css
+
+# Generated platform files (keep directory but not files)
+platforms/*.md
+platforms/*.json
+!platforms/.gitkeep
+
+# Test installations
+~/.config/opencode/skills/skill-writer.md
+~/.openclaw/skills/skill-writer.md
+~/.claude/skills/skill-writer.md
+~/.cursor/skills/skill-writer.md
+~/.gemini/skills/skill-writer.md

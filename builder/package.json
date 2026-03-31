@@ -1,0 +1,41 @@
+{
+  "name": "skill-writer-builder",
+  "version": "1.0.0",
+  "description": "Build tool for skill-writer - embeds core engine into platform-specific skills",
+  "main": "src/index.js",
+  "bin": {
+    "skill-writer-builder": "./bin/skill-writer-builder.js",
+    "swb": "./bin/skill-writer-builder.js"
+  },
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint src/",
+    "dev": "node bin/skill-writer-builder.js --watch"
+  },
+  "keywords": [
+    "skill",
+    "builder",
+    "opencode",
+    "openclaw",
+    "claude",
+    "ai",
+    "agent"
+  ],
+  "author": "theneoai",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.0.0",
+    "chalk": "^4.1.2",
+    "fs-extra": "^11.1.1",
+    "js-yaml": "^4.1.0",
+    "glob": "^10.3.0",
+    "chokidar": "^3.5.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.50.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

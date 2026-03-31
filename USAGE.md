@@ -1,0 +1,519 @@
+# Skill Writer - Usage Guide
+
+This guide provides detailed examples and patterns for using Skill Writer effectively.
+
+## Table of Contents
+
+1. [Getting Started](#getting-started)
+2. [CREATE Mode Examples](#create-mode-examples)
+3. [EVALUATE Mode Examples](#evaluate-mode-examples)
+4. [OPTIMIZE Mode Examples](#optimize-mode-examples)
+5. [Advanced Patterns](#advanced-patterns)
+6. [Best Practices](#best-practices)
+
+## Getting Started
+
+### Installation Verification
+
+After installation, verify the skill is working:
+
+```
+"Hello, are you ready to help me create skills?"
+```
+
+Expected response: The AI should acknowledge and offer to help with CREATE, EVALUATE, or OPTIMIZE modes.
+
+### First Skill Creation
+
+Let's create a simple skill:
+
+```
+"Create a skill that greets users by name"
+```
+
+The AI will:
+1. Ask 6 elicitation questions
+2. Select the Base template
+3. Generate the skill
+4. Show you the result
+
+## CREATE Mode Examples
+
+### Example 1: API Integration Skill
+
+**User Request:**
+```
+"Create a skill for fetching weather data from OpenWeatherMap API"
+```
+
+**Elicitation Process:**
+The AI will ask:
+1. What's the primary goal? → "Fetch current weather and forecasts"
+2. Who are the target users? → "Developers and end users"
+3. What capabilities must it have? → "Current weather, 5-day forecast, location search"
+4. Any constraints? → "Need API key, rate limits"
+5. Expected scale? → "100 requests/day"
+6. Any references? → "Similar to weather.com API"
+
+**Generated Skill Structure:**
+```yaml
+name: weather-api-skill
+version: 1.0.0
+description: Fetch weather data from OpenWeatherMap API
+template: api-integration
+```
+
+### Example 2: Data Pipeline Skill
+
+**User Request:**
+```
+"Create a skill that processes CSV files and generates reports"
+```
+
+**Key Features Generated:**
+- CSV parsing with validation
+- Data transformation steps
+- Report generation in multiple formats
+- Error handling for malformed data
+
+### Example 3: Workflow Automation Skill
+
+**User Request:**
+```
+"Create a skill that automates GitHub issue management"
+```
+
+**Generated Components:**
+- Issue creation from templates
+- Label management
+- Assignment automation
+- Notification triggers
+
+### Template Selection Guide
+
+| Use Case | Recommended Template | Why |
+|----------|---------------------|-----|
+| Simple utility | Base | Minimal boilerplate |
+| External API | API Integration | Built-in auth patterns |
+| Data processing | Data Pipeline | Validation & transformation |
+| CI/CD tasks | Workflow Automation | Step sequencing |
+
+## EVALUATE Mode Examples
+
+### Example 1: Basic Evaluation
+
+**User Request:**
+```
+"Evaluate this skill"
+```
+
+**AI Process:**
+1. Parse the skill file
+2. Run 4-phase evaluation
+3. Generate score report
+
+**Sample Output:**
+```
+Evaluation Report
+=================
+Overall Score: 847/1000 (GOLD Tier)
+
+Breakdown:
+- Completeness: 240/250 ✓
+- Clarity: 235/250 ✓
+- Security: 190/200 ✓
+- Usability: 182/200 ✓
+- Maintainability: 100/100 ✓
+
+Issues Found:
+1. Missing error handling examples (-10 points)
+2. Unclear trigger description (-5 points)
+
+Recommendations:
+1. Add try-catch examples
+2. Clarify trigger patterns with more examples
+```
+
+### Example 2: Security-Focused Evaluation
+
+**User Request:**
+```
+"Evaluate this skill for security issues"
+```
+
+**Sample Output:**
+```
+Security Audit Report
+=====================
+Score: 720/1000 (SILVER Tier)
+
+Security Issues:
+⚠️ CWE-78: Potential command injection in line 45
+   - Recommendation: Use parameterized commands
+
+⚠️ CWE-89: SQL injection risk in query builder
+   - Recommendation: Use prepared statements
+
+Security Score: 140/200
+
+Overall: Skill needs security improvements before production use.
+```
+
+### Example 3: Certification Request
+
+**User Request:**
+```
+"Certify my skill for production use"
+```
+
+**Certification Criteria:**
+- GOLD (850+) or PLATINUM (950+) required
+- No critical security issues
+- All required sections present
+- Clear documentation
+
+**Sample Output:**
+```
+Certification Result
+====================
+Status: ✓ CERTIFIED - GOLD Tier
+Score: 892/1000
+
+This skill meets production quality standards.
+Certification ID: SW-CERT-2026-001
+Valid until: 2027-03-31
+```
+
+## OPTIMIZE Mode Examples
+
+### Example 1: Conciseness Optimization
+
+**User Request:**
+```
+"Optimize this skill to be more concise"
+```
+
+**Optimization Process:**
+```
+Iteration 1: 720 → 810 (+90 points)
+- Removed redundant phrases
+- Consolidated similar sections
+
+Iteration 2: 810 → 855 (+45 points)
+- Simplified complex sentences
+- Removed duplicate examples
+
+Iteration 3: 855 → 858 (+3 points)
+⚠️ Convergence detected (improvement < 5 points)
+
+Final Score: 858/1000 (GOLD Tier)
+Total Improvement: +138 points
+Changes: 23 optimizations applied
+```
+
+### Example 2: Security Optimization
+
+**User Request:**
+```
+"Optimize this skill to fix security issues"
+```
+
+**Sample Output:**
+```
+Security Optimization Report
+============================
+Initial Score: 680/1000 (BRONZE)
+Security Score: 120/200
+
+Issues Fixed:
+✓ CWE-78: Replaced exec() with spawn() with input validation
+✓ CWE-89: Added parameterized queries
+✓ CWE-22: Implemented path validation
+
+Final Score: 890/1000 (GOLD)
+Security Score: 195/200
+
+All critical security issues resolved.
+```
+
+### Example 3: Comprehensive Optimization
+
+**User Request:**
+```
+"Optimize this skill across all dimensions"
+```
+
+**7-Dimension Analysis:**
+```
+Optimization Report
+===================
+Initial Score: 650/1000 (BRONZE)
+
+Improvements by Dimension:
+1. Conciseness: 140 → 230 (+90)
+2. Clarity: 180 → 240 (+60)
+3. Completeness: 200 → 245 (+45)
+4. Security: 120 → 195 (+75)
+5. Performance: 80 → 95 (+15)
+6. Maintainability: 70 → 98 (+28)
+7. Usability: 160 → 185 (+25)
+
+Final Score: 888/1000 (GOLD)
+Total Improvement: +238 points
+Iterations: 5
+```
+
+## Advanced Patterns
+
+### Pattern 1: Iterative Refinement
+
+**Workflow:**
+```
+1. CREATE: Generate initial skill
+2. EVALUATE: Identify issues
+3. OPTIMIZE: Fix issues
+4. EVALUATE: Verify improvements
+5. Repeat until satisfied
+```
+
+**Example:**
+```
+User: "Create a database query skill"
+[Skill created with score 720]
+
+User: "Evaluate this skill"
+[Issues identified: missing error handling, unclear examples]
+
+User: "Optimize this skill"
+[Optimized to 890]
+
+User: "Evaluate again"
+[Confirmed: 890/1000, GOLD tier]
+```
+
+### Pattern 2: Template Customization
+
+**Creating a custom template:**
+```
+"Create a skill using a custom template for machine learning models"
+```
+
+**Custom Template Structure:**
+```yaml
+name: ml-model-skill
+template: custom
+sections:
+  - Model Architecture
+  - Training Data
+  - Hyperparameters
+  - Evaluation Metrics
+  - Deployment
+```
+
+### Pattern 3: Multi-Platform Deployment
+
+**Building for multiple platforms:**
+```bash
+cd builder
+node bin/skill-writer-builder.js build --platform all
+
+# Results in:
+# platforms/skill-writer-opencode-dev.md
+# platforms/skill-writer-openclaw-dev.md
+# platforms/skill-writer-claude-dev.md
+# platforms/skill-writer-cursor-dev.md
+# platforms/skill-writer-openai-dev.json
+# platforms/skill-writer-gemini-dev.md
+```
+
+### Pattern 4: Batch Processing
+
+**Creating multiple skills:**
+```
+"Create skills for: 1) Email validation, 2) Phone formatting, 3) Address parsing"
+```
+
+The AI will create all three skills in sequence.
+
+## Best Practices
+
+### For Skill Creators
+
+1. **Be Specific**: Clear requirements lead to better skills
+   - ❌ "Create a good skill"
+   - ✅ "Create a skill that validates email addresses with regex"
+
+2. **Answer Elicitation Questions**: Provide detailed answers for better results
+
+3. **Test Triggers**: Verify trigger phrases work as expected
+
+4. **Iterate**: Use EVALUATE and OPTIMIZE to improve
+
+5. **Security First**: Always run security checks before deployment
+
+### For Skill Users
+
+1. **Use Exact Triggers**: Trigger phrases are case-sensitive
+
+2. **Provide Context**: More context = better results
+   - ❌ "Fix this"
+   - ✅ "Optimize this skill for better error handling"
+
+3. **Review Changes**: Always review optimized skills before using
+
+4. **Version Control**: Keep backups of working skills
+
+### For Platform Admins
+
+1. **Regular Evaluation**: Periodically evaluate installed skills
+
+2. **Security Audits**: Run security checks on all skills
+
+3. **Update Templates**: Keep templates current with best practices
+
+4. **Monitor Usage**: Track which skills are most used
+
+## Troubleshooting Common Issues
+
+### Issue: "Skill not found"
+
+**Solution:**
+1. Check installation path is correct
+2. Verify file permissions
+3. Restart AI assistant
+4. Reinstall skill
+
+### Issue: "Low evaluation score"
+
+**Solution:**
+1. Run OPTIMIZE mode
+2. Review specific feedback
+3. Add missing sections
+4. Improve examples
+
+### Issue: "Triggers not working"
+
+**Solution:**
+1. Check exact trigger phrase
+2. Verify no extra spaces
+3. Try alternative triggers
+4. Check case sensitivity
+
+### Issue: "Security warnings"
+
+**Solution:**
+1. Review CWE patterns
+2. Apply recommended fixes
+3. Run security-focused OPTIMIZE
+4. Re-evaluate
+
+## Tips and Tricks
+
+### Tip 1: Use Mode Chaining
+
+Chain modes for best results:
+```
+CREATE → EVALUATE → OPTIMIZE → EVALUATE
+```
+
+### Tip 2: Save Checkpoints
+
+Before optimizing, save a copy:
+```
+"Save a backup of this skill before optimizing"
+```
+
+### Tip 3: Targeted Optimization
+
+Be specific about what to optimize:
+```
+"Optimize only the security aspects of this skill"
+```
+
+### Tip 4: Compare Versions
+
+Compare before and after:
+```
+"Show me what changed in the optimization"
+```
+
+### Tip 5: Custom Requirements
+
+Add specific requirements:
+```
+"Create a skill that handles errors gracefully and logs to console"
+```
+
+## Command Reference
+
+### Builder CLI
+
+```bash
+# Build commands
+node bin/skill-writer-builder.js build --platform all
+node bin/skill-writer-builder.js build --platform opencode
+node bin/skill-writer-builder.js build --platform all --release
+
+# Development
+node bin/skill-writer-builder.js dev --platform opencode
+
+# Validation
+node bin/skill-writer-builder.js validate
+
+# Inspection
+node bin/skill-writer-builder.js inspect --platform opencode
+```
+
+### Natural Language Commands
+
+**CREATE Mode:**
+- "Create a [type] skill"
+- "Generate a skill for [purpose]"
+- "Build a skill that [functionality]"
+
+**EVALUATE Mode:**
+- "Evaluate this skill"
+- "Check quality"
+- "Certify this skill"
+- "Score this skill"
+
+**OPTIMIZE Mode:**
+- "Optimize this skill"
+- "Improve this skill"
+- "Make this better"
+- "Refine this skill"
+
+## Examples Gallery
+
+### Example Skills Created
+
+1. **Weather API Skill** - Fetches weather data
+2. **GitHub Manager** - Automates GitHub tasks
+3. **CSV Processor** - Processes data files
+4. **Email Validator** - Validates email formats
+5. **Code Formatter** - Formats code snippets
+6. **Test Generator** - Generates unit tests
+7. **Documentation Writer** - Creates documentation
+8. **Security Scanner** - Scans for vulnerabilities
+
+### Success Stories
+
+**Story 1: From Idea to Production**
+```
+User created a database migration skill:
+- Initial CREATE: 720 points (BRONZE)
+- After OPTIMIZE: 910 points (PLATINUM)
+- Time saved: 10 hours/week
+```
+
+**Story 2: Security Transformation**
+```
+Legacy skill with security issues:
+- Initial security score: 80/200
+- After security OPTIMIZE: 195/200
+- Critical issues resolved: 5
+```
+
+---
+
+**Need more help?** Check the [README](README.md) or [open an issue](https://github.com/yourusername/skill-writer/issues).

@@ -143,7 +143,7 @@ phases:
           - Consistent results across runs
     exit_criteria:
       - 100% of unit tests pass
-      - >= 90% of integration tests pass
+      - ">= 90% of integration tests pass"
       - All performance benchmarks within thresholds
       - No critical reliability failures
       - Score >= 70% of phase max_points (24.5/35)

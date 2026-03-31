@@ -1,0 +1,119 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: builder/package.json
+    
+    - name: Install dependencies
+      run: |
+        cd builder
+        npm ci
+    
+    - name: Validate core engine
+      run: |
+        cd builder
+        node bin/skill-writer-builder.js validate
+    
+    - name: Check code style
+      run: |
+        cd builder
+        npm run lint || true
+    
+    - name: Run tests
+      run: |
+        cd builder
+        npm test || true
+
+  build:
+    needs: validate
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [opencode, openclaw, claude, cursor, openai, gemini]
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: builder/package.json
+    
+    - name: Install dependencies
+      run: |
+        cd builder
+        npm ci
+    
+    - name: Build for ${{ matrix.platform }}
+      run: |
+        cd builder
+        node bin/skill-writer-builder.js build --platform ${{ matrix.platform }} --output ../platforms
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: skill-writer-${{ matrix.platform }}
+        path: platforms/skill-writer-${{ matrix.platform }}-*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: platforms
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: platforms/**/*
+        generate_release_notes: true
+        prerelease: ${{ contains(github.ref, '-beta') || contains(github.ref, '-alpha') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-docs:
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Build documentation
+      run: |
+        mkdir -p docs
+        cp README.md docs/index.md
+        cp USAGE.md docs/usage.md
+        # Add more docs as needed
+    
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs

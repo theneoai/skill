@@ -1,0 +1,51 @@
+{
+  "name": "skill-writer",
+  "version": "1.0.0",
+  "description": "Cross-platform meta-skill for creating, evaluating, and optimizing AI assistant skills",
+  "main": "builder/src/index.js",
+  "scripts": {
+    "build": "cd builder && node bin/skill-writer-builder.js build --platform all --output ../platforms",
+    "build:opencode": "cd builder && node bin/skill-writer-builder.js build --platform opencode --output ../platforms",
+    "build:openclaw": "cd builder && node bin/skill-writer-builder.js build --platform openclaw --output ../platforms",
+    "build:claude": "cd builder && node bin/skill-writer-builder.js build --platform claude --output ../platforms",
+    "build:cursor": "cd builder && node bin/skill-writer-builder.js build --platform cursor --output ../platforms",
+    "build:openai": "cd builder && node bin/skill-writer-builder.js build --platform openai --output ../platforms",
+    "build:gemini": "cd builder && node bin/skill-writer-builder.js build --platform gemini --output ../platforms",
+    "dev": "cd builder && node bin/skill-writer-builder.js dev --platform opencode",
+    "validate": "cd builder && node bin/skill-writer-builder.js validate",
+    "test": "cd builder && npm test",
+    "lint": "cd builder && npm run lint",
+    "install:opencode": "cp platforms/skill-writer-opencode-dev.md ~/.config/opencode/skills/skill-writer.md",
+    "install:openclaw": "cp platforms/skill-writer-openclaw-dev.md ~/.openclaw/skills/skill-writer.md",
+    "install:claude": "cp platforms/skill-writer-claude-dev.md ~/.claude/skills/skill-writer.md",
+    "install:cursor": "cp platforms/skill-writer-cursor-dev.md ~/.cursor/skills/skill-writer.md",
+    "install:gemini": "cp platforms/skill-writer-gemini-dev.md ~/.gemini/skills/skill-writer.md"
+  },
+  "keywords": [
+    "skill",
+    "meta-skill",
+    "ai",
+    "assistant",
+    "opencode",
+    "openclaw",
+    "claude",
+    "cursor",
+    "openai",
+    "gemini",
+    "automation",
+    "code-generation"
+  ],
+  "author": "Skill Writer Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/skill-writer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/skill-writer/issues"
+  },
+  "homepage": "https://github.com/yourusername/skill-writer#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
