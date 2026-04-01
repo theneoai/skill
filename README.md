@@ -17,7 +17,7 @@ Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and
 - **Agent Install**: One-line install via "read [URL] and install" — works in any supported platform
 - **Zero CLI Interface**: Natural language interaction - no commands to memorize
 - **Cross-Platform**: Works on 6 major AI platforms
-- **Four Powerful Modes**: CREATE, LEAN, EVALUATE, and OPTIMIZE
+- **Five Powerful Modes**: CREATE, LEAN, EVALUATE, OPTIMIZE, and INSTALL
 - **Template-Based**: 4 built-in templates for common skill patterns
 - **Quality Assurance**: 1000-point scoring system with certification tiers
 - **Security Built-In**: CWE-based security pattern detection
