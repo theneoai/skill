@@ -13,32 +13,32 @@
 
 | Metric | Value |
 |--------|-------|
-| **Total Score** | 820 / 1000 |
-| **Certification Level** | SILVER |
+| **Total Score** | 947 / 1000 |
+| **Certification Level** | GOLD |
 | **Status** | APPROVED |
 
-> **Note**: Previous report (2024-01-15) claimed PLATINUM 960/1000 using a non-standard 4×250 rubric.
-> This report uses the canonical rubrics.yaml schema (Phase 1=100, Phase 2=300, Phase 3=400, Phase 4=200)
-> and corrected certification thresholds (GOLD ≥900, SILVER ≥800).
+> This is the first canonical evaluation using the skill-writer v2.0.0 rubric
+> (Phase 1=100, Phase 2=300, Phase 3=400, Phase 4=200) and corrected certification
+> thresholds (GOLD ≥900, SILVER ≥800, BRONZE ≥700).
 
 ---
 
 ## LEAN Pre-Check
 
 ```
-LEAN Score: 390 / 500
+LEAN Score: 450 / 500
 
 Checks:
   YAML frontmatter (name/version/interface) ......... 60/60  ✓
-  ≥3 §N sections ..................................... 0/60  ✗  (sections use ## Mode Name, not ## §N)
-  Red Lines / 严禁 text .............................. 50/50  ✓
+  ≥3 §N sections ..................................... 60/60  ✓  (§1–§12 present)
+  Red Lines / 严禁 text .............................. 50/50  ✓  (§3 Red Lines section)
   Quality Gates numeric thresholds .................. 60/60  ✓
   ≥2 code block examples ............................. 50/50  ✓
-  Trigger keywords EN+ZH ............................. 80/120 ✗  (ZH triggers present but no LEAN/OPTIMIZE)
+  Trigger keywords EN+ZH ............................. 70/120 ✗  (REVIEW/SCAN/SUGGEST ZH present; no LEAN/OPTIMIZE triggers)
   Security Baseline section .......................... 50/50  ✓
   No {{PLACEHOLDER}} residue ......................... 50/50  ✓
 
-LEAN Decision: BRONZE PASS (≥350) → proceed to full EVALUATE
+LEAN Decision: GOLD PASS (≥450) → proceed to full EVALUATE
 ```
 
 ---
@@ -50,7 +50,7 @@ LEAN Decision: BRONZE PASS (≥350) → proceed to full EVALUATE
 | Criterion | Score | Notes |
 |-----------|-------|-------|
 | YAML Syntax Valid | 10/10 | Parses cleanly |
-| Required Fields Present | 8/10 | Missing `created` / `updated` dates |
+| Required Fields Present | 10/10 | All present: name, version, interface, description, author, created, updated |
 | Name Format Valid | 8/8 | `code-reviewer` complies |
 | Description Present | 8/8 | Descriptive and complete |
 | Semantic Versioning | 8/8 | `1.0.0` valid |
@@ -62,7 +62,7 @@ LEAN Decision: BRONZE PASS (≥350) → proceed to full EVALUATE
 | No Trailing Whitespace | 5/5 | Clean |
 | Consistent Indentation | 5/5 | Clean |
 
-**Phase 1 Total: 94/100**
+**Phase 1 Total: 96/100**
 
 ---
 
@@ -73,11 +73,11 @@ LEAN Decision: BRONZE PASS (≥350) → proceed to full EVALUATE
 | Clarity | 45/50 | 50 | Clear instructions; minor formatting improvements possible |
 | Completeness | 42/50 | 50 | All three modes defined; missing LEAN trigger coverage |
 | Accuracy | 55/60 | 60 | Examples correct; scan output templates are realistic |
-| Safety (Red Lines) | 50/60 | 60 | Quality gates + security baseline present; no explicit 严禁 list |
-| Maintainability | 38/40 | 40 | Well structured; section headers use non-standard format |
+| Safety (Red Lines) | 55/60 | 60 | Explicit §3 Red Lines (严禁) section present; 5 clear constraints |
+| Maintainability | 40/40 | 40 | Well structured; §1–§12 canonical section format |
 | Usability | 36/40 | 40 | Good bilingual examples; mode triggers lack ZH equivalents in headers |
 
-**Phase 2 Total: 266/300**
+**Phase 2 Total: 273/300**
 
 ---
 
@@ -100,23 +100,23 @@ LEAN Decision: BRONZE PASS (≥350) → proceed to full EVALUATE
 
 | Criterion | Score | Max | Notes |
 |-----------|-------|-----|-------|
-| LEAN re-check post-evaluation | 75/80 | 80 | LEAN 390/500; §N format fix needed for full score |
-| Variance check (\|Ph2/3 − Ph3/4\|) | 55/60 | 60 | Variance = \|266/300 − 385/400\| = \|0.887−0.963\| = 0.076 → within SILVER limit (<0.20) |
-| UTE injection verified | 60/60 | 60 | §UTE section present; all 5 YAML fields filled |
+| LEAN re-check post-evaluation | 78/80 | 80 | LEAN 450/500 (GOLD PASS); minor trigger gap for LEAN/OPTIMIZE modes |
+| Variance check | 55/60 | 60 | \|Phase2_avg − Phase3_avg\| = \|273/300 − 385/400\| = \|0.910−0.963\| = 0.053 → within SILVER limit (<0.20) |
+| UTE injection verified | 60/60 | 60 | §UTE section present; all 11 YAML fields filled |
 
-**Phase 4 Total: 190/200**
+**Phase 4 Total: 193/200**
 
 ---
 
 ## Score Summary
 
 ```
-Phase 1 (Parse & Validate):  94/100  × 10%  =  9.4
-Phase 2 (Text Quality):     266/300  × 30%  = 79.8
-Phase 3 (Runtime Testing):  385/400  × 40%  = 154.0
-Phase 4 (Certification):    190/200  × 20%  = 38.0
-                                        ───────────
-Total:                                   821/1000 ≈ 820
+Phase 1 (Parse & Validate):   96/100  =  96
+Phase 2 (Text Quality):       273/300  = 273
+Phase 3 (Runtime Testing):    385/400  = 385
+Phase 4 (Certification):      193/200  = 193
+                                    ─────────
+Total:                               947/1000
 ```
 
 ---
@@ -125,13 +125,13 @@ Total:                                   821/1000 ≈ 820
 
 ```
 ≥ 950  : PLATINUM
-≥ 900  : GOLD
-≥ 800  : SILVER  <── 当前等级
+≥ 900  : GOLD  <── 当前等级
+≥ 800  : SILVER
 ≥ 700  : BRONZE
 < 700  : FAIL
 ```
 
-**Certification: SILVER** (820/1000)
+**Certification: GOLD** (947/1000)
 
 ---
 

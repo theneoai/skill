@@ -40,7 +40,33 @@ Patches are proposed and staged; applied at session start or on user confirmatio
 
 ---
 
-## §2  Post-Invocation Hook
+## §2  YAML Frontmatter Block
+
+Every skill with UTE enabled **must** include a `use_to_evolve:` block in its YAML frontmatter with all 11 fields:
+
+```yaml
+use_to_evolve:
+  enabled: true                          # (bool) UTE active
+  injected_by: "skill-writer v2.0.0"    # (string) injector version
+  injected_at: "2026-04-01"             # (ISO-8601) injection date
+  check_cadence:                         # (dict) invocation thresholds
+    lightweight: 10                      #   lightweight check every N invocations
+    full_recompute: 50                   #   full metric recompute every N
+    tier_drift: 100                      #   tier drift check every N
+  micro_patch_enabled: true             # (bool) allow autonomous trigger patches
+  feedback_detection: true              # (bool) detect user feedback signals
+  certified_lean_score: 390             # (int) baseline LEAN score for tier drift
+  last_ute_check: null                  # (ISO-8601 | null) when last check ran
+  pending_patches: 0                    # (int) staged but unapplied patches
+  total_micro_patches_applied: 0        # (int) cumulative patches applied
+  cumulative_invocations: 0             # (int) total invocations (cadence counter)
+```
+
+> **Note**: Phase 4 certification checks that all 11 fields are present. Missing any field fails the UTE injection check (−60 points).
+
+---
+
+## §3  Post-Invocation Hook
 
 Every skill with UTE enabled runs this hook at the **end of every invocation**:
 
@@ -98,7 +124,7 @@ ALWAYS:
 
 ---
 
-## §3  Feedback Signal Taxonomy
+## §4  Feedback Signal Taxonomy
 
 ### Primary Signals (used to update rolling metrics)
 
@@ -123,7 +149,7 @@ When signal = `trigger_miss`:
 
 ---
 
-## §4  Lightweight Check (Every 10 Invocations)
+## §5  Lightweight Check (Every 10 Invocations)
 
 Fast check, no LLM. Uses rolling window of last 20 invocations.
 
@@ -148,7 +174,7 @@ IF consecutive_failures ≥ 3:
 
 ---
 
-## §5  Full Metric Recompute (Every 50 Invocations)
+## §6  Full Metric Recompute (Every 50 Invocations)
 
 Uses last 50 invocations. Recomputes F1, MRR, trigger_accuracy from usage log.
 
@@ -180,7 +206,7 @@ On any breach → consult evolution.md §2 decision engine → MICRO-PATCH or QU
 
 ---
 
-## §6  Tier Drift Check (Every 100 Invocations)
+## §7  Tier Drift Check (Every 100 Invocations)
 
 Estimate current LEAN score from usage metrics without running a formal eval:
 
@@ -199,7 +225,7 @@ IF estimated_lean_score < last_certified_lean_score - 50:
 
 ---
 
-## §7  Micro-Patch Protocol
+## §8  Micro-Patch Protocol
 
 Micro-patches are **atomic, single-line changes** applied autonomously for minor issues.
 They NEVER affect the skill's core logic — only surface-level trigger keywords or metadata.
@@ -254,7 +280,7 @@ They NEVER affect the skill's core logic — only surface-level trigger keywords
 
 ---
 
-## §8  UTE YAML Frontmatter
+## §9  UTE YAML Frontmatter (Legacy Reference)
 
 When UTE is injected into a skill, these fields are added to its YAML frontmatter:
 
@@ -274,7 +300,7 @@ use_to_evolve:
 
 ---
 
-## §9  Safety Constraints
+## §10  Safety Constraints
 
 | Constraint | Rule |
 |-----------|------|

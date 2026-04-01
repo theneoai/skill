@@ -21,7 +21,7 @@ interface:
 
 > **Type**: Meta-Skill  
 > **Platform**: Claude  
-> **Version**: 1.0.0
+> **Version**: 2.0.0
 
 A meta-skill that enables Claude to create, evaluate, and optimize other skills through natural language interaction.
 

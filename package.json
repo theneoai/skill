@@ -39,12 +39,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/skill-writer.git"
+    "url": "https://github.com/theneoai/skill-writer.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/skill-writer/issues"
+    "url": "https://github.com/theneoai/skill-writer/issues"
   },
-  "homepage": "https://github.com/yourusername/skill-writer#readme",
+  "homepage": "https://github.com/theneoai/skill-writer#readme",
   "engines": {
     "node": ">=16.0.0"
   }

@@ -101,21 +101,21 @@
 
 > 评分采用 skill-writer v2.0.0 四阶段权重模型（100/300/400/200）。
 
-| 阶段 | 描述 | 得分 | 满分 | 权重 | 加权分 |
-|------|------|------|------|------|--------|
-| Phase 1 | Parse & Validate | 92 | 100 | 10% | 9.2 |
-| Phase 2 | Text Quality | 268 | 300 | 30% | 80.4 |
-| Phase 3 | Runtime Testing | 355 | 400 | 40% | 142.0 |
-| Phase 4 | Certification | 180 | 200 | 20% | 36.0 |
-| **合计** | | | | | **267.6 → 895/1000** |
+| 阶段 | 描述 | 得分 | 满分 | 贡献分 |
+|------|------|------|------|--------|
+| Phase 1 | Parse & Validate | 92 | 100 | 92 |
+| Phase 2 | Text Quality | 268 | 300 | 268 |
+| Phase 3 | Runtime Testing | 355 | 400 | 355 |
+| Phase 4 | Certification | 180 | 200 | 180 |
+| **合计** | | | **1000** | **895/1000** |
 
 ```
-Phase 1 (Parse & Validate):  92/100  × 10%  =  9.2
-Phase 2 (Text Quality):     268/300  × 30%  = 80.4
-Phase 3 (Runtime Testing):  355/400  × 40%  = 142.0
-Phase 4 (Certification):    180/200  × 20%  = 36.0
-                                        ─────────
-Total:                                   895/1000
+Phase 1 (Parse & Validate):   92/100  =  92
+Phase 2 (Text Quality):       268/300  = 268
+Phase 3 (Runtime Testing):    355/400  = 355
+Phase 4 (Certification):      180/200  = 180
+                                    ─────────
+Total:                               895/1000
 ```
 
 **方差检查** (Variance): |268/300 − 355/400| = |0.893 − 0.888| = 0.005 → 远低于 GOLD 限值 15 ✓
