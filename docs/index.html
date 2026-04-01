@@ -31,7 +31,7 @@
         <div class="hero-content">
             <div class="container">
                 <div class="hero-badge">
-                    <span class="badge">🎉 v1.0.0 正式发布</span>
+                    <span class="badge">🎉 v2.0.0 正式发布</span>
                 </div>
                 <h1 class="hero-title">
                     让 AI 技能像软件一样<br>
@@ -44,7 +44,7 @@
                 <div class="hero-badges">
                     <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
                     <img src="https://img.shields.io/badge/Framework-PLATINUM-brightgreen" alt="Framework">
-                    <img src="https://img.shields.io/badge/version-1.0.0-blue" alt="Version">
+                    <img src="https://img.shields.io/badge/version-2.0.0-blue" alt="Version">
                 </div>
                 <div class="hero-cta">
                     <a href="#quickstart" class="btn btn-primary btn-large">快速开始</a>
@@ -66,7 +66,7 @@
                         <div class="stat-label">分评估体系</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">938</div>
+                        <div class="stat-number">878</div>
                         <div class="stat-label">平均认证分数</div>
                     </div>
                     <div class="stat-item">
@@ -91,6 +91,18 @@
             </div>
 
             <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">LEAN 快评模式</h3>
+                    <p class="feature-desc">500分启发式快评，约1秒完成，无需调用 LLM。8项检查快速判断技能质量。</p>
+                    <ul class="feature-list">
+                        <li>YAML frontmatter 完整性</li>
+                        <li>§N 格式段落检查</li>
+                        <li>Red Lines / 严禁文本</li>
+                        <li>触发词覆盖度</li>
+                    </ul>
+                </div>
+
                 <div class="feature-card">
                     <div class="feature-icon">🎯</div>
                     <h3 class="feature-title">1000分评估体系</h3>
@@ -117,25 +129,13 @@
 
                 <div class="feature-card">
                     <div class="feature-icon">🔄</div>
-                    <h3 class="feature-title">自进化系统</h3>
-                    <p class="feature-desc">3触发器自动监控技能质量，发现问题自动优化，无需人工干预。</p>
+                    <h3 class="feature-title">自进化系统 (UTE)</h3>
+                    <p class="feature-desc">Use-to-Evolve 协议，3触发器自动监控技能质量，发现问题自动优化，无需人工干预。</p>
                     <ul class="feature-list">
                         <li><strong>Threshold:</strong> 质量阈值监控</li>
                         <li><strong>Time:</strong> 新鲜度检查</li>
                         <li><strong>Usage:</strong> 使用率分析</li>
                         <li>7维度9步优化循环</li>
-                    </ul>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🌏</div>
-                    <h3 class="feature-title">原生双语支持</h3>
-                    <p class="feature-desc">中英文无缝切换，所有模板内置双语触发词，评估报告双语输出。</p>
-                    <ul class="feature-list">
-                        <li>双语触发词识别</li>
-                        <li>混合语言输入支持</li>
-                        <li>双语评估报告</li>
-                        <li>国际化模板</li>
                     </ul>
                 </div>
             </div>
@@ -207,14 +207,14 @@
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title">示例技能</h2>
-                <p class="section-subtitle">平均认证分数 938.3/1000，开箱即用</p>
+                <p class="section-subtitle">平均认证分数 878.3/1000，开箱即用</p>
             </div>
 
             <div class="examples-grid">
                 <div class="example-card">
                     <div class="example-header">
                         <div class="example-icon">🌐</div>
-                        <div class="example-tier">🏆 PLATINUM 960</div>
+                        <div class="example-tier">🥇 GOLD 920</div>
                     </div>
                     <h3 class="example-name">API Tester</h3>
                     <p class="example-type">API Integration</p>
@@ -234,7 +234,7 @@ skill run api-tester --mode batch \
                 <div class="example-card">
                     <div class="example-header">
                         <div class="example-icon">🔍</div>
-                        <div class="example-tier">🥇 GOLD 935</div>
+                        <div class="example-tier">🥈 SILVER 820</div>
                     </div>
                     <h3 class="example-name">Code Reviewer</h3>
                     <p class="example-type">Workflow Automation</p>
@@ -254,7 +254,7 @@ skill run code-reviewer --mode scan \
                 <div class="example-card">
                     <div class="example-header">
                         <div class="example-icon">📝</div>
-                        <div class="example-tier">🥇 GOLD 920</div>
+                        <div class="example-tier">🥇 GOLD 895</div>
                     </div>
                     <h3 class="example-name">Doc Generator</h3>
                     <p class="example-type">Data Pipeline</p>
@@ -405,10 +405,24 @@ cd skill</code></pre>
                     </div>
                 </div>
 
+                <div class="roadmap-item completed">
+                    <div class="roadmap-marker">✅</div>
+                    <div class="roadmap-content">
+                        <h3>v2.0.0 - 已发布</h3>
+                        <ul>
+                            <li>LEAN 快评模式（500分，约1秒）</li>
+                            <li>UTE 自进化协议</li>
+                            <li>LoongFlow 编排机制</li>
+                            <li>方差门控认证</li>
+                            <li>6平台完整支持</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <div class="roadmap-item in-progress">
                     <div class="roadmap-marker">🚧</div>
                     <div class="roadmap-content">
-                        <h3>v1.1.0 - 进行中</h3>
+                        <h3>v2.1.0 - 进行中</h3>
                         <ul>
                             <li>CLI工具 (skill create/evaluate/optimize)</li>
                             <li>VS Code插件</li>
@@ -421,7 +435,7 @@ cd skill</code></pre>
                 <div class="roadmap-item planned">
                     <div class="roadmap-marker">📅</div>
                     <div class="roadmap-content">
-                        <h3>v2.0.0 - 计划中</h3>
+                        <h3>v3.0.0 - 计划中</h3>
                         <ul>
                             <li>技能市场/注册表</li>
                             <li>Web IDE</li>

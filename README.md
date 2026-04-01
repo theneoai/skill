@@ -16,11 +16,13 @@ Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and
 
 - **Zero CLI Interface**: Natural language interaction - no commands to memorize
 - **Cross-Platform**: Works on 6 major AI platforms
-- **Three Powerful Modes**: CREATE, EVALUATE, and OPTIMIZE
+- **Four Powerful Modes**: CREATE, LEAN, EVALUATE, and OPTIMIZE
 - **Template-Based**: 4 built-in templates for common skill patterns
 - **Quality Assurance**: 1000-point scoring system with certification tiers
 - **Security Built-In**: CWE-based security pattern detection
 - **Continuous Improvement**: Automated optimization with convergence detection
+- **Self-Evolution**: UTE (Use-to-Evolve) protocol for automatic skill improvement
+- **Multi-LLM Deliberation**: Generator/Reviewer/Arbiter consensus mechanism
 
 ## Supported Platforms
 
@@ -79,14 +81,22 @@ cp platforms/skill-writer-gemini-dev.md ~/.gemini/skills/skill-writer.md
 "Create a weather API skill that fetches current conditions"
 ```
 
-**Evaluate an existing skill:**
+**Quick evaluation (LEAN mode):**
+```
+"Quickly evaluate this skill"
+"快评这个技能"
+```
+
+**Full evaluation:**
 ```
 "Evaluate this skill and give me a quality score"
+"评测这个技能"
 ```
 
 **Optimize a skill:**
 ```
 "Optimize this skill to make it more concise"
+"优化这个技能"
 ```
 
 ## Modes
@@ -95,14 +105,16 @@ cp platforms/skill-writer-gemini-dev.md ~/.gemini/skills/skill-writer.md
 
 Generates new skills from scratch using structured templates and elicitation.
 
-#### Workflow
-1. **Parse Request**: Analyze intent and extract requirements
-2. **Select Template**: Choose from 4 built-in templates
-3. **Elicit Requirements**: Ask 6 clarifying questions
-4. **Generate Output**: Create skill using template
-5. **Security Scan**: Check for CWE vulnerabilities
-6. **Quality Check**: Validate structure and completeness
-7. **Deliver**: Output final skill file
+#### Workflow (9-Phase)
+1. **ELICIT**: Ask 6 clarifying questions to understand requirements
+2. **SELECT TEMPLATE**: Choose from 4 built-in templates
+3. **PLAN**: Multi-LLM deliberation for implementation strategy
+4. **GENERATE**: Create skill using template
+5. **SECURITY SCAN**: Check for CWE vulnerabilities
+6. **LEAN EVAL**: Fast 500-point heuristic evaluation
+7. **FULL EVALUATE**: Complete 1000-point evaluation (if LEAN uncertain)
+8. **INJECT UTE**: Add Use-to-Evolve self-improvement hooks
+9. **DELIVER**: Output final skill file
 
 #### Available Templates
 
@@ -122,64 +134,89 @@ Generates new skills from scratch using structured templates and elicitation.
 - Use for: CI/CD, repetitive tasks, orchestration
 - Features: Step sequencing, error recovery, notifications
 
+#### Triggers (EN/ZH)
+- "create a [type] skill" / "创建一个[类型]技能"
+- "help me write a skill for [purpose]" / "帮我写一个技能"
+- "I need a skill that [description]" / "我需要一个技能"
+- "generate a skill to [action]" / "生成一个技能"
+- "build a skill for [task]" / "构建一个技能"
+
+### LEAN Mode
+
+Fast 500-point heuristic evaluator (~1 second, no LLM calls) for rapid quality assessment.
+
+#### 8-Check Rubric
+
+| Check | Points | Criteria |
+|-------|--------|----------|
+| YAML frontmatter | 60 | name, version, interface fields present |
+| §N Pattern Sections | 60 | ≥3 sections with `## §N` format |
+| Red Lines | 50 | "Red Lines" or "严禁" text present |
+| Quality Gates Table | 60 | Table with numeric thresholds |
+| Code Block Examples | 50 | ≥2 code block examples |
+| Trigger Keywords | 120 | EN+ZH keywords for all 4 modes |
+| Security Baseline | 50 | Security section present |
+| No Placeholders | 50 | No `{{PLACEHOLDER}}`残留 |
+
+#### Decision Gates
+- **PASS (≥350)**: Skill passes LEAN certification
+- **UNCERTAIN (300-349)**: Upgrade to full EVALUATE mode
+- **FAIL (<300)**: Route to OPTIMIZE mode
+
 #### Triggers
-- "create a [type] skill"
-- "help me write a skill for [purpose]"
-- "I need a skill that [description]"
-- "generate a skill to [action]"
-- "build a skill for [task]"
+- "lean evaluate" / "快评"
+- "quick check" / "快速检查"
+- "rapid eval" / "快速评估"
 
 ### EVALUATE Mode
 
 Assesses skill quality with rigorous 1000-point scoring and certification.
 
 #### 4-Phase Pipeline
-1. **Structural Analysis**: Check format, sections, completeness
-2. **Content Quality**: Assess clarity, examples, instructions
-3. **Security Audit**: Scan for CWE patterns
-4. **Scoring**: Calculate 1000-point score
 
-#### Scoring Rubric
-
-| Category | Points | Criteria |
-|----------|--------|----------|
-| Completeness | 250 | Required sections, placeholders, examples |
-| Clarity | 250 | Clear instructions, precise language |
-| Security | 200 | No CWE violations, safe patterns |
-| Usability | 200 | Easy to understand, good examples |
-| Maintainability | 100 | Well structured, documented |
+| Phase | Points | Focus |
+|-------|--------|-------|
+| Phase 1: Structural | 100 | YAML syntax, format, metadata |
+| Phase 2: Content Quality | 300 | Clarity, completeness, accuracy, safety, maintainability, usability |
+| Phase 3: Runtime Tests | 400 | Unit, integration, sandbox, error handling, performance, security tests |
+| Phase 4: Certification | 200 | Documentation, coverage, quality, compatibility, review |
 
 #### Certification Tiers
 
-- **PLATINUM (950-1000)**: Exceptional quality
-- **GOLD (850-949)**: Production-ready
-- **SILVER (750-849)**: Good quality
-- **BRONZE (650-749)**: Acceptable
-- **FAIL (<650)**: Needs improvement
+| Tier | Score | Variance | Phase 2 Min | Phase 3 Min |
+|------|-------|----------|-------------|-------------|
+| **PLATINUM** | ≥950 | <10 | ≥270 | ≥360 |
+| **GOLD** | ≥900 | <15 | ≥255 | ≥340 |
+| **SILVER** | ≥800 | <20 | ≥225 | ≥300 |
+| **BRONZE** | ≥700 | <30 | ≥195 | ≥265 |
+| **FAIL** | <700 | — | — | — |
 
-#### Triggers
-- "evaluate this skill"
-- "check the quality of my skill"
-- "certify my skill"
-- "score this skill"
-- "assess this skill"
+#### Triggers (EN/ZH)
+- "evaluate this skill" / "评测这个技能"
+- "check the quality" / "检查质量"
+- "certify my skill" / "认证我的技能"
+- "score this skill" / "评分"
+- "assess this skill" / "评估这个技能"
 
 ### OPTIMIZE Mode
 
-Continuously improves skills through iterative refinement.
+Continuously improves skills through iterative refinement with 7-dimension analysis.
 
 #### 7-Dimension Analysis
-1. **Conciseness**: Remove redundancy
-2. **Clarity**: Improve understanding
-3. **Completeness**: Add missing elements
-4. **Security**: Fix vulnerabilities
-5. **Performance**: Optimize execution
-6. **Maintainability**: Improve structure
-7. **Usability**: Enhance user experience
+
+| Dimension | Weight | Focus |
+|-----------|--------|-------|
+| System Design | 20% | Architecture, workflow structure |
+| Domain Knowledge | 20% | Accuracy, terminology, context |
+| Workflow Definition | 20% | Step clarity, transitions |
+| Error Handling | 15% | Edge cases, recovery |
+| Examples | 15% | Coverage, relevance |
+| Metadata | 10% | Documentation, tags |
+| Long-Context | 10% | Token efficiency, structure |
 
 #### 9-Step Optimization Loop
 1. **Parse**: Understand current skill
-2. **Analyze**: Identify improvement areas
+2. **Analyze**: Identify improvement areas across 7 dimensions
 3. **Generate**: Create optimized version
 4. **Evaluate**: Score the new version
 5. **Compare**: Check against previous
@@ -190,17 +227,18 @@ Continuously improves skills through iterative refinement.
 
 #### Convergence Detection
 Optimization stops when:
-- Score improvement < 5 points
-- 3 iterations without significant gain
+- Score improvement < 0.5 points
+- 10 iterations without significant gain (plateau window)
 - User requests stop
-- Maximum iterations reached (10)
+- Maximum iterations reached (20)
+- DIVERGING detected → HALT → HUMAN_REVIEW
 
-#### Triggers
-- "optimize this skill"
-- "improve my skill"
-- "make this skill better"
-- "refine this skill"
-- "enhance this skill"
+#### Triggers (EN/ZH)
+- "optimize this skill" / "优化这个技能"
+- "improve my skill" / "改进我的技能"
+- "make this skill better" / "让这个技能更好"
+- "refine this skill" / "精炼这个技能"
+- "enhance this skill" / "增强这个技能"
 
 ## Security Features
 
@@ -212,6 +250,15 @@ Automatically checks for:
 - **CWE-89**: SQL Injection
 - **CWE-22**: Path Traversal
 - And more...
+
+### Security Severity Levels
+
+| Level | CWE Examples | Action |
+|-------|--------------|--------|
+| P0 (Critical) | CWE-798, CWE-89, CWE-78 | ABORT immediately |
+| P1 (High) | CWE-22, CWE-306, CWE-862 | -50 points |
+| P2 (Medium) | Various | -30 points |
+| P3 (Low) | Minor issues | -10 points |
 
 ### Security Report Format
 
@@ -226,6 +273,32 @@ P3: X violations (Low)
 Recommendations:
 - [Specific fixes]
 ```
+
+## UTE (Use-to-Evolve)
+
+Self-improvement protocol that enables skills to evolve through usage.
+
+### UTE YAML Block
+
+```yaml
+use_to_evolve:
+  framework_version: "2.0.0"
+  injection_date: "2026-04-01"
+  certified_lean_score: 390
+  last_ute_check: "2026-04-01"
+```
+
+### 3-Trigger System
+
+1. **Threshold Trigger**: Quality drops below certified baseline
+2. **Time Trigger**: Freshness check (cadence-gated)
+3. **Usage Trigger**: Usage pattern analysis
+
+### Post-Invocation Hook
+- Records usage context
+- Detects implicit feedback signals
+- Runs trigger checks
+- Applies micro-patches if needed
 
 ## Builder Tool
 
@@ -276,7 +349,7 @@ node bin/skill-writer-builder.js inspect --platform opencode
 skill-writer/
 ├── core/                          # Core engine (platform-agnostic)
 │   ├── create/                    # CREATE mode
-│   │   ├── workflow.yaml          # 7-step workflow
+│   │   ├── workflow.yaml          # 9-phase workflow
 │   │   ├── elicitation.yaml       # 6 elicitation questions
 │   │   └── templates/             # 4 templates
 │   │       ├── base.md
@@ -323,13 +396,19 @@ skill-writer/
 │       ├── cursor.md
 │       ├── openai.json
 │       └── gemini.md
-└── platforms/                     # Generated platform files
-    ├── skill-writer-opencode-dev.md
-    ├── skill-writer-openclaw-dev.md
-    ├── skill-writer-claude-dev.md
-    ├── skill-writer-cursor-dev.md
-    ├── skill-writer-openai-dev.json
-    └── skill-writer-gemini-dev.md
+├── platforms/                     # Generated platform files
+│   ├── skill-writer-opencode-dev.md
+│   ├── skill-writer-openclaw-dev.md
+│   ├── skill-writer-claude-dev.md
+│   ├── skill-writer-cursor-dev.md
+│   ├── skill-writer-openai-dev.json
+│   └── skill-writer-gemini-dev.md
+├── examples/                      # Example skills
+│   ├── api-tester/                # GOLD 920/1000
+│   ├── code-reviewer/             # SILVER 820/1000
+│   └── doc-generator/             # GOLD 895/1000
+└── docs/                          # GitHub Pages documentation
+    └── index.html
 ```
 
 ## Architecture
@@ -342,18 +421,22 @@ skill-writer/
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │ CREATE Mode  │  │EVALUATE Mode │  │ OPTIMIZE Mode│      │
+│  │ CREATE Mode  │  │  LEAN Mode   │  │EVALUATE Mode │      │
 │  │              │  │              │  │              │      │
-│  │ • Templates  │  │ • 4-Phase    │  │ • 7-Dimension│      │
-│  │ • Elicitation│  │   Pipeline   │  │   Analysis   │      │
-│  │ • 7-Step     │  │ • 1000-Point │  │ • 9-Step     │      │
-│  │   Workflow   │  │   Scoring    │  │   Loop       │      │
+│  │ • Templates  │  │ • 500-Point  │  │ • 4-Phase    │      │
+│  │ • Elicitation│  │   Heuristic  │  │   Pipeline   │      │
+│  │ • 9-Phase    │  │ • 8-Check    │  │ • 1000-Point │      │
+│  │   Workflow   │  │   Rubric     │  │   Scoring    │      │
 │  └──────────────┘  └──────────────┘  └──────────────┘      │
 │                                                              │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │              Shared Resources                        │   │
-│  │  • CWE Security Patterns • Utility Functions        │   │
-│  └─────────────────────────────────────────────────────┘   │
+│  ┌──────────────┐  ┌─────────────────────────────────────┐ │
+│  │OPTIMIZE Mode │  │              Shared Resources        │ │
+│  │              │  │  • CWE Security Patterns            │ │
+│  │ • 7-Dimension│  │  • UTE Self-Evolution               │ │
+│  │   Analysis   │  │  • Multi-LLM Deliberation           │ │
+│  │ • 9-Step     │  │  • Utility Functions                │ │
+│  │   Loop       │  │                                     │ │
+│  └──────────────┘  └─────────────────────────────────────┘ │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
                             │
@@ -369,6 +452,18 @@ skill-writer/
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+## Example Skills
+
+All example skills are certified with detailed evaluation reports.
+
+| Skill | Type | Tier | Score | Description |
+|-------|------|------|-------|-------------|
+| [api-tester](examples/api-tester/) | API Integration | 🥇 GOLD | 920/1000 | HTTP API testing automation |
+| [code-reviewer](examples/code-reviewer/) | Workflow Automation | 🥈 SILVER | 820/1000 | Code review with security scanning |
+| [doc-generator](examples/doc-generator/) | Data Pipeline | 🥇 GOLD | 895/1000 | Documentation generation |
+
+**Average Score: 878.3/1000**
 
 ## Contributing
 
@@ -428,9 +523,12 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ## Roadmap
 
-- [x] Core engine with CREATE, EVALUATE, OPTIMIZE modes
+- [x] Core engine with CREATE, LEAN, EVALUATE, OPTIMIZE modes
 - [x] Builder tool with CLI
 - [x] Support for 6 platforms (OpenCode, OpenClaw, Claude, Cursor, OpenAI, Gemini)
+- [x] LEAN fast-evaluation mode
+- [x] UTE (Use-to-Evolve) self-improvement protocol
+- [x] Multi-LLM deliberation mechanism
 - [ ] Web UI for skill management
 - [ ] Skill marketplace integration
 - [ ] Automated testing framework
