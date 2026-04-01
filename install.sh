@@ -116,6 +116,7 @@ install_platform() {
       ;;
     openai)
       echo "  ℹ [openai] OpenAI platform requires manual installation via platform settings."
+      return 0
       ;;
     *)
       echo "  ! Unknown platform: ${p}" >&2
