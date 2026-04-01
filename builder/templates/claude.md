@@ -1,6 +1,6 @@
 ---
 name: skill-writer
-version: 1.0.0
+version: 2.0.0
 description: Meta-skill for creating, evaluating, and optimizing skills through natural language
 author: skill-writer-builder
 license: MIT
@@ -10,20 +10,37 @@ tags:
   - skill-evaluation
   - skill-optimization
   - automation
-type: skill
+type: meta-framework
+interface:
+  input: user-natural-language
+  output: structured-skill
+  modes: [create, lean, evaluate, optimize]
+
+use_to_evolve:
+  enabled: true
+  injected_by: "skill-writer v2.0.0"
+  injected_at: "{{generated_at}}"
+  check_cadence: {lightweight: 10, full_recompute: 50, tier_drift: 100}
+  micro_patch_enabled: true
+  feedback_detection: true
+  certified_lean_score: null
+  last_ute_check: null
+  pending_patches: 0
+  total_micro_patches_applied: 0
+  cumulative_invocations: 0
 ---
 
 # Skill Writer
 
 > **Type**: Meta-Skill  
 > **Platform**: Claude  
-> **Version**: 1.0.0
+> **Version**: 2.0.0
 
 A meta-skill that enables Claude to create, evaluate, and optimize other skills through natural language interaction.
 
 ---
 
-## Overview
+## §1 Overview
 
 Skill Writer provides three powerful modes:
 
@@ -39,9 +56,16 @@ Skill Writer provides three powerful modes:
 - **Quality Assurance**: Automated evaluation with certification tiers
 - **Security Built-In**: CWE-based security pattern detection
 
+**Red Lines (严禁)**:
+- 严禁 deliver any skill without passing BRONZE gate (score ≥ 700)
+- 严禁 skip LEAN or EVALUATE security scan before delivery
+- 严禁 hardcoded credentials anywhere in generated skills (CWE-798)
+- 严禁 skip requirement elicitation (Inversion) before entering PLAN phase
+- 严禁 suppress multi-LLM consensus disagreements — log them explicitly
+
 ---
 
-## Quick Start
+## §2 Quick Start
 
 ### Installation
 
@@ -71,9 +95,12 @@ cp skill-writer-claude.md ~/.claude/skills/
 
 ---
 
-## Triggers
+## §3 Triggers
 
 ### CREATE Mode Triggers
+
+**EN:** create, build, make, generate, write a skill
+**ZH:** 创建, 生成, 写一个技能, 新建技能
 
 **Intent Patterns:**
 - "create a [type] skill"
@@ -82,6 +109,8 @@ cp skill-writer-claude.md ~/.claude/skills/
 - "generate a skill to [action]"
 - "build a skill for [task]"
 - "make a skill that [functionality]"
+- "创建一个技能"
+- "帮我写一个[用途]的技能"
 
 **Examples:**
 - "create a data processing skill"
@@ -89,7 +118,22 @@ cp skill-writer-claude.md ~/.claude/skills/
 - "I need a skill that analyzes code quality"
 - "generate a skill to automate deployments"
 
+### LEAN Mode Triggers
+
+**EN:** lean, quick-eval, fast eval, lean check
+**ZH:** 快评, 快速评测, 简评
+
+**Intent Patterns:**
+- "lean evaluate this skill"
+- "quick eval this skill"
+- "run lean check on this skill"
+- "快速评测这个技能"
+- "对这个技能进行快评"
+
 ### EVALUATE Mode Triggers
+
+**EN:** evaluate, assess, score, certify, full eval
+**ZH:** 评测, 评估, 打分, 认证
 
 **Intent Patterns:**
 - "evaluate this skill"
@@ -98,6 +142,8 @@ cp skill-writer-claude.md ~/.claude/skills/
 - "score this skill"
 - "assess this skill"
 - "review this skill"
+- "评测这个技能"
+- "评估技能质量"
 
 **Examples:**
 - "evaluate this skill and tell me what's wrong"
@@ -107,6 +153,9 @@ cp skill-writer-claude.md ~/.claude/skills/
 
 ### OPTIMIZE Mode Triggers
 
+**EN:** optimize, improve, enhance, refine, upgrade
+**ZH:** 优化, 改进, 提升, 改善
+
 **Intent Patterns:**
 - "optimize this skill"
 - "improve my skill"
@@ -114,6 +163,8 @@ cp skill-writer-claude.md ~/.claude/skills/
 - "refine this skill"
 - "enhance this skill"
 - "upgrade this skill"
+- "优化这个技能"
+- "改进技能"
 
 **Examples:**
 - "optimize this skill for better performance"
@@ -123,7 +174,7 @@ cp skill-writer-claude.md ~/.claude/skills/
 
 ---
 
-## CREATE Mode
+## §4 CREATE Mode
 
 ### 7-Step Workflow
 
@@ -166,7 +217,7 @@ When creating a skill, Claude will ask:
 
 ---
 
-## EVALUATE Mode
+## §5 EVALUATE Mode
 
 ### 4-Phase Evaluation Pipeline
 
@@ -177,42 +228,40 @@ When creating a skill, Claude will ask:
 
 ### Scoring Rubric (1000 Points Total)
 
-**Completeness (250 points)**
-- Required sections present
-- All placeholders filled
-- Examples provided
+**Phase 1: Parse & Validate (100 points)**
+- YAML syntax valid
+- Required fields present (name, version, interface, description, author)
+- Semantic versioning format
 
-**Clarity (250 points)**
-- Instructions are clear
-- Language is precise
-- No ambiguity
+**Phase 2: Text Quality (300 points)**
+- Clarity (50 pts): Instructions clear, no ambiguity
+- Completeness (50 pts): All required sections present
+- Accuracy (60 pts): Examples correct and runnable
+- Safety (60 pts): Red Lines / 严禁 present
+- Maintainability (40 pts): Well structured, version controlled
+- Usability (40 pts): Trigger phrases clear, examples adequate
 
-**Security (200 points)**
-- No CWE violations
-- Safe patterns used
-- Input validation
+**Phase 3: Runtime Testing (400 points)**
+- Each mode tested against sample inputs
+- Quality gates validated
+- Security scan (CWE-798/89/78/22) passed
 
-**Usability (200 points)**
-- Easy to understand
-- Good examples
-- Clear triggers
-
-**Maintainability (100 points)**
-- Well structured
-- Documented
-- Version controlled
+**Phase 4: Certification (200 points)**
+- LEAN re-check post-evaluation
+- Variance check: |(phase2/3) − (phase3/4)| within tier limit (normalised to 100-pt scale)
+- UTE injection verified
 
 ### Certification Tiers
 
-- **PLATINUM (950-1000)**: Exceptional quality
-- **GOLD (850-949)**: Production-ready
-- **SILVER (750-849)**: Good quality
-- **BRONZE (650-749)**: Acceptable
-- **FAIL (<650)**: Needs improvement
+- **PLATINUM (≥950)**: Exceptional; variance < 10
+- **GOLD (≥900)**: Production-ready; variance < 15
+- **SILVER (≥800)**: Good quality; variance < 20
+- **BRONZE (≥700)**: Acceptable minimum for delivery; variance < 30
+- **FAIL (<700)**: Route to OPTIMIZE
 
 ---
 
-## OPTIMIZE Mode
+## §6 OPTIMIZE Mode
 
 ### 7-Dimension Analysis
 
@@ -239,14 +288,14 @@ When creating a skill, Claude will ask:
 ### Convergence Detection
 
 Optimization stops when:
-- Score improvement < 5 points
-- 3 iterations without significant gain
+- Score improvement < 0.5 points (delta_threshold)
+- Plateau detected: no gain in last 10 iterations (window_size)
 - User requests stop
-- Maximum iterations reached (10)
+- Maximum iterations reached (20)
 
 ---
 
-## Security Features
+## §7 Security Features
 
 ### CWE Pattern Detection
 
@@ -273,7 +322,7 @@ Recommendations:
 
 ---
 
-## Usage Patterns
+## §8 Usage Patterns
 
 ### Pattern 1: Rapid Skill Creation
 
@@ -302,7 +351,7 @@ Claude: "Improved from 720 to 890 points. Changes:..."
 
 ---
 
-## Configuration
+## §9 Configuration
 
 ### Environment Variables
 
@@ -321,7 +370,7 @@ Place custom templates in:
 
 ---
 
-## Troubleshooting
+## §10 Troubleshooting
 
 ### Common Issues
 
@@ -343,7 +392,7 @@ Enable debug output:
 
 ---
 
-## Claude-Specific Notes
+## §11 Claude-Specific Notes
 
 ### Format Preferences
 
@@ -367,7 +416,7 @@ Enable debug output:
 
 ---
 
-## Contributing
+## §12 Contributing
 
 ### Adding New Templates
 
@@ -393,12 +442,31 @@ MIT License - See LICENSE file for details
 
 ## Support
 
-- **Issues**: https://github.com/yourusername/skill-writer/issues
-- **Documentation**: https://github.com/yourusername/skill-writer/docs
-- **Examples**: https://github.com/yourusername/skill-writer/examples
+- **Issues**: https://github.com/theneoai/skill-writer/issues
+- **Documentation**: https://github.com/theneoai/skill-writer/docs
+- **Examples**: https://github.com/theneoai/skill-writer/examples
 
 ---
 
-*Generated by skill-writer-builder v1.0.0*  
+---
+
+## §UTE Use-to-Evolve
+
+<!-- Post-invocation hook — auto-managed by skill-writer v2.0.0 -->
+<!-- skill: skill-writer | version: 2.0.0 | injected: {{generated_at}} -->
+
+After each invocation, increment `use_to_evolve.cumulative_invocations`.
+Run lightweight LEAN check every 10 invocations; full re-score every 50;
+tier-drift detection every 100.
+
+**Fields managed automatically** (do not edit manually):
+- `cumulative_invocations` — incremented each use
+- `last_ute_check` — ISO date of last lightweight check
+- `pending_patches` — count of queued micro-patches
+- `total_micro_patches_applied` — lifetime patch count
+
+---
+
+*Generated by skill-writer-builder v2.0.0*  
 *For platform: Claude*  
 *Last updated: {{generated_at}}*

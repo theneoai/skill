@@ -88,7 +88,7 @@ async function build(options) {
         const skillMetadata = {
           TITLE: 'Skill Writer',
           TYPE: 'Meta-Skill',
-          VERSION: '1.0.0',
+          VERSION: '2.0.0',
           DESCRIPTION: 'A meta-skill for creating, evaluating, and optimizing other skills through natural language interaction.',
           TRIGGERS: `
 **CREATE Mode:**
@@ -106,7 +106,7 @@ async function build(options) {
 - "improve my skill"
 - "make this skill better"`,
           name: 'skill-writer',
-          version: '1.0.0',
+          version: '2.0.0',
           description: 'Meta-skill for creating, evaluating, and optimizing skills',
           author: 'skill-writer-builder',
           license: 'MIT',
@@ -116,7 +116,13 @@ async function build(options) {
           extra: {
             modes: ['create', 'evaluate', 'optimize'],
             platforms: ['opencode', 'openclaw', 'claude', 'cursor', 'openai', 'gemini']
-          }
+          },
+          // Security scan summary counts (filled at build time; 0 = clean baseline)
+          p0_count: 0,
+          p1_count: 0,
+          p2_count: 0,
+          p3_count: 0,
+          generated_at: new Date().toISOString()
         };
 
         const enrichedCoreData = {

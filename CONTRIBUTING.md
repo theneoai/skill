@@ -35,7 +35,7 @@ This project adheres to a code of conduct. By participating, you are expected to
 1. Fork the repository
 2. Clone your fork:
    ```bash
-   git clone https://github.com/yourusername/skill-writer.git
+   git clone https://github.com/theneoai/skill-writer.git
    cd skill-writer
    ```
 
@@ -319,9 +319,9 @@ docs(readme): update installation instructions
 
 ## Questions?
 
-- **General**: Open a [Discussion](https://github.com/yourusername/skill-writer/discussions)
-- **Bugs**: Open an [Issue](https://github.com/yourusername/skill-writer/issues)
-- **Security**: Email security@skill-writer.dev
+- **General**: Open a [Discussion](https://github.com/theneoai/skill-writer/discussions)
+- **Bugs**: Open an [Issue](https://github.com/theneoai/skill-writer/issues)
+- **Security**: Open a [GitHub Security Advisory](https://github.com/theneoai/skill-writer/security/advisories/new)
 
 ## Recognition
 
