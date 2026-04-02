@@ -1,168 +1,197 @@
 # Skill Writer — Agent Install Guide
 
-> **For AI agents**: This file contains executable installation instructions.
-> When a user asks you to "read this file and install", follow the steps below exactly.
-> No user interaction is needed unless the platform cannot be detected automatically.
+> **For AI agents**: This file contains self-contained installation instructions.
+> Execute the steps in §3 exactly as written. No extra user input is needed unless
+> the target platform is ambiguous.
 
 ---
 
-## §1  What Gets Installed
+## §1  File Sources
 
-| Item | Source (repo-relative) | Purpose |
-|------|----------------------|---------|
-| Main skill file | `skill-framework.md` | Core skill-writer logic |
-| Reference docs | `refs/*.md` | Evolution, deliberation, convergence specs (Claude only) |
-| Templates | `templates/*.md` | Skill creation templates (Claude only) |
-| Eval rubrics | `eval/*.md` | Evaluation rubrics (Claude only) |
-| Optimize guides | `optimize/*.md` | Optimization strategies (Claude only) |
+All files can be fetched from GitHub. Use whichever source applies:
+
+| Scenario | How to get files |
+|----------|-----------------|
+| Read this file from a **URL** | Fetch each file from the GitHub raw URLs listed in §4 |
+| Read this file from a **local clone** | Read files from the same directory as this file |
+
+**Base URL (for remote fetch):**
+```
+https://raw.githubusercontent.com/theneoai/skill-writer/main/
+```
+
+**Main skill file:**
+```
+https://raw.githubusercontent.com/theneoai/skill-writer/main/skill-framework.md
+```
 
 ---
 
 ## §2  Platform → Destination Map
 
-| Platform | Skills directory | Extra companion files |
-|----------|----------------|-----------------------|
-| **claude** | `~/.claude/skills/` | Yes — refs, templates, eval, optimize (see §4) |
+| Platform | Skills directory | Companion files |
+|----------|----------------|-----------------|
+| **claude** | `~/.claude/skills/` | Yes — see §4 |
 | **opencode** | `~/.config/opencode/skills/` | No |
 | **openclaw** | `~/.openclaw/skills/` | No |
 | **cursor** | `~/.cursor/skills/` | No |
 | **gemini** | `~/.gemini/skills/` | No |
-| **openai** | N/A | Manual — see §5 |
+| **openai** | N/A — manual only | See §5 |
 
-Installed filename on all platforms: `skill-writer.md`
+Installed filename on all platforms: **`skill-writer.md`**
 
 ---
 
 ## §3  Installation Steps (Agent: execute these)
 
-### Step 1 — Locate source files
+### Step 1 — Get the main skill file
 
-The directory containing this file (`install.md`) is the repo root.
-`skill-framework.md` is in the same directory.
-
+**If you read this file from a URL:**
 ```
-REPO_ROOT = directory of this file
-SOURCE    = REPO_ROOT/skill-framework.md
+Fetch: https://raw.githubusercontent.com/theneoai/skill-writer/main/skill-framework.md
+Store content as: SKILL_CONTENT
 ```
 
-Verify: `SOURCE` must exist and contain the line `name: skill-writer`.
-If missing, abort and tell the user.
+**If you read this file from a local path:**
+```
+Read: skill-framework.md  (same directory as this file)
+Store content as: SKILL_CONTENT
+```
+
+Verify: `SKILL_CONTENT` must contain the text `name: skill-writer`. If not, abort and tell the user.
 
 ### Step 2 — Determine target platform(s)
 
-**Auto-detect** from the user's request:
-- "install" or "install to all" → all platforms except openai
-- "install to claude" → claude only
-- "install to opencode" → opencode only
-- "install to openclaw" → openclaw only
-- "install to cursor" → cursor only
-- "install to gemini" → gemini only
-- "安装" / "安装到所有平台" → all platforms except openai
-- "安装到 <平台名>" → that platform only
+Detect from the user's message:
 
-If ambiguous, ask: "Which platform would you like to install to? (claude / opencode / openclaw / cursor / gemini / all)"
+| User says | Target |
+|-----------|--------|
+| "install" / "install to all" / "安装" | all (claude, opencode, openclaw, cursor, gemini) |
+| "install to claude" / "安装到 claude" | claude |
+| "install to opencode" / "安装到 opencode" | opencode |
+| "install to openclaw" / "安装到 openclaw" | openclaw |
+| "install to cursor" / "安装到 cursor" | cursor |
+| "install to gemini" / "安装到 gemini" | gemini |
 
-### Step 3 — Install for each target platform
+If unclear, ask: "Which platform? (claude / opencode / openclaw / cursor / gemini / all)"
 
-For every target platform, do:
+### Step 3 — Write skill file for each target platform
 
-```
-1. Create destination directory if it does not exist
-2. Copy SOURCE → <skills_dir>/skill-writer.md
-3. If platform is "claude", also run Step 4
-4. Report: ✓ [<platform>] <full destination path>
-```
+For each target platform:
+1. Create the skills directory if it does not exist
+2. Write `SKILL_CONTENT` to `<skills_dir>/skill-writer.md`
+3. If platform is **claude**, also execute Step 4
+4. Report: `✓ [<platform>] <full destination path>`
 
 ### Step 4 — Claude companion files (claude only)
 
-Copy each subdirectory from the repo into `~/.claude/`:
+Fetch each file below and write to the corresponding destination.
 
-| Source | Destination |
-|--------|-------------|
-| `REPO_ROOT/refs/*.md` | `~/.claude/refs/` |
-| `REPO_ROOT/templates/*.md` | `~/.claude/templates/` |
-| `REPO_ROOT/eval/*.md` | `~/.claude/eval/` |
-| `REPO_ROOT/optimize/*.md` | `~/.claude/optimize/` |
+**If remote:** fetch from the URL shown.
+**If local:** read from the repo path shown.
 
-Create each destination directory if it does not exist.
-Skip silently if a source directory is empty.
+| File | Remote URL | Local path | Destination |
+|------|-----------|------------|-------------|
+| use-to-evolve.md | `…/refs/use-to-evolve.md` | `refs/use-to-evolve.md` | `~/.claude/refs/use-to-evolve.md` |
+| evolution.md | `…/refs/evolution.md` | `refs/evolution.md` | `~/.claude/refs/evolution.md` |
+| deliberation.md | `…/refs/deliberation.md` | `refs/deliberation.md` | `~/.claude/refs/deliberation.md` |
+| convergence.md | `…/refs/convergence.md` | `refs/convergence.md` | `~/.claude/refs/convergence.md` |
+| security-patterns.md | `…/refs/security-patterns.md` | `refs/security-patterns.md` | `~/.claude/refs/security-patterns.md` |
+| base.md | `…/templates/base.md` | `templates/base.md` | `~/.claude/templates/base.md` |
+| api-integration.md | `…/templates/api-integration.md` | `templates/api-integration.md` | `~/.claude/templates/api-integration.md` |
+| data-pipeline.md | `…/templates/data-pipeline.md` | `templates/data-pipeline.md` | `~/.claude/templates/data-pipeline.md` |
+| workflow-automation.md | `…/templates/workflow-automation.md` | `templates/workflow-automation.md` | `~/.claude/templates/workflow-automation.md` |
+| use-to-evolve-snippet.md | `…/templates/use-to-evolve-snippet.md` | `templates/use-to-evolve-snippet.md` | `~/.claude/templates/use-to-evolve-snippet.md` |
+| rubrics.md | `…/eval/rubrics.md` | `eval/rubrics.md` | `~/.claude/eval/rubrics.md` |
+| benchmarks.md | `…/eval/benchmarks.md` | `eval/benchmarks.md` | `~/.claude/eval/benchmarks.md` |
+| pairwise.md | `…/eval/pairwise.md` | `eval/pairwise.md` | `~/.claude/eval/pairwise.md` |
+| strategies.md | `…/optimize/strategies.md` | `optimize/strategies.md` | `~/.claude/optimize/strategies.md` |
+| anti-patterns.md | `…/optimize/anti-patterns.md` | `optimize/anti-patterns.md` | `~/.claude/optimize/anti-patterns.md` |
 
-### Step 5 — Report results
+`…` expands to `https://raw.githubusercontent.com/theneoai/skill-writer/main`
 
-Print a summary like:
+Create each destination directory as needed. Skip any file that cannot be fetched/read.
+
+### Step 5 — Print summary
 
 ```
+Installing Skill Writer v2.0.0...
+
 ✓ [claude]   ~/.claude/skills/skill-writer.md
 ✓ [claude]   companion files → ~/.claude/{refs,templates,eval,optimize}/
 ✓ [opencode] ~/.config/opencode/skills/skill-writer.md
 ...
 
-Installed to N platform(s). Restart each platform to activate skill-writer.
+Installed to N platform(s). Restart each platform to activate Skill Writer.
 ```
 
 ---
 
-## §4  Companion Files Detail (Claude)
+## §4  All Remote URLs (reference)
 
-These files extend skill-writer's capabilities on Claude:
+```
+# Main skill
+https://raw.githubusercontent.com/theneoai/skill-writer/main/skill-framework.md
 
-| File | Purpose |
-|------|---------|
-| `refs/use-to-evolve.md` | UTE self-evolution protocol |
-| `refs/evolution.md` | Evolution trigger rules |
-| `refs/deliberation.md` | Multi-LLM deliberation spec |
-| `refs/convergence.md` | Convergence detection rules |
-| `refs/security-patterns.md` | CWE security pattern library |
-| `templates/base.md` | Base skill template |
-| `templates/api-integration.md` | API integration template |
-| `templates/data-pipeline.md` | Data pipeline template |
-| `templates/workflow-automation.md` | Workflow automation template |
-| `templates/use-to-evolve-snippet.md` | UTE YAML snippet |
-| `eval/rubrics.md` | Evaluation scoring rubrics |
-| `eval/benchmarks.md` | Benchmark reference data |
-| `eval/pairwise.md` | Pairwise comparison guide |
-| `optimize/strategies.md` | Optimization strategy guide |
-| `optimize/anti-patterns.md` | Anti-pattern reference |
+# refs/
+https://raw.githubusercontent.com/theneoai/skill-writer/main/refs/use-to-evolve.md
+https://raw.githubusercontent.com/theneoai/skill-writer/main/refs/evolution.md
+https://raw.githubusercontent.com/theneoai/skill-writer/main/refs/deliberation.md
+https://raw.githubusercontent.com/theneoai/skill-writer/main/refs/convergence.md
+https://raw.githubusercontent.com/theneoai/skill-writer/main/refs/security-patterns.md
+
+# templates/
+https://raw.githubusercontent.com/theneoai/skill-writer/main/templates/base.md
+https://raw.githubusercontent.com/theneoai/skill-writer/main/templates/api-integration.md
+https://raw.githubusercontent.com/theneoai/skill-writer/main/templates/data-pipeline.md
+https://raw.githubusercontent.com/theneoai/skill-writer/main/templates/workflow-automation.md
+https://raw.githubusercontent.com/theneoai/skill-writer/main/templates/use-to-evolve-snippet.md
+
+# eval/
+https://raw.githubusercontent.com/theneoai/skill-writer/main/eval/rubrics.md
+https://raw.githubusercontent.com/theneoai/skill-writer/main/eval/benchmarks.md
+https://raw.githubusercontent.com/theneoai/skill-writer/main/eval/pairwise.md
+
+# optimize/
+https://raw.githubusercontent.com/theneoai/skill-writer/main/optimize/strategies.md
+https://raw.githubusercontent.com/theneoai/skill-writer/main/optimize/anti-patterns.md
+```
 
 ---
 
 ## §5  OpenAI — Manual Installation
 
-OpenAI does not use a local skills directory.
-Tell the user:
+OpenAI does not support a local skills directory. Tell the user:
 
-> OpenAI platform requires manual installation:
-> upload `skill-framework.md` as a custom instruction or system prompt
+> Upload `skill-framework.md` as a custom instruction or system prompt
 > in your OpenAI project or assistant settings.
 
 ---
 
-## §6  Quick Reference for Users
-
-Paste one of these into your AI agent:
+## §6  User Commands
 
 ```
-# Install to all platforms (recommended)
-read install.md and install
+# Via URL (works from any machine)
+read https://raw.githubusercontent.com/theneoai/skill-writer/main/install.md and install
+read https://raw.githubusercontent.com/theneoai/skill-writer/main/install.md and install to claude
 
-# Install to a specific platform
-read install.md and install to claude
+# From local clone
+read install.md and install
 read install.md and install to opencode
-read install.md and install to cursor
 
 # Chinese
-读取 install.md 并安装
-读取 install.md 并安装到 claude
+读取 https://raw.githubusercontent.com/theneoai/skill-writer/main/install.md 并安装
+读取 install.md 并安装到 cursor
 ```
 
 ---
 
 ## §7  Verification
 
-After installation, verify by asking your AI agent:
+After installation, ask your agent:
 
 ```
-"Are you skill-writer? What version are you?"
+"Are you skill-writer? What version?"
 ```
 
-Expected response: agent acknowledges skill-writer v2.0.0 and offers CREATE / LEAN / EVALUATE / OPTIMIZE / INSTALL modes.
+Expected: agent confirms skill-writer v2.0.0 and lists available modes (CREATE / LEAN / EVALUATE / OPTIMIZE / INSTALL).

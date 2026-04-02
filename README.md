@@ -55,10 +55,11 @@ Paste one command into your AI agent to install the latest stable release:
 
 Each [GitHub Release](https://github.com/theneoai/skill-writer/releases) includes per-platform assets and ready-to-paste agent commands for that version.
 
-To install from the development branch instead of a release:
+To install from the development branch (always latest, includes companion files for Claude):
 
 ```
-read https://raw.githubusercontent.com/theneoai/skill-writer/main/skill-framework.md and install
+read https://raw.githubusercontent.com/theneoai/skill-writer/main/install.md and install
+read https://raw.githubusercontent.com/theneoai/skill-writer/main/install.md and install to claude
 ```
 
 #### Option 2 — Shell Script
