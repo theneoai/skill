@@ -5,8 +5,8 @@ A cross-platform meta-skill for creating, evaluating, and optimizing AI assistan
 [![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/theneoai/skill-writer)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platforms](https://img.shields.io/badge/platforms-6-orange.svg)](#supported-platforms)
-[![GitHub Actions](https://github.com/theneoai/skill-writer/workflows/Build%20and%20Release/badge.svg)](https://github.com/theneoai/skill-writer/actions)
-[![Security Scan](https://github.com/theneoai/skill-writer/workflows/Security%20Scan/badge.svg)](https://github.com/theneoai/skill-writer/actions)
+[![GitHub Actions](https://github.com/theneoai/skill-writer/workflows/Skill%20Writer%20-%20Build%20and%20Release/badge.svg)](https://github.com/theneoai/skill-writer/actions)
+[![Security Scan](https://github.com/theneoai/skill-writer/workflows/Skill%20Writer%20-%20Security%20Scan/badge.svg)](https://github.com/theneoai/skill-writer/actions)
 
 ## Overview
 
