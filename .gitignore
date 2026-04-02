@@ -75,8 +75,6 @@ htmlcov/
 *.min.css
 
 # Generated platform files (keep directory but not files)
-platforms/*.md
-platforms/*.json
 !platforms/.gitkeep
 
 # Test installations

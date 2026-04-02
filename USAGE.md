@@ -524,4 +524,4 @@ Legacy skill with security issues:
 
 ---
 
-**Need more help?** Check the [README](README.md) or [open an issue](https://github.com/yourusername/skill-writer/issues).
+**Need more help?** Check the [README](README.md) or [open an issue](https://github.com/theneoai/skill-writer/issues).

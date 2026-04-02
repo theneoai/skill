@@ -1,41 +1,58 @@
 ---
 name: skill-writer
-version: 1.0.0
-description: Meta-skill for creating, evaluating, and optimizing skills through natural language
-author: skill-writer-builder
+version: "2.0.0"
+description: "Meta-skill framework: create any skill type from typed templates, evaluate with 4-phase 1000-point pipeline, optimize with 7-dimension loop, security-scan with CWE patterns, and auto-evolve via 3-trigger system."
+description_i18n:
+  en: "Full lifecycle meta-skill framework: CREATE from templates, LEAN fast-eval, EVALUATE 4-phase 1000pt pipeline, OPTIMIZE 7-dim 9-step loop, auto-evolve via threshold/time/usage triggers."
+  zh: "全生命周期元技能框架：从模板CREATE、LEAN快速评测、4阶段1000分EVALUATE、7维9步OPTIMIZE、三触发器自动进化。"
 license: MIT
+author:
+  name: theneoai
+created: "2026-03-31"
+updated: "2026-04-01"
+type: meta-framework
 tags:
   - meta-skill
-  - skill-creation
-  - skill-evaluation
-  - skill-optimization
-  - automation
+  - lifecycle
+  - templates
+  - evaluation
+  - optimization
+  - multi-agent
+  - self-evolution
 interface:
-  mode:
-    type: enum
-    values:
-      - create
-      - evaluate
-      - optimize
-    default: create
-    description: Operating mode for the skill
+  input: user-natural-language
+  output: structured-skill
+  modes: [create, lean, evaluate, optimize, install]
+
+use_to_evolve:
+  enabled: true
+  framework_version: "2.0.0"
+  check_cadence: {lightweight: 10, full_recompute: 50, tier_drift: 100}
+  micro_patch_enabled: true
+  feedback_detection: true
+  certified_lean_score: null
+  last_ute_check: null
+  pending_patches: 0
+  total_micro_patches_applied: 0
+  cumulative_invocations: 0
 ---
 
 # Skill Writer
 
 > **Type**: Meta-Skill  
 > **Platform**: OpenClaw  
-> **Version**: 1.0.0
+> **Version**: 2.0.0
 
 A meta-skill that enables AI assistants to create, evaluate, and optimize other skills through natural language interaction. Compatible with AgentSkills format.
 
 ---
 
-## Overview
+## §1 Overview
 
-Skill Writer provides three powerful modes:
+Skill Writer provides four powerful modes:
 
 - **CREATE**: Generate new skills from scratch using structured templates
+- **LEAN**: Fast 500-point heuristic evaluation (~1 second)
 - **EVALUATE**: Assess skill quality with 1000-point scoring and certification
 - **OPTIMIZE**: Continuously improve skills through iterative refinement
 
@@ -46,10 +63,19 @@ Skill Writer provides three powerful modes:
 - **AgentSkills Compatible**: Follows OpenClaw skill standards
 - **Template-Based**: 4 built-in templates for common skill patterns
 - **Quality Assurance**: Automated evaluation with certification tiers
+- **Self-Evolution**: UTE protocol for automatic skill improvement
+- **Multi-LLM Deliberation**: Generator/Reviewer/Arbiter consensus
+
+**Red Lines (严禁)**:
+- 严禁 deliver any skill without passing BRONZE gate (score ≥ 700)
+- 严禁 skip LEAN or EVALUATE security scan before delivery
+- 严禁 hardcoded credentials anywhere in generated skills (CWE-798)
+- 严禁 skip requirement elicitation (Inversion) before entering PLAN phase
+- 严禁 suppress multi-LLM consensus disagreements — log them explicitly
 
 ---
 
-## Quick Start
+## §2 Quick Start
 
 ### Installation
 
@@ -66,23 +92,35 @@ openclaw skill install skill-writer
 **Create a new skill:**
 ```
 "Create a weather API skill that fetches current conditions"
+"创建一个天气API技能"
 ```
 
-**Evaluate an existing skill:**
+**Quick evaluation (LEAN mode):**
+```
+"Quickly evaluate this skill"
+"快评这个技能"
+```
+
+**Full evaluation:**
 ```
 "Evaluate this skill and give me a quality score"
+"评测这个技能"
 ```
 
 **Optimize a skill:**
 ```
 "Optimize this skill to make it more concise"
+"优化这个技能"
 ```
 
 ---
 
-## Triggers
+## §3 Triggers
 
 ### CREATE Mode Triggers
+
+**EN:** create, build, make, generate, write a skill  
+**ZH:** 创建, 生成, 写一个技能, 新建技能
 
 **Intent Patterns:**
 - "create a [type] skill"
@@ -91,14 +129,25 @@ openclaw skill install skill-writer
 - "generate a skill to [action]"
 - "build a skill for [task]"
 - "make a skill that [functionality]"
+- "创建一个技能"
+- "帮我写一个[用途]的技能"
 
-**Examples:**
-- "create a data processing skill"
-- "help me write a skill for API integration"
-- "I need a skill that analyzes code quality"
-- "generate a skill to automate deployments"
+### LEAN Mode Triggers
+
+**EN:** lean, quick-eval, fast eval, lean check  
+**ZH:** 快评, 快速评测, 简评
+
+**Intent Patterns:**
+- "lean evaluate this skill"
+- "quick eval this skill"
+- "run lean check on this skill"
+- "快速评测这个技能"
+- "对这个技能进行快评"
 
 ### EVALUATE Mode Triggers
+
+**EN:** evaluate, assess, score, certify, full eval  
+**ZH:** 评测, 评估, 打分, 认证
 
 **Intent Patterns:**
 - "evaluate this skill"
@@ -107,14 +156,13 @@ openclaw skill install skill-writer
 - "score this skill"
 - "assess this skill"
 - "review this skill"
-
-**Examples:**
-- "evaluate this skill and tell me what's wrong"
-- "check the quality of my API skill"
-- "certify my workflow automation skill"
-- "score this skill out of 1000 points"
+- "评测这个技能"
+- "评估技能质量"
 
 ### OPTIMIZE Mode Triggers
+
+**EN:** optimize, improve, enhance, refine, upgrade  
+**ZH:** 优化, 改进, 提升, 改善
 
 **Intent Patterns:**
 - "optimize this skill"
@@ -123,26 +171,24 @@ openclaw skill install skill-writer
 - "refine this skill"
 - "enhance this skill"
 - "upgrade this skill"
-
-**Examples:**
-- "optimize this skill for better performance"
-- "improve my skill's error handling"
-- "make this skill more user-friendly"
-- "refine this skill to be more concise"
+- "优化这个技能"
+- "改进技能"
 
 ---
 
-## CREATE Mode
+## §4 CREATE Mode
 
-### 7-Step Workflow
+### 9-Phase Workflow
 
-1. **Parse Request**: Analyze intent and extract requirements
-2. **Select Template**: Choose from 4 built-in templates
-3. **Elicit Requirements**: Ask clarifying questions
-4. **Generate Output**: Create skill using template
-5. **Security Scan**: Check for CWE vulnerabilities
-6. **Quality Check**: Validate structure and completeness
-7. **Deliver**: Output final skill file
+1. **ELICIT**: Ask 6 clarifying questions to understand requirements
+2. **SELECT TEMPLATE**: Choose from 4 built-in templates
+3. **PLAN**: Multi-LLM deliberation for implementation strategy
+4. **GENERATE**: Create skill using template
+5. **SECURITY SCAN**: Check for CWE vulnerabilities
+6. **LEAN EVAL**: Fast 500-point heuristic evaluation
+7. **FULL EVALUATE**: Complete 1000-point evaluation (if LEAN uncertain)
+8. **INJECT UTE**: Add Use-to-Evolve self-improvement hooks
+9. **DELIVER**: Output final skill file
 
 ### Available Templates
 
@@ -164,79 +210,88 @@ openclaw skill install skill-writer
 
 ### Elicitation Questions
 
-When creating a skill, the system will ask:
+When creating a skill, ask:
 
-1. **Purpose**: What is the primary goal?
-2. **Audience**: Who are the target users?
-3. **Features**: What capabilities must it have?
-4. **Constraints**: Any standards or requirements?
-5. **Scale**: Expected usage volume?
-6. **References**: Examples to emulate or avoid?
+1. **Purpose**: What is the primary goal? / 这个skill要解决什么核心问题？
+2. **Audience**: Who are the target users? / 主要用户是谁？
+3. **Input**: What form does the input take? / 输入是什么形式？
+4. **Output**: What is the expected output? / 期望的输出是什么？
+5. **Constraints**: Any security or technical constraints? / 有哪些安全或技术约束？
+6. **Acceptance**: What are the acceptance criteria? / 验收标准是什么？
 
 ---
 
-## EVALUATE Mode
+## §5 LEAN Mode (Fast Path ~1s)
 
-### 4-Phase Evaluation Pipeline
+**Purpose**: Rapid triage without LLM calls. Use for quick checks or high-volume screening.
 
-1. **Structural Analysis**: Check format, sections, completeness
-2. **Content Quality**: Assess clarity, examples, instructions
-3. **Security Audit**: Scan for CWE patterns
-4. **Scoring**: Calculate 1000-point score
+### 8-Check Rubric (500 points)
 
-### Scoring Rubric (1000 Points Total)
+| Check | Points | Criteria |
+|-------|--------|----------|
+| YAML frontmatter | 60 | name, version, interface fields present |
+| §N Pattern Sections | 60 | ≥3 sections with `## §N` format |
+| Red Lines | 50 | "Red Lines" or "严禁" text present |
+| Quality Gates Table | 60 | Table with numeric thresholds |
+| Code Block Examples | 50 | ≥2 code block examples |
+| Trigger Keywords | 120 | EN+ZH keywords for all 4 modes |
+| Security Baseline | 50 | Security section present |
+| No Placeholders | 50 | No `{{PLACEHOLDER}}` remaining |
 
-**Completeness (250 points)**
-- Required sections present
-- All placeholders filled
-- Examples provided
+### Decision Gates
 
-**Clarity (250 points)**
-- Instructions are clear
-- Language is precise
-- No ambiguity
+- **PASS (≥350)**: Skill passes LEAN certification
+- **UNCERTAIN (300-349)**: Upgrade to full EVALUATE mode
+- **FAIL (<300)**: Route to OPTIMIZE mode
 
-**Security (200 points)**
-- No CWE violations
-- Safe patterns used
-- Input validation
+---
 
-**Usability (200 points)**
-- Easy to understand
-- Good examples
-- Clear triggers
+## §6 EVALUATE Mode
 
-**Maintainability (100 points)**
-- Well structured
-- Documented
-- Version controlled
+### 4-Phase Evaluation Pipeline (1000 points)
+
+| Phase | Name | Points | Focus |
+|-------|------|--------|-------|
+| 1 | Parse & Validate | 100 | YAML syntax, format, metadata |
+| 2 | Text Quality | 300 | Clarity, completeness, accuracy, safety, maintainability, usability |
+| 3 | Runtime Testing | 400 | Unit, integration, sandbox, error handling, performance, security |
+| 4 | Certification | 200 | Variance gate + security scan + quality gates |
 
 ### Certification Tiers
 
-- **PLATINUM (950-1000)**: Exceptional quality
-- **GOLD (850-949)**: Production-ready
-- **SILVER (750-849)**: Good quality
-- **BRONZE (650-749)**: Acceptable
-- **FAIL (<650)**: Needs improvement
+| Tier | Min Score | Max Variance | Phase 2 Min | Phase 3 Min |
+|------|-----------|--------------|-------------|-------------|
+| **PLATINUM** | ≥950 | <10 | ≥270 | ≥360 |
+| **GOLD** | ≥900 | <15 | ≥255 | ≥340 |
+| **SILVER** | ≥800 | <20 | ≥225 | ≥300 |
+| **BRONZE** | ≥700 | <30 | ≥195 | ≥265 |
+| **FAIL** | <700 | — | — | — |
+
+**Variance formula**:
+```
+variance = | (phase2_score / 3) - (phase3_score / 4) |
+```
 
 ---
 
-## OPTIMIZE Mode
+## §7 OPTIMIZE Mode
 
 ### 7-Dimension Analysis
 
-1. **Conciseness**: Remove redundancy
-2. **Clarity**: Improve understanding
-3. **Completeness**: Add missing elements
-4. **Security**: Fix vulnerabilities
-5. **Performance**: Optimize execution
-6. **Maintainability**: Improve structure
-7. **Usability**: Enhance user experience
+| Dimension | Weight | Focus |
+|-----------|--------|-------|
+| System Design | 20% | Identity, architecture, Red Lines |
+| Domain Knowledge | 20% | Template accuracy, field specificity |
+| Workflow Definition | 20% | Phase sequence, exit criteria, loop gates |
+| Error Handling | 15% | Recovery paths, escalation triggers |
+| Examples | 15% | Usage examples count, quality, bilingual |
+| Metadata | 10% | YAML frontmatter, versioning, tags |
+| Long-Context | 10% | Section refs, chunking, cross-reference integrity |
 
 ### 9-Step Optimization Loop
 
 1. **Parse**: Understand current skill
-2. **Analyze**: Identify improvement areas
+2. **Analyze**: Identify improvement areas across 7 dimensions
 3. **Generate**: Create optimized version
 4. **Evaluate**: Score the new version
 5. **Compare**: Check against previous
@@ -248,70 +303,68 @@ When creating a skill, the system will ask:
 ### Convergence Detection
 
 Optimization stops when:
-- Score improvement < 5 points
-- 3 iterations without significant gain
+- Score improvement < 0.5 points
+- 10 iterations without significant gain (plateau window)
 - User requests stop
-- Maximum iterations reached (10)
+- Maximum iterations reached (20)
+- DIVERGING detected → HALT → HUMAN_REVIEW
 
 ---
 
-## Security Features
+## §8 Security Features
 
 ### CWE Pattern Detection
 
-Automatically checks for:
-- **CWE-78**: OS Command Injection
-- **CWE-79**: Cross-Site Scripting (XSS)
-- **CWE-89**: SQL Injection
-- **CWE-22**: Path Traversal
-- And more...
+| Severity | CWE | Pattern Type | Action |
+|----------|-----|-------------|--------|
+| **P0** | CWE-798 | Hardcoded credentials | **ABORT** |
+| **P0** | CWE-89 | SQL injection | **ABORT** |
+| **P0** | CWE-78 | Command injection | **ABORT** |
+| **P1** | CWE-22 | Path traversal | Score −50, WARNING |
+| **P1** | CWE-306 | Missing auth check | Score −30, WARNING |
+| **P1** | CWE-862 | Missing authz check | Score −30, WARNING |
 
-### Security Report Format
-
-```
-Security Scan Report
-====================
-P0: {{p0_count}} violations (Critical)
-P1: {{p1_count}} violations (High)
-P2: {{p2_count}} violations (Medium)
-P3: {{p3_count}} violations (Low)
-
-Recommendations:
-- [Specific fixes]
-```
+ABORT protocol: stop → log → flag → notify → require human sign-off before resume.
 
 ---
 
-## Usage Patterns
+## §9 Multi-LLM Deliberation
 
-### Pattern 1: Rapid Skill Creation
+| Role | Responsibility |
+|------|---------------|
+| LLM-1 Generator | Produce initial draft / score / fix proposal |
+| LLM-2 Reviewer | Security + quality audit; severity-tagged issue list |
+| LLM-3 Arbiter | Cross-validate; override if safety/quality critical; consensus matrix |
 
-```
-User: "Create a skill for GitHub issue management"
-AI: [Asks 6 elicitation questions]
-User: [Answers questions]
-AI: [Generates skill using API Integration template]
-```
-
-### Pattern 2: Quality Assurance
-
-```
-User: "Evaluate this skill"
-AI: [Runs 4-phase evaluation]
-AI: "Score: 847/1000 (GOLD tier). Issues found:..."
-```
-
-### Pattern 3: Continuous Improvement
-
-```
-User: "Optimize this skill"
-AI: [Runs optimization loop]
-AI: "Improved from 720 to 890 points. Changes:..."
-```
+Timeouts: 30 s per LLM, 60 s per phase, 180 s total (6 turns max).
+Consensus: UNANIMOUS → proceed; MAJORITY → proceed with notes;
+SPLIT → one revision; UNRESOLVED → HUMAN_REVIEW.
 
 ---
 
-## Configuration
+## §10 UTE (Use-to-Evolve)
+
+Self-improvement protocol that enables skills to evolve through usage.
+
+### UTE YAML Block
+
+```yaml
+use_to_evolve:
+  framework_version: "2.0.0"
+  injection_date: "2026-04-01"
+  certified_lean_score: 390
+  last_ute_check: "2026-04-01"
+```
+
+### 3-Trigger System
+
+1. **Threshold Trigger**: Quality drops below certified baseline
+2. **Time Trigger**: Freshness check (cadence-gated)
+3. **Usage Trigger**: Usage pattern analysis
+
+---
+
+## §11 Configuration
 
 ### Environment Variables
 
@@ -321,16 +374,9 @@ SKILL_WRITER_VERBOSE=true   # Detailed output
 SKILL_WRITER_SAFE_MODE=true # Extra security checks
 ```
 
-### Custom Templates
-
-Place custom templates in:
-```
-~/.openclaw/skills/skill-writer/templates/
-```
-
 ---
 
-## Troubleshooting
+## §12 Troubleshooting
 
 ### Common Issues
 
@@ -343,71 +389,30 @@ Place custom templates in:
 **Issue**: Security warnings
 - **Solution**: Review CWE patterns and fix violations
 
-### Debug Mode
-
-Enable debug output:
-```
-"Enable debug mode for skill writer"
-```
-
 ---
 
-## OpenClaw Integration
-
-### AgentSkills Compatibility
-
-This skill follows the AgentSkills format used by OpenClaw:
-- YAML frontmatter with metadata
-- Markdown content with sections
-- Standard trigger format
-
-### Installation Path
-
-```
-~/.openclaw/skills/skill-writer.md
-```
-
-### Verification
-
-After installation, verify with:
-```bash
-openclaw skill list
-```
-
----
-
-## Contributing
-
-### Adding New Templates
-
-1. Create template in `core/create/templates/`
-2. Add metadata header
-3. Include placeholder documentation
-4. Test with CREATE mode
-
-### Adding Platform Support
-
-1. Create adapter in `builder/src/platforms/`
-2. Implement required functions
-3. Add to platform registry
-4. Test build command
-
----
-
-## License
+## §13 License
 
 MIT License - See LICENSE file for details
 
 ---
 
-## Support
+## §UTE Use-to-Evolve
 
-- **Issues**: https://github.com/yourusername/skill-writer/issues
-- **Documentation**: https://github.com/yourusername/skill-writer/docs
-- **Examples**: https://github.com/yourusername/skill-writer/examples
+<!-- Post-invocation hook — auto-managed by skill-writer v2.0.0 -->
+
+After each invocation, increment `use_to_evolve.cumulative_invocations`.
+Run lightweight LEAN check every 10 invocations; full re-score every 50;
+tier-drift detection every 100.
+
+**Fields managed automatically**:
+- `cumulative_invocations` — incremented each use
+- `last_ute_check` — ISO date of last lightweight check
+- `pending_patches` — count of queued micro-patches
+- `total_micro_patches_applied` — lifetime patch count
 
 ---
 
-*Generated by skill-writer-builder v1.0.0*  
+*Generated by skill-writer-builder v2.0.0*  
 *For platform: OpenClaw*  
 *Last updated: {{generated_at}}*
