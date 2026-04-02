@@ -1,4 +1,4 @@
-name: Build and Release
+name: Skill Writer - Build and Release
 
 on:
   push:

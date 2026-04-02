@@ -8,7 +8,7 @@
 #   ./install.sh --url <URL>              # download skill-framework.md from URL first
 #   ./install.sh --platform cursor --url <URL>
 #
-# Supported platforms: claude, opencode, openclaw, cursor, gemini
+# Supported platforms: claude, opencode, openclaw, cursor, gemini, openai (info only)
 
 set -euo pipefail
 
@@ -116,6 +116,7 @@ install_platform() {
       ;;
     openai)
       echo "  ℹ [openai] OpenAI platform requires manual installation via platform settings."
+      return 0
       ;;
     *)
       echo "  ! Unknown platform: ${p}" >&2

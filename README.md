@@ -5,8 +5,8 @@ A cross-platform meta-skill for creating, evaluating, and optimizing AI assistan
 [![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/theneoai/skill-writer)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platforms](https://img.shields.io/badge/platforms-6-orange.svg)](#supported-platforms)
-[![GitHub Actions](https://github.com/theneoai/skill-writer/workflows/Build%20and%20Release/badge.svg)](https://github.com/theneoai/skill-writer/actions)
-[![Security Scan](https://github.com/theneoai/skill-writer/workflows/Security%20Scan/badge.svg)](https://github.com/theneoai/skill-writer/actions)
+[![GitHub Actions](https://github.com/theneoai/skill-writer/workflows/Skill%20Writer%20-%20Build%20and%20Release/badge.svg)](https://github.com/theneoai/skill-writer/actions)
+[![Security Scan](https://github.com/theneoai/skill-writer/workflows/Skill%20Writer%20-%20Security%20Scan/badge.svg)](https://github.com/theneoai/skill-writer/actions)
 
 ## Overview
 
@@ -55,10 +55,11 @@ Paste one command into your AI agent to install the latest stable release:
 
 Each [GitHub Release](https://github.com/theneoai/skill-writer/releases) includes per-platform assets and ready-to-paste agent commands for that version.
 
-To install from the development branch instead of a release:
+To install from the development branch (always latest, includes companion files for Claude):
 
 ```
-read https://raw.githubusercontent.com/theneoai/skill-writer/main/skill-framework.md and install
+read https://raw.githubusercontent.com/theneoai/skill-writer/main/install.md and install
+read https://raw.githubusercontent.com/theneoai/skill-writer/main/install.md and install to claude
 ```
 
 #### Option 2 — Shell Script
@@ -130,8 +131,8 @@ cp skill-framework.md ~/.gemini/skills/skill-writer.md
 
 **Install skill-writer (agent-driven):**
 ```
-"read https://raw.githubusercontent.com/theneoai/skill-writer/main/skill-framework.md and install"
-"read https://raw.githubusercontent.com/theneoai/skill-writer/main/skill-framework.md and install to claude"
+"read https://raw.githubusercontent.com/theneoai/skill-writer/main/install.md and install"
+"read https://raw.githubusercontent.com/theneoai/skill-writer/main/install.md and install to claude"
 "安装 skill-writer"
 ```
 
@@ -375,6 +376,8 @@ npm install
 ```
 
 ### Commands
+
+> **Note**: Run `npm run build` from the project root before using `npm run install:*` scripts — they copy files from the `platforms/` directory created by the build step.
 
 #### Build
 ```bash
