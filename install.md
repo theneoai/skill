@@ -25,6 +25,13 @@ https://raw.githubusercontent.com/theneoai/skill-writer/main/
 https://raw.githubusercontent.com/theneoai/skill-writer/main/skill-framework.md
 ```
 
+**Platform-specific built files (recommended for most platforms):**
+```
+https://raw.githubusercontent.com/theneoai/skill-writer/main/platforms/skill-writer-<platform>-dev.md
+```
+
+> **Note**: The `platforms/` directory contains pre-built, self-contained skill files for each platform. These are recommended over `skill-framework.md` because they don't have external file dependencies (like `claude/refs/` paths).
+
 ---
 
 ## §2  Platform → Destination Map
@@ -44,9 +51,17 @@ Installed filename on all platforms: **`skill-writer.md`**
 
 ## §3  Installation Steps (Agent: execute these)
 
-### Step 1 — Get the main skill file
+### Step 1 — Get the skill file
 
-**If you read this file from a URL:**
+**IMPORTANT**: For most platforms (opencode, openclaw, cursor, gemini), use the **pre-built platform files** from the `platforms/` directory. These are self-contained and don't require external companion files.
+
+**For OpenCode, OpenClaw, Cursor, Gemini:**
+```
+Fetch: https://raw.githubusercontent.com/theneoai/skill-writer/main/platforms/skill-writer-<platform>-dev.md
+Store content as: SKILL_CONTENT
+```
+
+**For Claude:**
 ```
 Fetch: https://raw.githubusercontent.com/theneoai/skill-writer/main/skill-framework.md
 Store content as: SKILL_CONTENT
@@ -54,8 +69,11 @@ Store content as: SKILL_CONTENT
 
 **If you read this file from a local path:**
 ```
-Read: skill-framework.md  (same directory as this file)
-Store content as: SKILL_CONTENT
+# For most platforms (recommended):
+Read: platforms/skill-writer-<platform>-dev.md
+
+# For Claude (requires companion files):
+Read: skill-framework.md
 ```
 
 Verify: `SKILL_CONTENT` must contain the text `name: skill-writer`. If not, abort and tell the user.
@@ -129,8 +147,31 @@ Installed to N platform(s). Restart each platform to activate Skill Writer.
 
 ## §4  All Remote URLs (reference)
 
+### Pre-built Platform Files (Recommended)
+
+These files are self-contained and ready to use:
+
 ```
-# Main skill
+# OpenCode
+https://raw.githubusercontent.com/theneoai/skill-writer/main/platforms/skill-writer-opencode-dev.md
+
+# OpenClaw
+https://raw.githubusercontent.com/theneoai/skill-writer/main/platforms/skill-writer-openclaw-dev.md
+
+# Cursor
+https://raw.githubusercontent.com/theneoai/skill-writer/main/platforms/skill-writer-cursor-dev.md
+
+# Gemini
+https://raw.githubusercontent.com/theneoai/skill-writer/main/platforms/skill-writer-gemini-dev.md
+
+# OpenAI (JSON format)
+https://raw.githubusercontent.com/theneoai/skill-writer/main/platforms/skill-writer-openai-dev.json
+```
+
+### Source Files (Claude only - requires companion files)
+
+```
+# Main skill (for Claude)
 https://raw.githubusercontent.com/theneoai/skill-writer/main/skill-framework.md
 
 # refs/
@@ -182,6 +223,34 @@ read install.md and install to opencode
 # Chinese
 读取 https://raw.githubusercontent.com/theneoai/skill-writer/main/install.md 并安装
 读取 install.md 并安装到 cursor
+```
+
+### Quick Install (One-liners)
+
+**OpenCode:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/platforms/skill-writer-opencode-dev.md -o ~/.config/opencode/skills/skill-writer.md
+```
+
+**OpenClaw:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/platforms/skill-writer-openclaw-dev.md -o ~/.openclaw/skills/skill-writer.md
+```
+
+**Cursor:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/platforms/skill-writer-cursor-dev.md -o ~/.cursor/skills/skill-writer.md
+```
+
+**Gemini:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/platforms/skill-writer-gemini-dev.md -o ~/.gemini/skills/skill-writer.md
+```
+
+**Claude** (requires companion files, see §4):
+```bash
+curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/skill-framework.md -o ~/.claude/skills/skill-writer.md
+# Then copy companion files from refs/, templates/, eval/, optimize/
 ```
 
 ---
