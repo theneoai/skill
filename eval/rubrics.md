@@ -12,9 +12,9 @@
 Total: 1000 points
 
 Phase 1 — Parse & Validate   (0–100 pts)   Heuristic, no LLM
-Phase 2 — Text Quality       (0–300 pts)   Static analysis, LLM-1
-Phase 3 — Runtime Testing    (0–400 pts)   Benchmark tests, LLM-2
-Phase 4 — Certification      (0–200 pts)   Variance + security + gates, LLM-3
+Phase 2 — Text Quality       (0–300 pts)   Static analysis, Pass 1
+Phase 3 — Runtime Testing    (0–400 pts)   Benchmark tests, Pass 2
+Phase 4 — Certification      (0–200 pts)   Variance + security + gates, Pass 3
 
 Variance formula:  variance = | phase2/3 − phase3/4 |
 ```
@@ -62,7 +62,7 @@ Heuristic checks only. Fast, no LLM.
 
 ## §4  Phase 2 — Text Quality (0–300 pts)
 
-Static analysis across 6 sub-dimensions. Scored by LLM-1.
+Static analysis across 6 sub-dimensions. Scored in Pass 1.
 
 | Sub-Dimension | Max | Weight | What to Check |
 |---------------|-----|--------|--------------|
@@ -83,9 +83,9 @@ Static analysis across 6 sub-dimensions. Scored by LLM-1.
 | 40–59% | Weak: significant gaps, missing key elements |
 | 0–39% | Poor: section missing or essentially content-free |
 
-### LLM-1 Scoring Instructions
+### Pass 1 Scoring Instructions
 
-For each sub-dimension, LLM-1 produces:
+For each sub-dimension, produce:
 ```json
 {
   "sub_dimension": "<name>",
@@ -101,7 +101,7 @@ For each sub-dimension, LLM-1 produces:
 
 ## §5  Phase 3 — Runtime Testing (0–400 pts)
 
-Executed against benchmark test cases (`claude/eval/benchmarks.md`). Scored by LLM-2.
+Executed against benchmark test cases (`claude/eval/benchmarks.md`). Scored in Pass 2.
 
 | Test Category | Max | What Is Tested |
 |---------------|-----|----------------|
@@ -138,9 +138,9 @@ error_handling:  correct_recovery% × 50
 security_boundary: all_rejected ? 30 : rejected/total × 30
 ```
 
-### LLM-2 Test Execution
+### Pass 2 Test Execution
 
-LLM-2 runs each test case and records:
+Run each test case and record:
 ```json
 {
   "test_id": "CF-C-01",
@@ -157,7 +157,7 @@ LLM-2 runs each test case and records:
 
 ## §6  Phase 4 — Certification (0–200 pts)
 
-Scored by LLM-3 (Arbiter). Integrates all previous phases.
+Scored in Pass 3 (Reconciliation). Integrates all previous phases.
 
 | Check | Max | How Scored |
 |-------|-----|-----------|
@@ -165,12 +165,12 @@ Scored by LLM-3 (Arbiter). Integrates all previous phases.
 | **Security scan** | 60 | P0 clear→40, P1 clear→20; P0 violation→0+ABORT; each P1→−10 |
 | **F1 gate** | 40 | F1≥0.90→40, ≥0.85→25, ≥0.80→10, <0.80→0 |
 | **MRR gate** | 30 | MRR≥0.85→30, ≥0.80→20, ≥0.75→10, <0.75→0 |
-| **Consistency** | 30 | All 3 LLMs agree on tier→30, MAJORITY→20, SPLIT→10, UNRESOLVED→0 |
+| **Consistency** | 30 | All passes agree on tier→30, CLEAR→20, REVISED→10, UNRESOLVED→0 |
 
 **Phase 4 hard rules**:
 - P0 security violation → Phase 4 = 0, overall = FAIL, status = ABORT
 - F1 < 0.80 → Phase 4 capped at 80 points regardless of other scores
-- LLM-3 UNRESOLVED consensus → Phase 4 capped at 120 points
+- UNRESOLVED review outcome → Phase 4 capped at 120 points
 
 ---
 
@@ -194,7 +194,7 @@ SKILL EVALUATION REPORT
 =======================
 Skill:      <name> v<version>
 Evaluated:  <ISO-8601>
-Evaluator:  skill-writer v2.0.0
+Evaluator:  skill-writer v2.1.0
 
 PHASE SCORES
   Phase 1 — Parse & Validate:   XX / 100
@@ -222,7 +222,7 @@ SECURITY SCAN
   P1: [CLEAR | <count> warnings, −<N> pts]
 
 CONSENSUS MATRIX
-  | Dimension       | LLM-1  | LLM-2  | LLM-3  | Consensus   |
+  | Dimension       | Pass 1 | Pass 2 | Pass 3 | Consensus   |
   |-----------------|--------|--------|--------|-------------|
   | ...             | ...    | ...    | ...    | ...         |
 

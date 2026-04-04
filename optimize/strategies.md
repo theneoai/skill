@@ -30,9 +30,9 @@ The OPTIMIZE loop always targets the **lowest-scoring dimension first**.
 Round N (repeat up to 20 rounds, or until convergence):
 
   Step 1  READ       Score all 7 dimensions. Record to score_history[N].
-  Step 2  ANALYZE    LLM-1 and LLM-2 each propose 3 targeted fixes for lowest dim.
+  Step 2  ANALYZE    Propose 3 targeted fixes for lowest dim.
   Step 3  CURATE     Every 10 rounds: consolidate learning, prune context (§3).
-  Step 4  PLAN       LLM-3 selects best fix; records decision in dim_history[N].
+  Step 4  PLAN       Review and select best fix; record decision in dim_history[N].
   Step 5  IMPLEMENT  Apply one atomic change. Single dimension focus. No rewrites.
   Step 6  VERIFY     Re-score. IF regressed → rollback. IF no improvement → try fix #2.
   Step 7  HUMAN_REVIEW  Trigger if total_score < 560 (FAIL×0.8) after round 10.
@@ -44,7 +44,7 @@ Round N (repeat up to 20 rounds, or until convergence):
 ```
 
 **Rollback rule (Step 6)**: If re-score shows regression > 5 pts → discard change,
-restore previous version, try the second-best fix from LLM-2's list.
+restore previous version, try the second-best fix from the review pass list.
 If all 3 proposed fixes regress → switch strategy to next-lowest dimension.
 
 ---
@@ -250,7 +250,7 @@ GOOD: "严禁 hardcoded credentials (CWE-798) — use env var AUTH_TOKEN"
 | §2 Mode Router | Always | Full |
 | §3 CREATE | On CREATE trigger | Full |
 | §N Details | On demand | Lazy |
-| claude/refs/deliberation.md | §4 accessed | External |
+| claude/refs/self-review.md | §4 accessed | External |
 ```
 
 ---

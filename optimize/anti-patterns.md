@@ -1,7 +1,7 @@
 # Anti-Patterns Catalog
 
 > **Purpose**: Common mistakes that degrade skill quality, trigger failures, or create security issues.
-> **Load**: During OPTIMIZE mode and during LLM-2 Reviewer deliberation.
+> **Load**: During OPTIMIZE mode and during review pass.
 > **Format**: Each anti-pattern has a symptom, root cause, and specific fix.
 
 ---

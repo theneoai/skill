@@ -64,14 +64,13 @@ Skill Writer provides four powerful modes:
 - **Template-Based**: 4 built-in templates for common skill patterns
 - **Quality Assurance**: Automated evaluation with certification tiers
 - **Self-Evolution**: UTE protocol for automatic skill improvement
-- **Multi-LLM Deliberation**: Generator/Reviewer/Arbiter consensus
+- **Multi-Pass Self-Review**: Generate/Review/Reconcile protocol
 
 **Red Lines (严禁)**:
 - 严禁 deliver any skill without passing BRONZE gate (score ≥ 700)
 - 严禁 skip LEAN or EVALUATE security scan before delivery
 - 严禁 hardcoded credentials anywhere in generated skills (CWE-798)
 - 严禁 skip requirement elicitation (Inversion) before entering PLAN phase
-- 严禁 suppress multi-LLM consensus disagreements — log them explicitly
 
 ---
 
@@ -182,7 +181,7 @@ openclaw skill install skill-writer
 
 1. **ELICIT**: Ask 6 clarifying questions to understand requirements
 2. **SELECT TEMPLATE**: Choose from 4 built-in templates
-3. **PLAN**: Multi-LLM deliberation for implementation strategy
+3. **PLAN**: Multi-pass self-review for implementation strategy
 4. **GENERATE**: Create skill using template
 5. **SECURITY SCAN**: Check for CWE vulnerabilities
 6. **LEAN EVAL**: Fast 500-point heuristic evaluation
@@ -328,13 +327,13 @@ ABORT protocol: stop → log → flag → notify → require human sign-off befo
 
 ---
 
-## §9 Multi-LLM Deliberation
+## §9 Self-Review Protocol
 
 | Role | Responsibility |
 |------|---------------|
-| LLM-1 Generator | Produce initial draft / score / fix proposal |
-| LLM-2 Reviewer | Security + quality audit; severity-tagged issue list |
-| LLM-3 Arbiter | Cross-validate; override if safety/quality critical; consensus matrix |
+| Pass 1 — Generate | Produce initial draft / score / fix proposal |
+| Pass 2 — Review | Security + quality audit; severity-tagged issue list (ERROR/WARNING/INFO) |
+| Pass 3 — Reconcile | Address all ERRORs, reconcile scores, produce final artifact |
 
 Timeouts: 30 s per LLM, 60 s per phase, 180 s total (6 turns max).
 Consensus: UNANIMOUS → proceed; MAJORITY → proceed with notes;

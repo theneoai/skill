@@ -419,11 +419,7 @@ function embedSharedResources(template, sharedData) {
   // Section 2: Security Patterns
   if (sharedData.security) {
     sections.push(formatSectionHeader('Security Patterns', 3, config));
-    sections.push(formatCodeBlock(
-      extractContent(sharedData.security),
-      'yaml',
-      config
-    ));
+    sections.push(extractContent(sharedData.security));
   }
   
   // Section 3: Utilities

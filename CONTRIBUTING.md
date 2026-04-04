@@ -85,27 +85,28 @@ This project adheres to a code of conduct. By participating, you are expected to
 
 ```
 skill-writer/
-├── core/              # Core engine (platform-agnostic)
-│   ├── create/        # CREATE mode
-│   ├── evaluate/      # EVALUATE mode
-│   ├── optimize/      # OPTIMIZE mode
-│   └── shared/        # Shared resources
+├── skill-framework.md # Main skill definition
+├── refs/              # Reference documentation (self-review, UTE, security, etc.)
+├── templates/         # 4 skill templates + UTE snippet
+├── eval/              # Evaluation rubrics and benchmarks
+├── optimize/          # Optimization strategies and anti-patterns
 ├── builder/           # Builder tool
 │   ├── src/
 │   │   ├── commands/  # CLI commands
-│   │   ├── core/      # Core modules
+│   │   ├── core/      # Reader and embedder modules
 │   │   └── platforms/ # Platform adapters
-│   └── templates/     # Platform templates
-└── platforms/         # Generated files
+│   └── templates/     # Platform-specific output templates
+├── examples/          # Certified example skills
+└── platforms/         # Generated platform-specific files
 ```
 
 ## Adding New Features
 
 ### Adding a New Template
 
-1. Create file in `core/create/templates/`:
+1. Create file in `templates/`:
    ```bash
-   touch core/create/templates/my-template.md
+   touch templates/my-template.md
    ```
 
 2. Add template structure:
@@ -132,10 +133,7 @@ skill-writer/
 
 ### Adding a New Mode
 
-1. Create directory in `core/`:
-   ```bash
-   mkdir core/newmode
-   ```
+1. Add mode-specific companion files under the appropriate directory (`refs/`, `eval/`, or `optimize/`).
 
 2. Create required files:
    - `README.md` - Mode documentation
