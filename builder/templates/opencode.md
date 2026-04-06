@@ -1,6 +1,6 @@
 ---
 name: skill-writer
-version: "2.0.0"
+version: "2.1.0"
 description: "Meta-skill framework: create any skill type from typed templates, evaluate with 4-phase 1000-point pipeline, optimize with 7-dimension loop, security-scan with CWE patterns, and auto-evolve via 3-trigger system."
 description_i18n:
   en: "Full lifecycle meta-skill framework: CREATE from templates, LEAN fast-eval, EVALUATE 4-phase 1000pt pipeline, OPTIMIZE 7-dim 9-step loop, auto-evolve via threshold/time/usage triggers."
@@ -17,7 +17,7 @@ tags:
   - templates
   - evaluation
   - optimization
-  - multi-agent
+  - self-review
   - self-evolution
 interface:
   input: user-natural-language
@@ -36,7 +36,7 @@ extends:
     scan-on-delivery: true
   evolution:
     triggers: [threshold, time, usage]
-  deliberation:
+  self_review:
     enabled: true
   convergence:
     enabled: true
@@ -116,7 +116,7 @@ When confidence < 0.70 **and** user insists on proceeding:
 | Step | Action |
 |------|--------|
 | 1 | Log: explicit user override with timestamp |
-| 2 | Switch to single-LLM deliberation (LLM-1 only) |
+| 2 | Switch to minimal self-review (single pass only) |
 | 3 | Increase all checkpoint thresholds by 50% |
 | 4 | Require additional human sign-off before DELIVER |
 | 5 | Flag output with `TEMP_CERT` — mandatory 72 h review window |
@@ -133,7 +133,7 @@ Every mode executes via Plan-Execute-Summarize:
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  PLAN                                                    │
-│  Multi-LLM deliberation → consensus on approach          │
+│  Multi-pass self-review → consensus on approach          │
 │  Build cognitive graph of steps                          │
 └──────────────────────────────┬───────────────────────────┘
                                │ consensus reached
@@ -147,7 +147,7 @@ Every mode executes via Plan-Execute-Summarize:
                                ▼
 ┌──────────────────────────────────────────────────────────┐
 │  SUMMARIZE                                               │
-│  LLM-3 cross-validates results                           │
+│  Cross-validate results against requirements                           │
 │  Update evolution memory                                 │
 │  Produce consensus matrix                                │
 │  Route: CERTIFIED | TEMP_CERT | HUMAN_REVIEW | ABORT     │
@@ -164,7 +164,7 @@ Every mode executes via Plan-Execute-Summarize:
 |---|-------|------|
 | 1 | **ELICIT** — Inversion pattern, one question at a time (§7) | All Qs answered |
 | 2 | **SELECT TEMPLATE** — match skill type → template selection | Template chosen |
-| 3 | **PLAN** — multi-LLM deliberation | Consensus reached |
+| 3 | **PLAN** — multi-pass self-review | Plan reviewed |
 | 4 | **GENERATE** — fill template, no placeholders remain | Draft complete |
 | 5 | **SECURITY SCAN** — CWE patterns | No P0 violations |
 | 6 | **LEAN EVAL** — fast heuristic check (§6) | Score ≥ 350 (pass lean) |
@@ -294,12 +294,12 @@ High variance = artifact looks good on paper but fails runtime (or vice versa).
      FAIL       → auto-route to OPTIMIZE (§9)
 ```
 
-### Multi-LLM Scoring
+### Multi-Pass Scoring
 
-Three LLMs score independently, then cross-validate:
-- LLM-1: Scores Phase 2 (Text Quality)
-- LLM-2: Scores Phase 3 (Runtime, trigger accuracy)
-- LLM-3: Arbitrates divergence > 15 points, produces final Phase 4 consensus
+Score in separate passes to ensure objectivity:
+- Pass 1: Score Phase 2 (Text Quality) — focus on structure and content
+- Pass 2: Score Phase 3 (Runtime) — focus on trigger accuracy and behavior
+- Pass 3: Reconcile scores, compute variance, certify (Phase 4)
 
 ---
 
@@ -326,9 +326,9 @@ Pre-loop — UTE bootstrap:
 
 Round N:
   1. READ    — score all 7 dimensions; identify lowest-scoring
-  2. ANALYZE — LLM-1/2 each propose 3 targeted fixes for weakest dimension
+  2. ANALYZE — Propose 3 targeted fixes for weakest dimension
   3. CURATE  — every 10 rounds: consolidate learning, prune stale context
-  4. PLAN    — LLM-3 selects best fix strategy; log decision
+  4. PLAN    — Review and select best fix strategy; log decision
   5. IMPLEMENT — apply atomic change (single dimension focus)
   6. VERIFY  — re-score; if score regressed → rollback; if no improvement → try fix #2
   7. HUMAN_REVIEW — trigger if total_score < 560 after round 10
@@ -407,13 +407,13 @@ CWE-22:
 
 ---
 
-## §12 Multi-LLM Deliberation (Summary)
+## §12 Self-Review Protocol (Summary)
 
 | Role | Responsibility |
 |------|---------------|
-| LLM-1 Generator | Produce initial draft / score / fix proposal |
-| LLM-2 Reviewer | Security + quality audit; severity-tagged issue list |
-| LLM-3 Arbiter | Cross-validate; override if safety/quality critical; consensus matrix |
+| Pass 1 — Generate | Produce initial draft / score / fix proposal |
+| Pass 2 — Review | Security + quality audit; severity-tagged issue list (ERROR/WARNING/INFO) |
+| Pass 3 — Reconcile | Address all ERRORs, reconcile scores, produce final artifact |
 
 Timeouts: 30 s per LLM, 60 s per phase, 180 s total (6 turns max).
 Consensus: UNANIMOUS → proceed; MAJORITY → proceed with notes;
@@ -445,7 +445,7 @@ Every operation appends to `.skill-audit/framework.jsonl` (365-day retention):
   "trigger_accuracy": 0.00,
   "security_p0_clear": true,
   "security_p1_warnings": 0,
-  "deliberation_consensus": "UNANIMOUS|MAJORITY|SPLIT|UNRESOLVED",
+  "review_consensus": "CLEAR|REVISED|UNRESOLVED",
   "evolution_trigger": "<threshold|time|usage|null>",
   "error_recovery_invoked": false,
   "error_recovery_actions": [],
@@ -519,7 +519,7 @@ It makes the target skill self-improving through actual use — no scheduled job
 3. FILL PLACEHOLDERS:
      {{SKILL_NAME}}           = skill's `name` YAML field
      {{VERSION}}              = skill's `version` YAML field
-     {{FRAMEWORK_VERSION}}    = "2.0.0"
+     {{FRAMEWORK_VERSION}}    = "2.1.0"
      {{INJECTION_DATE}}       = today ISO-8601
      {{CERTIFIED_LEAN_SCORE}} = LEAN score from Step 6 (or 350 if unknown)
 
@@ -648,8 +648,8 @@ from a URL or using local files. No evaluation or generation — pure deployment
 
 ## §UTE Use-to-Evolve
 
-<!-- Post-invocation hook — auto-managed by skill-writer v2.0.0 -->
-<!-- skill: skill-writer | version: 2.0.0 | injected: {{generated_at}} -->
+<!-- Post-invocation protocol — auto-managed by skill-writer v2.1.0 -->
+<!-- skill: skill-writer | version: 2.1.0 | injected: {{generated_at}} -->
 
 After each invocation, increment `use_to_evolve.cumulative_invocations`.
 Run lightweight LEAN check every 10 invocations; full re-score every 50;
@@ -663,6 +663,6 @@ tier-drift detection every 100.
 
 ---
 
-*Generated by skill-writer-builder v2.0.0*  
+*Generated by skill-writer-builder v2.1.0*  
 *For platform: OpenCode*  
 *Last updated: {{generated_at}}*

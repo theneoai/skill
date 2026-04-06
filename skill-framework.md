@@ -1,6 +1,6 @@
 ---
 name: skill-writer
-version: "2.0.0"
+version: "2.1.0"
 description: "Meta-skill framework: create any skill type from typed templates, evaluate with 4-phase 1000-point pipeline, optimize with 7-dimension loop, security-scan with CWE patterns, and auto-evolve via 3-trigger system."
 description_i18n:
   en: "Full lifecycle meta-skill framework: CREATE from templates, LEAN fast-eval, EVALUATE 4-phase 1000pt pipeline, OPTIMIZE 7-dim 9-step loop, auto-evolve via threshold/time/usage triggers."
@@ -10,7 +10,7 @@ license: MIT
 author:
   name: theneoai
 created: "2026-03-31"
-updated: "2026-04-01"
+updated: "2026-04-04"
 type: meta-framework
 
 tags:
@@ -19,7 +19,7 @@ tags:
   - templates
   - evaluation
   - optimization
-  - multi-agent
+  - self-review
   - self-evolution
 
 interface:
@@ -41,8 +41,8 @@ extends:
   evolution:
     triggers: [threshold, time, usage]
     spec: claude/refs/evolution.md
-  deliberation:
-    spec: claude/refs/deliberation.md
+  self_review:
+    spec: claude/refs/self-review.md
   convergence:
     spec: claude/refs/convergence.md
   use_to_evolve:
@@ -60,7 +60,7 @@ extends:
     claude/refs/security-patterns.md  →  ~/.claude/refs/security-patterns.md
     claude/refs/use-to-evolve.md      →  ~/.claude/refs/use-to-evolve.md
     claude/refs/convergence.md        →  ~/.claude/refs/convergence.md
-    claude/refs/deliberation.md       →  ~/.claude/refs/deliberation.md
+    claude/refs/self-review.md        →  ~/.claude/refs/self-review.md
     claude/refs/evolution.md          →  ~/.claude/refs/evolution.md
     claude/templates/                 →  ~/.claude/templates/
     claude/eval/                      →  ~/.claude/eval/
@@ -75,18 +75,18 @@ extends:
 **Role**: Skill Factory, Quality Engine & Evolution Manager
 **Purpose**: One framework to CREATE any skill from typed templates, evaluate with a
 4-phase 1000-point pipeline, optimize with a 7-dimension 9-step loop, and
-auto-evolve via a 3-trigger system — all enforced by multi-LLM deliberation
+auto-evolve via a 3-trigger system — all enforced by multi-pass self-review
 and non-bypassable security gates.
 
 **Design Patterns** (Google 5):
 - **Tool Wrapper**: Load `claude/refs/` on demand, treat as absolute truth
 - **Generator**: Template-based structured output for every skill type
-- **Reviewer**: LLM-2 severity-scoped audit (ERROR / WARNING / INFO)
+- **Reviewer**: Self-review severity-scoped audit (ERROR / WARNING / INFO)
 - **Inversion**: Blocking requirement elicitation before any generation
 - **Pipeline**: Strict phase order with hard checkpoints
 
 **Orchestration**: LoongFlow — Plan-Execute-Summarize replacing rigid state machines.
-See `claude/refs/deliberation.md §1` for full spec.
+See `claude/refs/self-review.md §1` for full spec.
 
 **Red Lines (严禁)**:
 - 严禁 hardcoded credentials (CWE-798) — patterns: `claude/refs/security-patterns.md`
@@ -94,7 +94,6 @@ See `claude/refs/deliberation.md §1` for full spec.
 - 严禁 skip LEAN or EVALUATE security scan before delivery
 - 严禁 proceed past ABORT trigger without explicit human sign-off
 - 严禁 skip elicitation gate (Inversion) before entering PLAN phase
-- 严禁 suppress or average consensus disagreements — log them explicitly
 
 ---
 
@@ -144,7 +143,7 @@ When confidence < 0.70 **and** user insists on proceeding:
 | Step | Action |
 |------|--------|
 | 1 | Log: explicit user override with timestamp |
-| 2 | Switch to single-LLM deliberation (LLM-1 only) |
+| 2 | Switch to minimal self-review (single pass only) |
 | 3 | Increase all checkpoint thresholds by 50% |
 | 4 | Require additional human sign-off before DELIVER |
 | 5 | Flag output with `TEMP_CERT` — mandatory 72 h review window |
@@ -162,25 +161,24 @@ Every mode executes via Plan-Execute-Summarize:
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  PLAN                                                    │
-│  Multi-LLM deliberation → consensus on approach          │
+│  Multi-pass self-review → consensus on approach           │
 │  Build cognitive graph of steps                          │
-│  See: claude/refs/deliberation.md                        │
+│  See: claude/refs/self-review.md                         │
 └──────────────────────────────┬───────────────────────────┘
-                               │ consensus reached
+                               │ plan reviewed
                                ▼
 ┌──────────────────────────────────────────────────────────┐
 │  EXECUTE                                                 │
 │  Implement plan with error recovery fallback             │
 │  Hard checkpoint after each phase                        │
-│  See: claude/refs/deliberation.md §4 (error recovery)   │
+│  See: claude/refs/self-review.md §4 (error recovery)    │
 └──────────────────────────────┬───────────────────────────┘
                                │ execution complete
                                ▼
 ┌──────────────────────────────────────────────────────────┐
 │  SUMMARIZE                                               │
-│  LLM-3 cross-validates results                           │
+│  Cross-validate results against requirements             │
 │  Update evolution memory                                 │
-│  Produce consensus matrix                                │
 │  Route: CERTIFIED | TEMP_CERT | HUMAN_REVIEW | ABORT     │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -195,7 +193,7 @@ Every mode executes via Plan-Execute-Summarize:
 |---|-------|------|
 | 1 | **ELICIT** — Inversion pattern, one question at a time (§7) | All Qs answered |
 | 2 | **SELECT TEMPLATE** — match skill type → `claude/templates/<type>.md` | Template chosen |
-| 3 | **PLAN** — multi-LLM deliberation (`claude/refs/deliberation.md §2`) | Consensus reached |
+| 3 | **PLAN** — multi-pass self-review (`claude/refs/self-review.md §2`) | Plan reviewed |
 | 4 | **GENERATE** — fill template, no placeholders remain | Draft complete |
 | 5 | **SECURITY SCAN** — CWE patterns (`claude/refs/security-patterns.md`) | No P0 violations |
 | 6 | **LEAN EVAL** — fast heuristic check (§6) | Score ≥ 350 (pass lean) |
@@ -276,7 +274,7 @@ Ask **one question at a time**. Wait for answer before next question.
 ### EVALUATE questions (ask all):
 1. "请提供skill文件路径或内容。 / Provide the skill file path or content."
 2. "评测重点在哪个维度？ / Any specific evaluation focus?"
-3. "是否需要与其他skill做配对排名？ / Pairwise ranking needed?"
+3. "需要对比其他skill吗？ / Compare against another skill?"
 
 ### OPTIMIZE questions (ask all):
 1. "请提供当前评测报告（分数 + 最低维度）。 / Provide the current eval report."
@@ -327,14 +325,14 @@ High variance = artifact looks good on paper but fails runtime (or vice versa).
      FAIL       → auto-route to OPTIMIZE (§9)
 ```
 
-### Multi-LLM Scoring
+### Multi-Pass Scoring
 
-Three LLMs score independently, then cross-validate:
-- LLM-1: Scores Phase 2 (Text Quality)
-- LLM-2: Scores Phase 3 (Runtime, trigger accuracy)
-- LLM-3: Arbitrates divergence > 15 points, produces final Phase 4 consensus
+Score in separate passes to ensure objectivity:
+- Pass 1: Score Phase 2 (Text Quality) — focus on structure and content
+- Pass 2: Score Phase 3 (Runtime) — focus on trigger accuracy and behavior
+- Pass 3: Reconcile scores, compute variance, certify (Phase 4)
 
-Full protocol: `claude/refs/deliberation.md §2`
+Full protocol: `claude/refs/self-review.md §2`
 
 ---
 
@@ -361,9 +359,9 @@ Pre-loop — UTE bootstrap:
 
 Round N:
   1. READ    — score all 7 dimensions; identify lowest-scoring
-  2. ANALYZE — LLM-1/2 each propose 3 targeted fixes for weakest dimension
+  2. ANALYZE — propose 3 targeted fixes for weakest dimension
   3. CURATE  — every 10 rounds: consolidate learning, prune stale context
-  4. PLAN    — LLM-3 selects best fix strategy; log decision
+  4. PLAN    — review and select best fix strategy; log decision
   5. IMPLEMENT — apply atomic change (single dimension focus)
   6. VERIFY  — re-score; if score regressed → rollback; if no improvement → try fix #2
   7. HUMAN_REVIEW — trigger if total_score < 560 after round 10
@@ -425,19 +423,19 @@ Full regex patterns: `claude/refs/security-patterns.md`
 
 ---
 
-## §12  Multi-LLM Deliberation (Summary)
+## §12  Self-Review Protocol (Summary)
 
-| Role | Responsibility |
-|------|---------------|
-| LLM-1 Generator | Produce initial draft / score / fix proposal |
-| LLM-2 Reviewer | Security + quality audit; severity-tagged issue list |
-| LLM-3 Arbiter | Cross-validate; override if safety/quality critical; consensus matrix |
+| Pass | Focus |
+|------|-------|
+| Pass 1 — Generate | Produce initial draft / score / fix proposal |
+| Pass 2 — Review | Security audit (CWE) + quality audit; severity-tagged issues (ERROR/WARNING/INFO) |
+| Pass 3 — Reconcile | Address all ERRORs, improve on WARNINGs, produce final artifact |
 
-Timeouts: 30 s per LLM, 60 s per phase, 180 s total (6 turns max).
-Consensus: UNANIMOUS → proceed; MAJORITY → proceed with notes;
-SPLIT → one revision; UNRESOLVED → HUMAN_REVIEW.
+Timeouts: 60 s per phase, 180 s total.
+Outcomes: CLEAR → proceed; REVISED → proceed with note;
+UNRESOLVED → HUMAN_REVIEW.
 
-Full spec: `claude/refs/deliberation.md`
+Full spec: `claude/refs/self-review.md`
 
 ---
 
@@ -465,7 +463,7 @@ Every operation appends to `.skill-audit/framework.jsonl` (365-day retention):
   "trigger_accuracy": 0.00,
   "security_p0_clear": true,
   "security_p1_warnings": 0,
-  "deliberation_consensus": "UNANIMOUS|MAJORITY|SPLIT|UNRESOLVED",
+  "review_consensus": "CLEAR|REVISED|UNRESOLVED",
   "evolution_trigger": "<threshold|time|usage|null>",
   "error_recovery_invoked": false,
   "error_recovery_actions": [],
@@ -525,7 +523,8 @@ Mode: EVALUATE → auto-route to OPTIMIZE on FAIL
 ## §15  UTE Injection
 
 **Use-to-Evolve (UTE)** is injected into every skill the framework creates or optimizes.
-It makes the target skill self-improving through actual use — no scheduled jobs required.
+The AI, upon recognizing the UTE section, follows the protocol to observe usage patterns
+and propose improvements over time.
 
 Full spec: `claude/refs/use-to-evolve.md`
 Snippet: `claude/templates/use-to-evolve-snippet.md`
@@ -542,7 +541,7 @@ Snippet: `claude/templates/use-to-evolve-snippet.md`
 3. FILL PLACEHOLDERS:
      {{SKILL_NAME}}           = skill's `name` YAML field
      {{VERSION}}              = skill's `version` YAML field
-     {{FRAMEWORK_VERSION}}    = "2.0.0"
+     {{FRAMEWORK_VERSION}}    = "2.1.0"
      {{INJECTION_DATE}}       = today ISO-8601
      {{CERTIFIED_LEAN_SCORE}} = LEAN score from Step 6 (or 350 if unknown)
 
@@ -550,26 +549,20 @@ Snippet: `claude/templates/use-to-evolve-snippet.md`
 
 5. MERGE YAML — add use_to_evolve: block to skill's YAML frontmatter
 
-6. LEAN RE-CHECK — run LEAN eval on injected skill
-     IF lean_score regressed > 10 pts → revert injection, log warning
-
-7. LOG — record in audit trail: {"ute_injected": true, "certified_lean_score": N}
+6. LOG — record in audit trail: {"ute_injected": true, "certified_lean_score": N}
 ```
 
-### What UTE Adds to Target Skills
+### What UTE Enables
 
-After injection, every target skill gains:
+After injection, the AI follows the UTE protocol to:
 
-| Capability | Mechanism |
+| Capability | How It Works |
 |-----------|-----------|
-| Per-call usage recording | Post-Invocation Hook appended to skill context |
-| Implicit feedback detection | Pattern match on user follow-up (correction / rephrasing / approval) |
-| Trigger candidate collection | Rephrasing signals logged; count≥3 → micro-patch candidate |
-| Lightweight check every 10 calls | Rolling 20-call success rate + trigger accuracy check |
-| Full metric recompute every 50 calls | F1 / MRR / trigger_accuracy from usage log |
-| Tier drift detection every 100 calls | Estimated LEAN vs certified baseline |
-| Autonomous micro-patching | Keyword additions staged + LEAN-validated before apply |
-| OPTIMIZE queue | Structural issues written to evolution-queue.jsonl |
+| Feedback detection | AI observes user corrections, rephrasing, and approvals |
+| Trigger candidate collection | Rephrasing patterns noted; ≥3 similar → micro-patch candidate |
+| Periodic health checks | AI reviews skill performance at ~10/50/100 use intervals |
+| Micro-patch proposals | AI suggests keyword additions; user confirms before apply |
+| OPTIMIZE suggestions | Structural issues flagged for full OPTIMIZE cycle |
 
 ### UTE Update (on OPTIMIZE)
 
@@ -577,16 +570,14 @@ When optimizing a skill that already has UTE:
 
 ```
 1. Load current use_to_evolve.certified_lean_score
-2. Load .skill-audit/evolution-queue.jsonl → read queued issues
-3. Use queued issues as starting point for dimension analysis (Step 1 READ)
-4. After all optimization rounds complete:
+2. Review any user-reported issues as starting point for dimension analysis
+3. After all optimization rounds complete:
      update use_to_evolve.certified_lean_score = final_lean_score
      update use_to_evolve.last_ute_check = today
-     clear processed items from evolution-queue.jsonl
 ```
 
-This closes the feedback loop: UTE collects real-usage signals → queues them →
-OPTIMIZE consumes the queue → updates UTE baseline → repeat.
+This closes the feedback loop: UTE observes usage → proposes improvements →
+OPTIMIZE applies fixes → updates UTE baseline → repeat.
 
 ---
 
@@ -695,7 +686,7 @@ User: "read https://raw.githubusercontent.com/.../skill-framework.md and install
 **创建** | **快评** | **评测** | **优化** | **安装**
 
 (Templates: `claude/templates/` · UTE snippet: `claude/templates/use-to-evolve-snippet.md` ·
-Eval rubrics: `claude/eval/rubrics.md` · Pairwise: `claude/eval/pairwise.md` ·
-Deliberation: `claude/refs/deliberation.md` · Security: `claude/refs/security-patterns.md` ·
+Eval rubrics: `claude/eval/rubrics.md` · Benchmarks: `claude/eval/benchmarks.md` ·
+Self-review: `claude/refs/self-review.md` · Security: `claude/refs/security-patterns.md` ·
 Evolution: `claude/refs/evolution.md` · UTE spec: `claude/refs/use-to-evolve.md` ·
 Convergence: `claude/refs/convergence.md` · Optimize strategies: `claude/optimize/strategies.md`)

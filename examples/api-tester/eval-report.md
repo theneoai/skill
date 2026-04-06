@@ -124,7 +124,7 @@ LEAN Decision: LEAN PASS (≥350) → proceed to full EVALUATE
 | Security Scan | 60 | 60 | P0 CLEAR, P1 CLEAR |
 | F1 Gate | 40 | 40 | 0.92 ≥ 0.90 ✓ |
 | MRR Gate | 30 | 30 | 0.88 ≥ 0.85 ✓ |
-| Consensus | 20 | 30 | MAJORITY agreement (LLM-1/2/3 all GOLD) |
+| Consensus | 20 | 30 | CLEAR agreement (all passes scored GOLD) |
 | UTE injection verified | 10 | 10 | §UTE section present; all 11 YAML fields filled |
 
 **Variance 计算**:
@@ -164,13 +164,13 @@ variance = | (phase2_score / 3) - (phase3_score / 4) |
 
 ## 共识矩阵
 
-| 维度 | LLM-1 | LLM-2 | LLM-3 | 共识 |
-|------|-------|-------|-------|------|
-| Phase 1 | 95 | 95 | 95 | UNANIMOUS |
-| Phase 2 | 275 | 278 | 272 | MAJORITY |
-| Phase 3 | 370 | 375 | 365 | MAJORITY |
-| Phase 4 | 190 | 195 | 185 | MAJORITY |
-| **Tier** | GOLD | GOLD | GOLD | UNANIMOUS |
+| 维度 | Pass 1 | Pass 2 | Pass 3 | 共识 |
+|------|--------|--------|--------|------|
+| Phase 1 | 95 | 95 | 95 | CLEAR |
+| Phase 2 | 275 | 278 | 272 | REVISED |
+| Phase 3 | 370 | 375 | 365 | REVISED |
+| Phase 4 | 190 | 195 | 185 | REVISED |
+| **Tier** | GOLD | GOLD | GOLD | CLEAR |
 
 **最终共识**: MAJORITY (符合 GOLD 要求)
 
@@ -255,7 +255,7 @@ variance = | (phase2_score / 3) - (phase3_score / 4) |
   "trigger_accuracy": 0.93,
   "security_p0_clear": true,
   "security_p1_warnings": 0,
-  "deliberation_consensus": "MAJORITY",
+  "review_consensus": "REVISED",
   "outcome": "CERTIFIED"
 }
 ```

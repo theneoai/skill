@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-04-04
+
+### 🔧 Simplified
+
+- Replaced Multi-LLM deliberation (3-LLM Generator/Reviewer/Arbiter) with **multi-pass self-review** protocol — realistic for single-LLM AI platforms
+- Simplified UTE (Use-to-Evolve) from automated post-invocation hooks to **AI-followed protocol convention** — no longer assumes programmatic execution
+- Established **Single Source of Truth** — each concept defined in exactly one Markdown file
+
+### ✨ Added
+
+- `refs/self-review.md` — 3-pass self-review protocol (Generate → Review → Reconcile) replacing the unrealizable 3-LLM system
+
+### 🗑️ Removed
+
+- Deleted entire `core/` directory (~5700 lines of duplicated YAML and README content)
+- Deleted `refs/deliberation.md` (replaced by `refs/self-review.md`)
+- Deleted `eval/pairwise.md` (over-engineered Bradley-Terry pairwise ranking)
+- Deleted `builder/templates/claude.md` (duplicated `skill-framework.md`)
+
+### 📈 Impact
+
+- Project reduced from ~87 files / ~9600 lines to ~55 files / ~6000 lines
+- Builder now reads directly from Markdown companion files (no YAML intermediary)
+- All LLM-1/LLM-2/LLM-3 references updated to Pass 1/Pass 2/Pass 3
+
+---
+
 ## [2.0.0] - 2026-04-01
 
 ### ✨ Added

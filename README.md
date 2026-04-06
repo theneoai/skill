@@ -2,7 +2,7 @@
 
 A cross-platform meta-skill for creating, evaluating, and optimizing AI assistant skills through natural language interaction.
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/theneoai/skill-writer)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/theneoai/skill-writer)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platforms](https://img.shields.io/badge/platforms-6-orange.svg)](#supported-platforms)
 [![GitHub Actions](https://github.com/theneoai/skill-writer/workflows/Skill%20Writer%20-%20Build%20and%20Release/badge.svg)](https://github.com/theneoai/skill-writer/actions)
@@ -23,7 +23,7 @@ Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and
 - **Security Built-In**: CWE-based security pattern detection
 - **Continuous Improvement**: Automated optimization with convergence detection
 - **Self-Evolution**: UTE (Use-to-Evolve) protocol for automatic skill improvement
-- **Multi-LLM Deliberation**: Generator/Reviewer/Arbiter consensus mechanism
+- **Multi-Pass Self-Review**: Generate/Review/Reconcile quality protocol
 
 ## Supported Platforms
 
@@ -145,7 +145,7 @@ Generates new skills from scratch using structured templates and elicitation.
 #### Workflow (9-Phase)
 1. **ELICIT**: Ask 6 clarifying questions to understand requirements
 2. **SELECT TEMPLATE**: Choose from 4 built-in templates
-3. **PLAN**: Multi-LLM deliberation for implementation strategy
+3. **PLAN**: Multi-pass self-review for implementation strategy
 4. **GENERATE**: Create skill using template
 5. **SECURITY SCAN**: Check for CWE vulnerabilities
 6. **LEAN EVAL**: Fast 500-point heuristic evaluation
@@ -346,7 +346,7 @@ Self-improvement protocol that enables skills to evolve through usage.
 
 ```yaml
 use_to_evolve:
-  framework_version: "2.0.0"
+  framework_version: "2.1.0"
   injection_date: "2026-04-01"
   certified_lean_score: 390
   last_ute_check: "2026-04-01"
@@ -358,11 +358,11 @@ use_to_evolve:
 2. **Time Trigger**: Freshness check (cadence-gated)
 3. **Usage Trigger**: Usage pattern analysis
 
-### Post-Invocation Hook
-- Records usage context
-- Detects implicit feedback signals
-- Runs trigger checks
-- Applies micro-patches if needed
+### Post-Invocation Protocol
+- AI observes outcome and follows UTE protocol when section is present
+- Detects implicit feedback signals (user corrections, repeated patterns)
+- Runs cadence-gated health checks
+- Proposes micro-patches for user confirmation
 
 ## Builder Tool
 
@@ -413,68 +413,39 @@ node bin/skill-writer-builder.js inspect --platform opencode
 
 ```
 skill-writer/
-├── core/                          # Core engine (platform-agnostic)
-│   ├── create/                    # CREATE mode
-│   │   ├── workflow.yaml          # 9-phase workflow
-│   │   ├── elicitation.yaml       # 6 elicitation questions
-│   │   └── templates/             # 4 templates
-│   │       ├── base.md
-│   │       ├── api-integration.md
-│   │       ├── data-pipeline.md
-│   │       └── workflow-automation.md
-│   ├── evaluate/                  # EVALUATE mode
-│   │   ├── phases.yaml            # 4-phase pipeline
-│   │   ├── rubrics.yaml           # Scoring rubrics
-│   │   └── certification.yaml     # Certification tiers
-│   ├── optimize/                  # OPTIMIZE mode
-│   │   ├── dimensions.yaml        # 7-dimension analysis
-│   │   ├── strategies.yaml        # Optimization strategies
-│   │   └── convergence.yaml       # Convergence rules
-│   └── shared/                    # Shared resources
-│       ├── security/
-│       │   └── cwe-patterns.yaml  # CWE security patterns
-│       └── utils/
-│           └── helpers.yaml       # Utility functions
-├── builder/                       # Builder tool
+├── skill-framework.md             # Main skill definition (entry point)
+├── refs/                          # Reference documentation
+│   ├── self-review.md             # Multi-pass self-review protocol
+│   ├── use-to-evolve.md           # UTE self-improvement spec
+│   ├── evolution.md               # 3-trigger evolution system
+│   ├── convergence.md             # Convergence detection rules
+│   └── security-patterns.md       # CWE security patterns
+├── templates/                     # Skill templates (4 types + UTE snippet)
+│   ├── base.md
+│   ├── api-integration.md
+│   ├── data-pipeline.md
+│   ├── workflow-automation.md
+│   └── use-to-evolve-snippet.md
+├── eval/                          # Evaluation resources
+│   ├── rubrics.md                 # 1000-point scoring rubric
+│   └── benchmarks.md              # Benchmark test cases
+├── optimize/                      # Optimization resources
+│   ├── strategies.md              # 7-dimension strategy catalog
+│   └── anti-patterns.md           # Common pitfalls
+├── builder/                       # Multi-platform builder tool
 │   ├── bin/
 │   │   └── skill-writer-builder.js
 │   ├── src/
-│   │   ├── commands/              # CLI commands
-│   │   │   ├── build.js
-│   │   │   ├── dev.js
-│   │   │   ├── validate.js
-│   │   │   └── inspect.js
-│   │   ├── core/                  # Core modules
-│   │   │   ├── reader.js
-│   │   │   └── embedder.js
-│   │   └── platforms/             # Platform adapters
-│   │       ├── index.js
-│   │       ├── opencode.js
-│   │       ├── openclaw.js
-│   │       ├── claude.js
-│   │       ├── cursor.js
-│   │       ├── openai.js
-│   │       └── gemini.js
-│   └── templates/                 # Platform-specific templates
-│       ├── opencode.md
-│       ├── openclaw.md
-│       ├── claude.md
-│       ├── cursor.md
-│       ├── openai.json
-│       └── gemini.md
-├── platforms/                     # Generated platform files
-│   ├── skill-writer-opencode-dev.md
-│   ├── skill-writer-openclaw-dev.md
-│   ├── skill-writer-claude-dev.md
-│   ├── skill-writer-cursor-dev.md
-│   ├── skill-writer-openai-dev.json
-│   └── skill-writer-gemini-dev.md
-├── examples/                      # Example skills
+│   │   ├── commands/              # CLI commands (build, dev, validate, inspect)
+│   │   ├── core/                  # Reader and embedder modules
+│   │   └── platforms/             # 6 platform adapters
+│   └── templates/                 # Platform-specific output templates
+├── platforms/                     # Generated platform files (6 platforms)
+├── examples/                      # Certified example skills
 │   ├── api-tester/                # GOLD 920/1000
 │   ├── code-reviewer/             # SILVER 820/1000
 │   └── doc-generator/             # GOLD 895/1000
 └── docs/                          # GitHub Pages documentation
-    └── index.html
 ```
 
 ## Architecture
@@ -499,7 +470,7 @@ skill-writer/
 │  │OPTIMIZE Mode │  │              Shared Resources        │ │
 │  │              │  │  • CWE Security Patterns            │ │
 │  │ • 7-Dimension│  │  • UTE Self-Evolution               │ │
-│  │   Analysis   │  │  • Multi-LLM Deliberation           │ │
+│  │   Analysis   │  │  • Multi-Pass Self-Review            │ │
 │  │ • 9-Step     │  │  • Utility Functions                │ │
 │  │   Loop       │  │                                     │ │
 │  └──────────────┘  └─────────────────────────────────────┘ │
@@ -535,7 +506,7 @@ All example skills are certified with detailed evaluation reports.
 
 ### Adding New Templates
 
-1. Create template in `core/create/templates/`
+1. Create template in `templates/`
 2. Add metadata header with placeholders
 3. Include placeholder documentation
 4. Test with CREATE mode
@@ -594,7 +565,7 @@ MIT License - See [LICENSE](LICENSE) file for details.
 - [x] Support for 6 platforms (OpenCode, OpenClaw, Claude, Cursor, OpenAI, Gemini)
 - [x] LEAN fast-evaluation mode
 - [x] UTE (Use-to-Evolve) self-improvement protocol
-- [x] Multi-LLM deliberation mechanism
+- [x] Multi-pass self-review protocol
 - [ ] Web UI for skill management
 - [ ] Skill marketplace integration
 - [ ] Automated testing framework
@@ -610,4 +581,4 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 **Made with ❤️ by the Skill Writer Team**
 
-*Last updated: 2026-04-01*
+*Last updated: 2026-04-05*
