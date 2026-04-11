@@ -1156,6 +1156,38 @@ Post-loop — Final summary output (always show after loop ends):
   ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
 
 Max rounds: 20 → if not BRONZE after round 20 → HUMAN_REVIEW
+
+OSCILLATION diagnostic (when score fluctuates ±5–15 pts without clear trend):
+When VOLATILITY or PLATEAU detected AND score < 350 (FAIL), output structured diagnostic:
+
+  ─── OPTIMIZE Diagnostic ─────────────────────────────────────────
+  Rounds completed: N | Score range this session: [LOW]–[HIGH]/500
+  Stop reason: VOLATILITY / PLATEAU / MAX_ROUNDS
+
+  Dimension breakdown (current scores vs. what's needed for BRONZE ≥ 350):
+    systemDesign    [N]/100  [status: OK / ⚠ NEEDS WORK]
+    domainKnowledge [N]/100  [status: OK / ⚠ NEEDS WORK]
+    workflow        [N]/100  [status: OK / ⚠ NEEDS WORK]
+    errorHandling   [N]/100  [status: OK / ⚠ NEEDS WORK]
+    examples        [N]/100  [status: OK / ⚠ NEEDS WORK]
+    security        [N]/100  [status: OK / ⚠ NEEDS WORK]
+    metadata        [N]/100  [status: OK / ⚠ NEEDS WORK]
+
+  Why oscillation happens:
+  - If ≥2 dimensions are ⚠ NEEDS WORK and have competing constraints
+    (e.g., adding more examples makes the skill larger, reducing workflow clarity),
+    OPTIMIZE cannot improve both simultaneously → score oscillates.
+
+  Recommended manual actions (pick 1-2 per editing session):
+  ⚠ [TOP_WEAK_DIM]: [specific suggestion for this dimension]
+    Example for errorHandling: "Add a concrete error recovery table with ≥3 rows"
+    Example for examples: "Add 2 complete input→output examples in a code block"
+    Example for metadata: "Add 3+ Chinese trigger phrases to YAML frontmatter"
+  ⚠ [SECOND_WEAK_DIM]: [specific suggestion]
+
+  After manual edits: run /lean to check improvement, then continue /opt
+  Or: run /eval for authoritative score to see if you've reached BRONZE
+  ─────────────────────────────────────────────────────────────────
 ```
 
 Strategy catalog: `claude/optimize/strategies.md`
@@ -2124,6 +2156,27 @@ Step 2: When ready, paste 2+ JSON artifacts directly into the chat:
 
 If you only have 1 artifact: AGGREGATE will run but note "low confidence — 
   collect 2+ sessions for reliable prioritization."
+
+Confidence guide by artifact count:
+  1 artifact  → runs but flags LOW CONFIDENCE (directional only, not actionable)
+  2–4 artifacts → MEDIUM confidence (good enough to plan next /opt round)
+  5+ artifacts → HIGH confidence (reliable prioritization, safe to act on)
+```
+
+**Multi-skill artifact handling** (artifacts from different skills mixed together):
+
+```
+When artifacts from multiple skills are present, AGGREGATE automatically:
+1. Groups artifacts by skill_name field in each JSON
+2. Runs per-skill analysis independently
+3. Produces a ranked improvement list per skill, then a cross-skill summary
+
+Example output header when multiple skills are present:
+  "Skills covered: pr-reviewer (4 artifacts), git-diff-summarizer (2 artifacts)"
+  → Per-skill sections follow, then a cross-skill "No-Skill Bucket"
+
+You do NOT need to separate artifacts by skill before running AGGREGATE.
+Just paste all artifacts together — AGGREGATE handles the grouping.
 ```
 
 When the user provides 2+ Session Artifact JSONs, AGGREGATE mode synthesizes them:
@@ -2198,6 +2251,13 @@ What to do next:
   • To save to GitHub Gist (team sharing):
     POST the JSON to a private Gist, share the URL with your team lead
   • Already have 2+ artifacts? Paste them and run: aggregate skill feedback
+
+Are you a skill USER (not the author)?
+  → Share feedback with the skill author:
+    1. Run /collect → copy the JSON output
+    2. Send it to the skill author via your team channel / Gist / email
+    3. The author pastes it into AGGREGATE to see your usage patterns
+    No special tool needed — plain JSON in any communication channel works.
 ──────────────────────────────────────────────────────────────
 ```
 

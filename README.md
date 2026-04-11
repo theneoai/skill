@@ -473,8 +473,48 @@ Installs skill-writer itself to one or all supported platforms from a URL or loc
 | OpenClaw | `~/.openclaw/skills/` | Markdown |
 | Cursor | `~/.cursor/skills/` | Markdown |
 | Gemini | `~/.gemini/skills/` | Markdown |
-| OpenAI | `~/.openai/skills/` | JSON |
+| OpenAI | via platform dashboard | JSON |
 | MCP | `~/.mcp/servers/skill-writer/` | JSON manifest |
+
+#### OpenAI Custom GPT Setup
+
+OpenAI requires manual setup through the platform dashboard — there is no local file path.
+
+**Step-by-step**:
+1. Generate the skill-writer JSON file:
+   ```bash
+   # If you have the local clone:
+   ./install.sh --platform openai
+   # Output: platforms/skill-writer-openai.json
+   
+   # Or download directly:
+   curl -fsSL https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer-openai.json -o skill-writer-openai.json
+   ```
+2. Go to [platform.openai.com](https://platform.openai.com) → **My GPTs** → **Create a GPT** → **Configure** → **Actions**
+3. Upload `skill-writer-openai.json` as an Action schema
+4. Save the GPT configuration
+
+**Validating the JSON before upload**:
+```bash
+# Quick validation (checks JSON syntax):
+python3 -m json.tool skill-writer-openai.json > /dev/null && echo "Valid JSON" || echo "Invalid JSON"
+
+# Schema validation (if openapi-spec-validator is installed):
+pip install openapi-spec-validator
+python3 -m openapi_spec_validator skill-writer-openai.json
+```
+
+**Modes available via OpenAI Custom GPT**:
+- ✅ CREATE, LEAN, EVALUATE, OPTIMIZE — all work via natural language
+- ⚠️ INSTALL — limited (Custom GPT cannot write to file system)
+- ⚠️ COLLECT auto-persist — not available (no file system hooks)
+- ✅ COLLECT JSON output — available (output to conversation)
+
+**If OpenAI rejects the JSON**:
+- Check that your GPT account has "Actions" enabled (requires ChatGPT Plus or API access)
+- Validate the JSON schema with `openapi-spec-validator` (see above)
+- Verify there are no special characters in field values
+- Try re-downloading the JSON — the upload file may have been corrupted
 
 ### COLLECT Mode
 
@@ -617,14 +657,50 @@ When you type a message, the AI compares it against each loaded skill's `trigger
 
 You can also activate skills with `/skill-name` on platforms that support slash commands (Claude, OpenCode). On Cursor, use the keyword trigger phrases since the IDE intercepts `/`.
 
+### Diagnosing False Triggers
+
+A **false trigger** is when your skill activates for the wrong request (e.g., a "code reviewer" skill fires when someone says "review my architecture diagram").
+
+**How to diagnose**:
+1. Open your skill file and read the `triggers` section in the YAML frontmatter
+2. Check the **Skill Summary** (§2) — if it's too broad, nearby skills will also match
+3. Check the **Negative Boundaries** (§3) — add the false-triggering phrase there
+
+**How to fix false triggers**:
+```yaml
+# In your skill's YAML frontmatter — add exclusions:
+triggers:
+  en:
+    - "review my code"         # ← KEEP: your skill's purpose
+    - "check this PR"          # ← KEEP
+  # NOT listed → will not activate on these phrases
+```
+
+```markdown
+## Negative Boundaries
+**Do NOT use this skill for:**
+- "review my architecture diagram" → use a diagram-explainer skill instead
+- "explain this design doc" → use a doc-summarizer skill instead
+```
+
+**Debug by asking the AI**:
+> "Does my skill `pr-reviewer` match the phrase 'review my architecture'? Show me why or why not."
+
+The AI will explain which trigger phrases matched and which Negative Boundaries should have blocked it.
+
+**If a skill isn't triggering when it should**:
+1. Add the missing phrase to `triggers.en` in the YAML frontmatter
+2. Run `/lean` to confirm triggers section has ≥3 EN + ≥2 ZH phrases (required for LEAN PASS)
+
 ### Improving Your Skill Over Time
 
 | Situation | Action |
 |-----------|--------|
-| Skill triggered when it shouldn't | Add an exclusion to `Negative Boundaries` |
-| Skill missed a valid trigger phrase | Add phrase to `triggers.en` / `triggers.zh` |
+| Skill triggered when it shouldn't | Add specific phrase to `Negative Boundaries` section |
+| Skill missed a valid trigger phrase | Add phrase to `triggers.en` / `triggers.zh` in YAML |
 | Output quality degraded | Run `/eval` → `/opt` |
 | Many users gave similar feedback | Run `/collect` → `/aggregate` → `/opt` |
+| Skill version bumped, team not notified | Update `version:` in YAML, reshare via `/share` |
 
 ---
 

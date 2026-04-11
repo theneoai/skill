@@ -345,8 +345,12 @@ for p in "${TARGETS[@]}"; do
       echo "    JSON output in the chat, then save manually."
       ;;
     gemini)
-      echo "  [Gemini] Restart Gemini, then try:"
-      echo "    create a skill that summarises git diffs"
+      echo "  [Gemini] After install:"
+      echo "    1. Skill file is at: ~/.gemini/skills/skill-writer.md"
+      echo "    2. Restart Gemini (close and reopen the app or CLI session)"
+      echo "    3. Test with a trigger phrase: create a skill that summarises git diffs"
+      echo "    Note: Gemini reads skills from ~/.gemini/skills/ on startup."
+      echo "    If skills don't activate, verify the path and restart once more."
       ;;
     mcp)
       echo "  [MCP] Restart your MCP host. Manifest at:"
