@@ -288,6 +288,20 @@ else
   echo "⚠ Installed to ${INSTALLED} platform(s). ${FAILED} failed — see warnings above."
 fi
 echo ""
+echo "Feature support:"
+echo "  ✓ CREATE, LEAN, EVALUATE, OPTIMIZE, INSTALL, COLLECT, SHARE — all modes"
+echo "  ✓ LEAN & EVALUATE scoring — full 500/1000-pt algorithms"
+echo "  ✓ OPTIMIZE loop with VERIFY (up to 20 rounds)"
+echo "  ✓ COLLECT JSON output (manual save)"
+if [[ -d "${SCRIPT_DIR}/refs" ]]; then
+  echo "  ✓ Companion files (refs/, templates/) — richer EVALUATE reports"
+  echo "  ✓ COLLECT auto-persist available (requires UTE hooks, see refs/use-to-evolve.md §8)"
+else
+  echo "  ○ Companion files — not installed (curl install)"
+  echo "    To add: git clone https://github.com/theneoai/skill-writer.git && cd skill-writer && ./install.sh"
+  echo "    Adds: richer EVALUATE reports + COLLECT auto-persist for Claude"
+fi
+echo ""
 echo "Next steps:"
 echo ""
 

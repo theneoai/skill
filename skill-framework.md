@@ -583,6 +583,14 @@ Submit skill file via PR with this EVALUATE report attached as context.
 >
 > Score meaning: {N}/500 → estimated {N*2}/1000 → tier: {TIER}
 >   ≥ 350 (BRONZE+) = ready to use | < 350 = run /opt first
+>   Tier guide: PLATINUM(≥950)=publish-ready · GOLD(≥900)=professional · SILVER(≥800)=team-ready · BRONZE(≥700)=personal use
+>
+> About the two key sections in your skill file:
+>   Skill Summary (§2): tells the AI WHEN to use this skill. Keep it specific — it's
+>     the routing signal. If it's vague, the skill may trigger too rarely or too often.
+>   Negative Boundaries (§3): tells the AI when NOT to use it. Without sharp boundaries,
+>     similar-sounding requests will mis-trigger this skill. Edit these if you notice
+>     false triggers.
 >
 > Next steps (optional): /lean · /eval · /opt · /share
 > ───────────────────────────────────────────────────────────────────────
@@ -1055,6 +1063,8 @@ Round N (max 20):
 
   1. READ    — score all 7 dimensions; identify lowest-scoring per strategy
   2. ANALYZE — propose 3 targeted fixes for weakest dimension
+             → always output: "Auto chose [DIMENSION] ([N]/100 — lowest scoring this round)"
+               so the user always sees WHY a dimension was selected
   3. CURATE  — every 10 rounds: consolidate learning, prune stale context
   4. PLAN    — review and select best fix strategy; log decision
   5. IMPLEMENT — apply atomic change (single dimension focus)
@@ -1070,6 +1080,17 @@ Round N (max 20):
   9. COMMIT  — git commit every 10 rounds; tag with score
 
   [User can type /stop → exit loop, output session_best version + final report]
+
+  After EVERY round, output this status block:
+  ─── Round N complete ────────────────────────────────────
+  Score: [PREV] → [NEW] (delta ±N) | Session best: [BEST]/500
+  Status: [IMPROVING / STABLE / PLATEAU / VOLATILITY / STOPPED]
+    IMPROVING  = keep going; next target: [DIM] ([score]/100)
+    STABLE     = diminishing returns — suggest /stop or continue?
+    PLATEAU    = no gain in 5 rounds — auto-stopping
+    VOLATILITY = score swinging ±30pt — auto-stopping, using session best
+  Rounds left: [20-N] | /stop to exit with current best version
+  ────────────────────────────────────────────────────────
 
 Convergence check (every round):
   PLATEAU:    no net change in 5 consecutive rounds, OR cumulative_delta < 10 pts total
@@ -1546,8 +1567,25 @@ URL examples:
            ~/.claude/skills/  (or platform skills dir) → restart platform
        (b) Team share via Agent Install: paste to GitHub Gist, then share:
            "read [your-gist-url] and install to claude"
+           → Team members paste that one line and the skill installs automatically
        (c) Future registry: [registry URL TBD — v3.2.0 milestone]
            Registry push tag: {stable | beta | experimental} (based on tier)
+
+       ─── Team Deployment Checklist ──────────────────────────────
+       □ LEAN score ≥ 350 (BRONZE minimum) — confirmed above
+       □ Negative Boundaries section has ≥ 3 specific anti-cases
+         (not just "avoid irreversible actions" generic placeholder)
+       □ Security scan: no P0/P1 violations
+       □ Trigger phrases tested with at least one team member
+       □ Platform paths confirmed:
+           Claude:    ~/.claude/skills/{skill_name}.md
+           OpenCode:  ~/.config/opencode/skills/{skill_name}.md
+           Cursor:    ~/.cursor/skills/{skill_name}.md
+       □ Team members know to restart assistant after install
+       □ Gist URL or skill file link shared in team channel/wiki
+       □ Version number in YAML frontmatter reflects current state
+         (bump version: "1.1.0" when making significant updates)
+       ────────────────────────────────────────────────────────────
 ```
 
 ### Registry Push Policy
@@ -1733,6 +1771,33 @@ choose a backend based on team size and infrastructure:
 | **PostgreSQL** | Large team, multi-host MCP | Medium | Unlimited with proper indexing | Full query capability; recommended for >20 developers |
 | **Vector DB** (Qdrant/Pinecone) | Semantic search across sessions | High | Depends on plan | Required for §17 L4 episodic memory |
 
+**PostgreSQL schema for teams** (recommended for >20 developers):
+```sql
+-- Migration: skill_artifacts table
+CREATE TABLE skill_artifacts (
+    id            SERIAL PRIMARY KEY,
+    skill_name    TEXT NOT NULL,
+    invocation_id TEXT UNIQUE,
+    trigger_phrase TEXT,
+    outcome       TEXT CHECK (outcome IN ('SUCCESS', 'FAILURE', 'PARTIAL')),
+    prm_signal    FLOAT CHECK (prm_signal BETWEEN 0.0 AND 1.0),
+    lesson_type   TEXT CHECK (lesson_type IN ('strategic_pattern','failure_lesson','neutral')),
+    data          JSONB NOT NULL,  -- full Session Artifact JSON
+    created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_skill_artifacts_skill_name ON skill_artifacts (skill_name);
+CREATE INDEX idx_skill_artifacts_created_at ON skill_artifacts (created_at);
+
+-- AGGREGATE query (run via skill-writer API or manually):
+SELECT skill_name, lesson_type, COUNT(*) as evidence_count,
+       AVG(prm_signal) as avg_quality
+FROM skill_artifacts
+WHERE created_at > NOW() - INTERVAL '30 days'
+GROUP BY skill_name, lesson_type
+ORDER BY evidence_count DESC;
+```
+
 **Minimum viable team setup** (GitHub Gist, no ops):
 ```
 1. After each skill invocation, call COLLECT via MCP API
@@ -1788,6 +1853,61 @@ MCP UTE/COLLECT Architecture:
 **Who triggers COLLECT?** Your application wrapper (not the end user). Build it as a
 post-hook that fires after every successful skill invocation. If using a Slack bot, call
 COLLECT in the bot's response handler. If using CI, add a COLLECT step after the skill step.
+
+**Minimal integration example (Python pseudocode)**:
+```python
+import mcp_client, json, os, datetime
+
+def invoke_skill_and_collect(skill_name, trigger_phrase, user_input):
+    # Step 1 — invoke the actual skill
+    skill_response = mcp_client.call("skill-writer", {
+        "mode": "run",
+        "skill": skill_name,
+        "input": user_input
+    })
+
+    # Step 2 — rate the outcome (your app logic)
+    outcome = "SUCCESS" if skill_response.get("status") == "ok" else "FAILURE"
+    prm_signal = 1.0 if outcome == "SUCCESS" else 0.0
+
+    # Step 3 — trigger COLLECT immediately after
+    collect_response = mcp_client.call("skill-writer", {
+        "mode": "collect",
+        "session_context": {
+            "skill_name": skill_name,
+            "invocation_id": skill_response.get("invocation_id"),
+            "trigger_phrase": trigger_phrase,
+            "outcome": outcome,
+            "prm_signal": prm_signal
+        }
+    })
+
+    # Step 4 — persist artifact to your backend
+    artifact = collect_response["artifact"]
+    store_artifact(artifact)  # see backend choice table above
+    return skill_response
+
+def store_artifact(artifact):
+    # PostgreSQL example:
+    # cursor.execute("INSERT INTO skill_artifacts (data) VALUES (%s)", [json.dumps(artifact)])
+    # File system example:
+    today = datetime.date.today().isoformat()
+    path = os.path.expanduser(f"~/.skill-artifacts/{today}_{artifact['skill_name']}.jsonl")
+    with open(path, "a") as f:
+        f.write(json.dumps(artifact) + "\n")
+
+# UTE cadence check (call in your periodic job / cron):
+def ute_cadence_check(invocation_count, skill_name):
+    if invocation_count % 100 == 0:
+        mode = "ute_tier_drift_check"
+    elif invocation_count % 50 == 0:
+        mode = "ute_full_recompute"
+    elif invocation_count % 10 == 0:
+        mode = "ute_lightweight"
+    else:
+        return  # no check needed this invocation
+    mcp_client.call("skill-writer", {"mode": mode, "skill": skill_name})
+```
 
 - **UTE auto-trigger** does not fire (no chat to observe). Add `use_to_evolve.enabled: true`
   to skill YAML; your application handles the cadence (every 10/50/100 invocations above).
@@ -2026,6 +2146,15 @@ When the user provides 2+ Session Artifact JSONs, AGGREGATE mode synthesizes the
 - "synthesize session data" / "综合会话数据"
 - "which skill to optimize?" / "哪个技能先优化？"
 
+**AGGREGATE performance characteristics**:
+- Complexity: O(N) where N = number of artifacts analyzed
+- Expected duration: <5s for 100 artifacts, <30s for 1,000 artifacts
+- Memory: ~2KB per artifact in context window (250 artifacts ≈ 500KB of context)
+- For very large datasets (>500 artifacts from many team members):
+  → Pre-aggregate by skill_name first: `SELECT ... GROUP BY skill_name` (PostgreSQL)
+  → Then run AGGREGATE on grouped summaries (reduces context load)
+  → Or run AGGREGATE per-skill: "aggregate feedback for skill-name-X only"
+
 **AGGREGATE output format** (always produce this structure):
 ```
 AGGREGATE Results — N artifacts analyzed
@@ -2052,6 +2181,24 @@ Sessions analyzed: N  |  Date range: YYYY-MM-DD – YYYY-MM-DD
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Recommended next action: optimize [priority-1-skill] first
+```
+
+### After COLLECT completes — always output this guidance
+
+After the Session Artifact JSON is output, always append:
+```
+─── Session Artifact saved ────────────────────────────────────
+[CORE]    Copy the JSON above and save it to a file.
+          Suggested path: ~/.skill-artifacts/YYYYMMDD_{skill_name}.json
+[EXTENDED] Auto-written to ~/.skill-artifacts/ (if UTE hooks configured)
+
+What to do next:
+  • Collect 2+ artifacts, then:  aggregate skill feedback
+    → AGGREGATE ranks improvement opportunities and feeds /opt
+  • To save to GitHub Gist (team sharing):
+    POST the JSON to a private Gist, share the URL with your team lead
+  • Already have 2+ artifacts? Paste them and run: aggregate skill feedback
+──────────────────────────────────────────────────────────────
 ```
 
 ### Triggers for COLLECT
