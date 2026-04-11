@@ -64,24 +64,25 @@ use_to_evolve:
 
 ## §2  Skill Summary
 
-**What it does**: Takes a `git diff` paste and returns a concise bullet-point summary
-grouped by file and change type (added / modified / removed).
+git-diff-summarizer reads raw `git diff` or `git show` output and returns a concise, structured changelog entry grouped by file and change type (feat/fix/refactor/chore/docs/test). Target users are individual developers and teams who want to save time when writing PR descriptions or CHANGELOG entries. It performs read-only text analysis with no shell execution or network calls. Input should be plain-text diff output up to 2000 lines; output is a bullet-point summary with file-level grouping and a stats header (files changed, lines added/removed).
 
-**When to use**: After staging changes, before writing a PR description or CHANGELOG.md entry.
+## §3  Negative Boundaries
 
-**When NOT to use (Negative Boundaries)**:
-- Do NOT use for binary files or image diffs — output will be meaningless
-- Do NOT use to generate commit messages (use a commit-message skill instead)
-- Do NOT use when the diff is > 2000 lines — summarisation quality drops significantly
-  → Recommended alternative: split into smaller diffs first
+**Do NOT use this skill for**:
+- **Binary files or image diffs**: Output will be meaningless — no textual diff to parse.
+  → Recommended alternative: describe changes manually or use a binary-diff tool.
+- **Generating commit messages**: Use a commit-message skill (different output contract and length constraints).
+- **Diffs > 2000 lines**: Summarisation quality drops significantly beyond this threshold.
+  → Recommended alternative: split the diff into per-file chunks first.
 
-**Trigger phrases that should NOT activate this skill**:
-- "explain this code" → use a code-explainer skill instead
-- "review my PR" → use a code-reviewer skill instead
+**The following trigger phrases should NOT activate this skill**:
+- "explain this code" → use a code-explainer skill
+- "review my PR" → use a code-reviewer skill
+- "what does this function do" → use a code-explainer skill
 
 ---
 
-## §3  Workflow
+## §4  Workflow
 
 ```
 1. PARSE  — detect language/file type from diff header (--- a/file +++ b/file)
@@ -101,7 +102,7 @@ grouped by file and change type (added / modified / removed).
 
 ---
 
-## §4  Error Handling
+## §5  Error Handling
 
 | Error | Recovery |
 |-------|---------|
@@ -115,7 +116,7 @@ Escalation: If format cannot be parsed after one retry → HUMAN_REVIEW (ask use
 
 ---
 
-## §5  Output Format
+## §6  Output Format
 
 ```
 ## Summary — git diff
@@ -139,7 +140,7 @@ Escalation: If format cannot be parsed after one retry → HUMAN_REVIEW (ask use
 
 ---
 
-## §6  Security Baseline
+## §7  Security Baseline
 
 - Input is read-only text analysis — no code execution
 - No network calls, no file system writes
@@ -147,7 +148,7 @@ Escalation: If format cannot be parsed after one retry → HUMAN_REVIEW (ask use
 
 ---
 
-## §7  Examples
+## §8  Examples
 
 **Example 1 — Basic usage**:
 ```

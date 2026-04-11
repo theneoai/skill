@@ -291,55 +291,52 @@ echo ""
 echo "Next steps:"
 echo ""
 
-# Context-sensitive guidance per installed platform
+# Context-sensitive guidance — printed once per platform, no duplicate headers
 for p in "${TARGETS[@]}"; do
   case "${p}" in
     claude)
-      echo "  [Claude]"
-      echo "    1. Restart Claude to activate skill-writer."
-      echo "    2. Try: /create a skill that summarises git diffs"
-      echo "       Or use keywords: create / 创建 / lean / 快评 / eval / 评测"
+      echo "  [Claude] Restart Claude, then try:"
       if [[ -z "${CUSTOM_FILE}" && -d "${SCRIPT_DIR}/refs" ]]; then
-        echo "    ✓ Companion files installed (refs/, templates/, eval/, optimize/)"
-        echo "      → Full feature set available including EVALUATE and COLLECT modes."
+        echo "    /create a skill that summarises git diffs"
+        echo "    ✓ Full feature set (companion files installed)"
       else
-        echo "    ℹ Companion files (refs/, templates/) NOT installed (curl/remote install)."
-        echo "      LEAN and CREATE modes work fully. For complete features, clone the repo:"
+        echo "    ✓ Right now:  create a skill that summarises git diffs"
+        echo "                  lean eval [paste skill content]"
+        echo "                  install skill-writer to claude"
+        echo "    ↑ All 6 modes work without companion files."
+        echo ""
+        echo "    ℹ For EVALUATE detail reports & COLLECT persistence:"
         echo "      git clone https://github.com/theneoai/skill-writer.git"
         echo "      cd skill-writer && ./install.sh --platform claude"
       fi
       ;;
     opencode)
-      echo "  [OpenCode]"
-      echo "    1. Restart OpenCode to activate skill-writer."
-      echo "    2. Try: /create a skill that summarises git diffs"
+      echo "  [OpenCode] Restart OpenCode, then try:"
+      echo "    /create a skill that summarises git diffs"
       ;;
     openclaw)
-      echo "  [OpenClaw]"
-      echo "    1. Restart OpenClaw to activate skill-writer."
-      echo "    2. Try: create a skill that summarises git diffs"
+      echo "  [OpenClaw] Restart OpenClaw, then try:"
+      echo "    create a skill that summarises git diffs"
       ;;
     cursor)
-      echo "  [Cursor]"
-      echo "    1. Restart Cursor to activate skill-writer."
-      echo "    ⚠ Cursor may intercept /command syntax. Use keywords instead:"
-      echo "      create a skill / lean eval / evaluate / optimize"
+      echo "  [Cursor] Restart Cursor, then try (use keywords — not /slash):"
+      echo "    create a skill that summarises git diffs"
+      echo "    lean eval / evaluate / optimize"
       ;;
     gemini)
-      echo "  [Gemini]"
-      echo "    1. Restart Gemini to activate skill-writer."
-      echo "    2. Try: create a skill that summarises git diffs"
+      echo "  [Gemini] Restart Gemini, then try:"
+      echo "    create a skill that summarises git diffs"
       ;;
     mcp)
-      echo "  [MCP]"
-      echo "    1. Restart your MCP host to load the skill-writer manifest."
-      echo "    2. The skill is registered at: ~/.mcp/servers/skill-writer/mcp-manifest.json"
+      echo "  [MCP] Restart your MCP host. Manifest at:"
+      echo "    ~/.mcp/servers/skill-writer/mcp-manifest.json"
+      echo "    Try: create a skill that summarises git diffs"
       ;;
   esac
-  echo ""
 done
 
-echo "Quick reference:"
-echo "  /create → 新建技能    /lean → 快评    /eval → 评测    /opt → 优化"
-echo "  Docs: https://github.com/theneoai/skill-writer#quick-start"
+echo ""
+echo "Quick reference: create/lean/eval/opt/install/collect"
+echo "  (or: 创建 / 快评 / 评测 / 优化 / 安装 / 采集)"
+echo "Docs: https://github.com/theneoai/skill-writer#quick-start"
 echo ""

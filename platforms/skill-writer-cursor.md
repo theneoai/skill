@@ -1,18 +1,18 @@
 ```json
 {
   "name": "skill-writer",
-  "version": "2.1.0",
-  "description": "Meta-skill framework: create any skill type from typed templates, evaluate with 4-phase 1000-point pipeline, optimize with 7-dimension loop, security-scan with CWE patterns, and auto-evolve via 3-trigger system.",
+  "version": "3.1.0",
+  "description": "Full lifecycle meta-skill framework: CREATE from templates (3-tier hierarchy, negative boundaries), LEAN fast-eval, EVALUATE 4-phase 1000pt pipeline + OWASP Agentic Top 10, OPTIMIZE 7-dim loop + co-evolutionary VERIFY, COLLECT for session artifact recording, deploy to 7 platforms.",
   "description_i18n": {
-    "en": "Full lifecycle meta-skill framework: CREATE from templates, LEAN fast-eval, EVALUATE 4-phase 1000pt pipeline, OPTIMIZE 7-dim 9-step loop, auto-evolve via threshold/time/usage triggers.",
-    "zh": "全生命周期元技能框架：从模板CREATE、LEAN快速评测、4阶段1000分EVALUATE、7维9步OPTIMIZE、三触发器自动进化。"
+    "en": "Full lifecycle meta-skill framework: CREATE from templates (skill_tier, negative boundaries, trigger phrases), LEAN 500pt fast-eval [STATIC]+[HEURISTIC], EVALUATE 4-phase 1000pt + OWASP ASI01-ASI10, OPTIMIZE 7-dim 9-step + VERIFY, COLLECT session artifacts, UTE 2.0 L1/L2 self-evolution.",
+    "zh": "全生命周期元技能框架：三层架构+负向边界+触发词的CREATE、[静态]+[启发式]双轨LEAN快评、OWASP Agentic Top 10安全检测4阶段EVALUATE、协同进化VERIFY的OPTIMIZE、会话数据COLLECT、UTE 2.0双层自进化。"
   },
   "license": "MIT",
   "author": {
     "name": "theneoai"
   },
   "created": "2026-03-31",
-  "updated": "2026-04-01",
+  "updated": "2026-04-11",
   "type": "meta-framework",
   "tags": [
     "meta-skill",
@@ -31,12 +31,13 @@
       "lean",
       "evaluate",
       "optimize",
-      "install"
+      "install",
+      "collect"
     ]
   },
   "use_to_evolve": {
     "enabled": true,
-    "framework_version": "2.1.0",
+    "framework_version": "3.1.0",
     "check_cadence": {
       "lightweight": 10,
       "full_recompute": 50,
@@ -58,7 +59,7 @@
 
 > **Type**: Meta-Skill  
 > **Platform**: Cursor  
-> **Version**: 2.1.0
+> **Version**: 3.1.0
 
 > ⚠️ **Cursor users — command syntax**: Cursor's command palette may intercept `/create`, `/eval`, etc.
 > If a slash command opens the palette instead of triggering this skill, use the **keyword form**:

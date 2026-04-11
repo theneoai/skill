@@ -140,7 +140,32 @@ extends:
 │  认证等级: PLATINUM≥950 | GOLD≥900 | SILVER≥800 | BRONZE≥700 | FAIL │
 │                                                                     │
 │  何时用 LEAN: CREATE后 / OPTIMIZE每轮 / 快速迭代                    │
-│  何时用 EVALUATE: 推送Registry前 / 声明等级前 / LEAN分近边界(±30pt) │
+│  何时用 EVALUATE: 发布/共享技能前 / 声明认证等级前 / LEAN分近边界    │
+│    (Registry = 技能共享库，见 §16 INSTALL；±30pt 内建议用 EVALUATE) │
+└─────────────────────────────────────────────────────────────────────┘
+
+```
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  技能文件强制结构 / Required Skill File Structure (v3.1.0)           │
+│                                                                     │
+│  §1  Identity            (必须 Required)                            │
+│      Name / Role / Purpose / Red Lines (严禁)                       │
+│                                                                     │
+│  §2  Skill Summary       (必须 Required — v3.1.0)                   │
+│      ≤5句稠密段落: what/when/who/not-for                            │
+│      ≤5-sentence dense paragraph encoding what/when/who/not-for     │
+│                                                                     │
+│  §3  Negative Boundaries (必须 Required — v3.1.0)                   │
+│      Do NOT use for ... / 不应触发的短语                            │
+│      (可与 §2 合并为一节 / may be merged with §2)                   │
+│                                                                     │
+│  §4–§N  功能节 / Functional sections (最少3节 / min 3)              │
+│      Workflow / Error Handling / Examples / Security / etc.         │
+│                                                                     │
+│  §UTE  Use-to-Evolve     (自动注入 / auto-injected by CREATE)        │
+│      不要手动编辑 / do not edit manually                            │
 └─────────────────────────────────────────────────────────────────────┘
 
 ```
@@ -210,6 +235,11 @@ No confirmation needed. These commands are LLM-evaluated (not platform CLI comma
 | `/opt` or `/optimize` | OPTIMIZE mode | `/优化` |
 | `/install` | INSTALL mode | `/安装` |
 | `/collect` | COLLECT mode | `/采集` |
+| `/skip` | Accept current result as-is (TEMP_CERT if below BRONZE) | `/跳过` |
+
+> `/skip` is only meaningful when the framework has displayed a "type /skip" prompt
+> (e.g., LEAN UNCERTAIN escalation, OPTIMIZE early exit). It does not trigger a mode
+> route — it signals "accept and stop" for the currently running operation.
 
 > **Note**: These slash commands are evaluated by the LLM processing this skill prompt,
 > not by the platform's native command system.
@@ -247,6 +277,8 @@ User Input
 │           enhance,tune,refine,upgrade,evolve]                   │
 │ INSTALL  [安装,部署,读取安装 | install,read.*install,            │
 │           fetch.*install,setup,deploy]                          │
+│ COLLECT  [采集,记录,收集,会话数据 | collect,record,artifact,    │
+│           session-data,session-artifact,export.*log]            │
 │                                                                 │
 │ confidence HIGH   → AUTO-ROUTE (no confirmation)                │
 │ confidence MEDIUM → show "I'll run [MODE] — confirm? (yes/no)"  │
@@ -257,14 +289,15 @@ User Input
 **Low confidence mode menu** (show when no clear keyword and no context clue):
 ```
 Not sure which mode to use. Please choose:
-  1. /create  — Build a new skill from a description
-  2. /lean    — Quick quality check (~5s, heuristic scoring)
-  3. /eval    — Full 4-phase quality evaluation (~60s)
-  4. /opt     — Iterative improvement loop (up to 20 rounds)
-  5. /install — Deploy skill to platforms
-  6. /collect — Record this session as a skill artifact
+  1. /create  — 创建新技能 / Build a new skill from a description
+  2. /lean    — 快速检查 (~5s) / Quick quality check (~5s, heuristic scoring)
+  3. /eval    — 完整评测 (~60s) / Full 4-phase quality evaluation (~60s)
+  4. /opt     — 迭代优化 (最多20轮) / Iterative improvement loop (up to 20 rounds)
+  5. /install — 部署到平台 / Deploy skill to platforms
+  6. /collect — 记录会话数据 / Record this session as a skill artifact
 
 Or describe what you want to do and I'll route automatically.
+(Cursor/IDE users: type the number or keyword — not the /command)
 ```
 
 **Routing Decision Tree** `[CORE — apply in order, stop at first match]`:
@@ -591,23 +624,26 @@ lean_score ≥ 350 AND no_placeholders AND security_section_present
     → Schedule full EVALUATE within 24 h (recommended, not blocking)
 
 lean_score 300–349 (UNCERTAIN)
-    → Show escalation notice to user (ALWAYS before starting EVALUATE):
-      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-       LEAN 评分完成 / LEAN Complete
-       分数 / Score: [N]/500 (UNCERTAIN — 接近 BRONZE 临界值 / near BRONZE threshold)
-       静态检查 / Static [STATIC]:    [S]/335 (零方差 / zero variance)
-       启发式检查 / Heuristic [HEUR]: [H]/165 (±20 pt 方差 / variance)
-       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-       ⚠ LEAN 分数 UNCERTAIN — 正在启动完整 EVALUATE (~60 秒)
-       ⚠ LEAN UNCERTAIN — launching full EVALUATE (~60 seconds)
-       输入 /skip 跳过，接受 LEAN 结果（附 TEMP_CERT 标记）
-       Type /skip to accept LEAN result with TEMP_CERT tag instead
+    → Show escalation notice BEFORE starting EVALUATE (never silent):
 
-       [EVALUATE Phase 1/4: 结构解析 / Parse...       ] ████░░░░ 25%"
-      (update progress each phase:)
-       [EVALUATE Phase 2/4: 内容质量 / Text Quality...] ████████ 50%
-       [EVALUATE Phase 3/4: 运行测试 / Runtime...     ] ████████████ 75%
-       [EVALUATE Phase 4/4: 认证 / Certification...   ] ████████████████ 100%"
+      Output exactly this block:
+      ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+      LEAN 评分完成 / LEAN Complete
+      分数 / Score: [N]/500  (UNCERTAIN — near BRONZE threshold)
+      静态检查  [STATIC]:    [S]/335  (零方差 / zero variance)
+      启发式检查 [HEURISTIC]: [H]/165  (±20 pt 方差 / variance)
+
+      ⚠ UNCERTAIN — 启动完整 EVALUATE (~60 秒) / launching full EVALUATE (~60s)
+        输入 /skip 跳过，保留 LEAN 结果 (附 TEMP_CERT 标记)
+        Type /skip to keep LEAN result with TEMP_CERT tag instead
+      ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+
+      Then show phase progress as each phase completes:
+        [Phase 1/4 结构解析 / Parse        ████░░░░░░░░ 25%]
+        [Phase 2/4 内容质量 / Text Quality ████████░░░░ 50%]
+        [Phase 3/4 运行测试 / Runtime      ████████████ 75%]
+        [Phase 4/4 认证 / Certification   ████████████ done]
+
     → If /skip received → deliver with TEMP_CERT; otherwise proceed with EVALUATE (§8)
 
 lean_score < 300 (FAIL)
@@ -791,6 +827,9 @@ OPTIMIZE pre-loop:
      > 当前最弱维度 / Weakest dimension: {{WEAKEST_DIM}} ({{WEAKEST_SCORE}}/100)
      > 建议 / Suggestion: {{STRATEGY_RECOMMENDATION}}
      > 例如: 若最弱维度 < 60 → 选 B {{WEAKEST_DIM}} | 若各维度分差 < 15 → 选 C
+     >
+     > 维度名称 (camelCase 格式，与 B/Focus 命令一致):
+     > systemDesign | domainKnowledge | workflow | errorHandling | examples | security | metadata
 
      [Enter to confirm A / type B/C/D + optional dimension name / /stop to exit]
   4. IF skill has no §UTE section → INJECT UTE first (§15)
