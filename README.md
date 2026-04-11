@@ -8,6 +8,16 @@ A cross-platform meta-skill for creating, evaluating, and optimizing AI assistan
 [![GitHub Actions](https://github.com/theneoai/skill-writer/workflows/Skill%20Writer%20-%20Build%20and%20Release/badge.svg)](https://github.com/theneoai/skill-writer/actions)
 [![Security Scan](https://github.com/theneoai/skill-writer/workflows/Skill%20Writer%20-%20Security%20Scan/badge.svg)](https://github.com/theneoai/skill-writer/actions)
 
+## What is a skill?
+
+A **skill** is a small instruction file (Markdown, `.md`) that you place in your AI assistant's skills folder. It tells the assistant how to handle a specific type of request — like "summarize a git diff", "write a PR description", or "validate API responses". When you say something that matches the skill's trigger phrases, the assistant follows the skill's instructions automatically.
+
+Think of it like a custom command: you define what it does once, and then the assistant does it consistently every time you ask.
+
+After creating a skill, it lives in `~/.claude/skills/` (or your platform's equivalent). Restart the assistant to activate it.
+
+---
+
 ## Overview
 
 Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and optimize other skills through natural language interaction. No CLI commands required - just describe what you need.
@@ -26,6 +36,7 @@ Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and
 - **Continuous Improvement**: Automated optimization with convergence detection + co-evolutionary VERIFY step
 - **Self-Evolution**: UTE (Use-to-Evolve) protocol for automatic skill improvement (L1 enforced + L2 collective)
 - **Multi-Pass Self-Review**: Generate/Review/Reconcile quality protocol
+- **Bilingual**: Full English + Chinese (中文) support for all 6 modes. Framework documentation (refs/ companion files) is in English.
 
 ## Supported Platforms
 
@@ -35,15 +46,95 @@ Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and
 | [OpenClaw](https://openclaw.ai) | ✅ P0 | `~/.openclaw/skills/` |
 | [Claude](https://claude.ai) | ✅ P0 | `~/.claude/skills/` |
 | [Cursor](https://cursor.sh) | ✅ P1 | `~/.cursor/skills/` |
-| [OpenAI](https://openai.com) | ✅ P1 | `~/.openai/skills/` (JSON) |
+| [OpenAI](https://openai.com) | ✅ P1 | Manual setup via platform dashboard (JSON) |
 | [Gemini](https://gemini.google.com) | ✅ P2 | `~/.gemini/skills/` |
 | [MCP](https://modelcontextprotocol.io) | ✅ P2 | `~/.mcp/servers/skill-writer/` (JSON manifest) |
 
+### Platform Feature Matrix
+
+| Feature | Claude | OpenCode | OpenClaw | Cursor | Gemini | OpenAI | MCP |
+|---------|--------|----------|----------|--------|--------|--------|-----|
+| `/command` syntax | ✅ | ✅ | ✅ | ⚠️ Use keywords | ✅ | — | — |
+| Keyword triggers | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| All 6 modes (CREATE/LEAN/EVALUATE/OPTIMIZE/INSTALL/COLLECT) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Companion files (refs/, templates/, eval/) `[CORE]` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| UTE Hook persistence `[EXTENDED]` | ✅ | ✅ | ❌ | ❌ | ❌ | — | — |
+| COLLECT auto-persist `[EXTENDED]` | ✅† | ✅† | ❌ | ❌ | ❌ | — | — |
+| YAML frontmatter | ✅ | ✅ | ✅ | ❌* | ✅ | JSON | JSON |
+
+\* Cursor uses `${KEY}` placeholder syntax in the IDE — but skill-writer auto-handles conversion.
+  You don't need to manually edit YAML. If you hand-edit a `.md` file in the Cursor IDE, use `${KEY}` syntax.  
+† Requires platform hooks — see `refs/use-to-evolve.md §8` for setup  
+⚠️ Cursor: IDE command palette intercepts `/` — use keyword phrases instead:
+
+| Mode | Use this keyword phrase (not `/command`) |
+|------|------------------------------------------|
+| CREATE | `create a skill that …` |
+| LEAN | `lean eval` / `fast check this skill` |
+| EVALUATE | `evaluate this skill` / `full eval` |
+| OPTIMIZE | `optimize this skill` |
+| INSTALL | `install skill-writer to cursor` |
+| COLLECT | `collect session data` / `record this session` |
+
+> **Cursor + COLLECT**: COLLECT auto-persist (file hooks) is not available in IDE context.
+> Instead, COLLECT outputs JSON directly to the chat window. To save it:
+> 1. Run `collect session data` → copy the JSON output
+> 2. Save to `~/.skill-artifacts/YYYYMMDD_skillname.json` manually
+> 3. Later: paste 2+ artifacts into a new chat and type `aggregate skill feedback`
+> 
+> This is COLLECT Method B (manual paste) — fully supported in Cursor.
+
 ## Quick Start
+
+> **START HERE →** New to skill-writer? Follow this dependency flow:
+> ```
+> 1. INSTALL  → install skill-writer to your platform (one-liner below)
+> 2. CREATE   → describe a skill you want and answer 8 questions
+> 3. LEAN     → quick quality check (5s, 500 pts) — is the structure solid?
+> 4. EVALUATE → full quality score (60s, 1000 pts) — what certification tier?
+> 5. OPTIMIZE → improve to target tier (up to 20 rounds with convergence guard)
+> 6. SHARE    → package and distribute to your team or registry
+> ```
+> Each step feeds the next. Skip ahead only if you already have a skill file.
+
+### What You Get After Installing
+
+| Feature | curl install `[CORE]` | git clone install `[EXTENDED]` |
+|---------|----------------------|-------------------------------|
+| All 6 modes (CREATE, LEAN, EVALUATE, OPTIMIZE, INSTALL, COLLECT) | ✅ | ✅ |
+| LEAN scoring (17-check, 500 pts) | ✅ | ✅ |
+| EVALUATE scoring (4-phase, 1000 pts) | ✅ same scoring logic | ✅ + per-dimension breakdown in report |
+| OPTIMIZE loop | ✅ | ✅ |
+| COLLECT manual (JSON output to conversation) | ✅ | ✅ |
+| Companion files (refs/, templates/, eval/) for Claude | ❌ | ✅ |
+| COLLECT auto-persist to `~/.skill-artifacts/` | ❌ | ✅ (requires hooks) |
+| UTE Hook-based auto-evolution | ❌ | ✅ |
+
+> **EVALUATE scoring is identical in both installs** — the 1000-point algorithm is fully inline.
+> The difference is output richness: git clone adds companion files that enable per-dimension
+> breakdowns, historical comparisons, and richer advisory text in the report.
+
+**tl;dr**: The curl one-liner gives you everything you need to create, evaluate, and optimize skills. The git clone adds richer evaluation reports and automatic persistence.
 
 ### Installation
 
-#### Option 1 — Agent Install from Latest Release (Recommended)
+#### Option 1 — curl one-liner (no git clone required)
+
+Auto-detects your installed AI platforms and installs to all of them:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/install.sh | bash
+```
+
+Install to a specific platform:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/install.sh | bash -s -- --platform claude
+curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/install.sh | bash -s -- --platform opencode
+curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/install.sh | bash -s -- --all
+```
+
+#### Option 2 — Agent Install from Latest Release
 
 Paste one command into your AI agent to install the latest stable release:
 
@@ -60,14 +151,7 @@ Paste one command into your AI agent to install the latest stable release:
 
 Each [GitHub Release](https://github.com/theneoai/skill-writer/releases) includes per-platform assets and ready-to-paste agent commands for that version.
 
-To install from the development branch (always latest, includes companion files for Claude):
-
-```
-read https://raw.githubusercontent.com/theneoai/skill-writer/main/install.md and install
-read https://raw.githubusercontent.com/theneoai/skill-writer/main/install.md and install to claude
-```
-
-#### Option 2 — Shell Script
+#### Option 3 — Shell Script (from git clone)
 
 ```bash
 git clone https://github.com/theneoai/skill-writer.git
@@ -88,35 +172,39 @@ cd skill-writer
 ./install.sh --url https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer.md
 ```
 
-#### Option 3 — Manual Copy
+#### Option 4 — Manual Copy
+
+Pre-built platform files are committed to the repository — no builder step required:
 
 ```bash
 # Claude
-cp skill-framework.md ~/.claude/skills/skill-writer.md
+cp platforms/skill-writer-claude.md ~/.claude/skills/skill-writer.md
 
 # OpenCode
 mkdir -p ~/.config/opencode/skills
-cp skill-framework.md ~/.config/opencode/skills/skill-writer.md
+cp platforms/skill-writer-opencode.md ~/.config/opencode/skills/skill-writer.md
 
 # OpenClaw
 mkdir -p ~/.openclaw/skills
-cp skill-framework.md ~/.openclaw/skills/skill-writer.md
+cp platforms/skill-writer-openclaw.md ~/.openclaw/skills/skill-writer.md
 
 # Cursor
 mkdir -p ~/.cursor/skills
-cp skill-framework.md ~/.cursor/skills/skill-writer.md
+cp platforms/skill-writer-cursor.md ~/.cursor/skills/skill-writer.md
+# ⚠️  Cursor: IDE command palette intercepts /commands — use keywords instead:
+#     "create a skill that ..." (not /create)   "lean eval" (not /lean)
 
 # Gemini
 mkdir -p ~/.gemini/skills
-cp skill-framework.md ~/.gemini/skills/skill-writer.md
+cp platforms/skill-writer-gemini.md ~/.gemini/skills/skill-writer.md
 
-# OpenAI (JSON format)
-mkdir -p ~/.openai/skills
-cp platforms/skill-writer-openai-dev.json ~/.openai/skills/skill-writer.json
+# OpenAI (JSON format — requires manual setup via platform dashboard)
+# The JSON file is at: platforms/skill-writer-openai.json
+# Upload it via https://platform.openai.com (see platform docs for custom GPT setup)
 
 # MCP (JSON manifest)
 mkdir -p ~/.mcp/servers/skill-writer
-cp platforms/skill-writer-mcp-dev.json ~/.mcp/servers/skill-writer/mcp-manifest.json
+cp platforms/skill-writer-mcp.json ~/.mcp/servers/skill-writer/mcp-manifest.json
 ```
 
 ### Usage Examples
@@ -158,33 +246,44 @@ cp platforms/skill-writer-mcp-dev.json ~/.mcp/servers/skill-writer/mcp-manifest.
 Generates new skills from scratch using structured templates and elicitation.
 
 #### Workflow (9-Phase)
-1. **ELICIT**: Ask 6 clarifying questions to understand requirements
-2. **SELECT TEMPLATE**: Choose from 4 built-in templates
+1. **ELICIT**: Ask 8 clarifying questions to understand requirements
+2. **SELECT TEMPLATE**: Choose from 4 built-in templates based on your answers
 3. **PLAN**: Multi-pass self-review for implementation strategy
-4. **GENERATE**: Create skill using template
-5. **SECURITY SCAN**: Check for CWE vulnerabilities
+4. **GENERATE**: Create skill using template — includes **Skill Summary** and **Negative Boundaries** (see below)
+5. **SECURITY SCAN**: Check for CWE vulnerabilities + OWASP ASI01–ASI10
 6. **LEAN EVAL**: Fast 500-point heuristic evaluation
-7. **FULL EVALUATE**: Complete 1000-point evaluation (if LEAN uncertain)
+7. **FULL EVALUATE**: Complete 1000-point evaluation (if LEAN uncertain or score near boundary)
 8. **INJECT UTE**: Add Use-to-Evolve self-improvement hooks
-9. **DELIVER**: Output final skill file
+9. **DELIVER**: Output final skill file with activation instructions
+
+#### What's in the Generated Skill File
+
+Every skill file includes two mandatory sections that new users often wonder about:
+
+**Skill Summary** (§2 in the file) — 5 sentences describing what the skill does, who it's for,
+what the input/output looks like, and what it's NOT for. This is how the AI knows whether to
+activate the skill for a given request.
+
+**Negative Boundaries** (§3 in the file) — A list of "Do NOT use this skill for..." examples.
+This prevents the skill from firing when a user asks something similar but out of scope.
+Example: A "code reviewer" skill should NOT trigger when someone asks "explain this diagram".
+Without this section, skills false-trigger on semantically similar requests.
+
+> Both sections are auto-generated from your elicitation answers (Q6 and Q7). You can edit
+> them after creation to make them more specific — run `/lean` after editing to check score.
 
 #### Available Templates
 
-**Base Template**
-- Use for: Simple skills, proof of concepts
-- Features: Standard sections, minimal boilerplate
+| Template | Use for | Example skill |
+|----------|---------|---------------|
+| **Base** | Simple skills, proof of concepts, text analysis | meeting summarizer, language translator |
+| **API Integration** | REST APIs, webhooks, integrations | weather fetcher, GitHub PR creator |
+| **Data Pipeline** | ETL, data transformation, analysis | CSV validator, log parser |
+| **Workflow Automation** | Multi-step tasks, CI/CD, orchestration | deploy checker, PR review workflow |
 
-**API Integration**
-- Use for: REST API clients, webhooks, integrations
-- Features: Endpoint handling, authentication patterns
-
-**Data Pipeline**
-- Use for: ETL, data transformation, analysis
-- Features: Input validation, processing steps, output formatting
-
-**Workflow Automation**
-- Use for: CI/CD, repetitive tasks, orchestration
-- Features: Step sequencing, error recovery, notifications
+> Not sure which to pick? If your skill makes HTTP calls → API Integration. If it transforms
+> data step-by-step → Data Pipeline. If it coordinates multiple sub-tasks → Workflow Automation.
+> Otherwise → Base.
 
 #### Triggers (EN/ZH)
 - "create a [type] skill" / "创建一个[类型]技能"
@@ -326,6 +425,19 @@ Optimization stops when:
 - Maximum iterations reached (20)
 - DIVERGING detected → HALT → HUMAN_REVIEW
 
+#### When to Stop Optimizing
+
+| Current Tier | Recommendation |
+|-------------|----------------|
+| FAIL (<700) | Keep optimizing — skill is not ready to use |
+| BRONZE (700–799) | Optimize if planning to share; OK to use personally |
+| SILVER (800–899) | Ready for team use with `beta` tag; PLATINUM push optional |
+| GOLD (900–949) | Excellent quality; further PLATINUM optimization is nice-to-have only |
+| PLATINUM (≥950) | Done — publish with `stable` tag |
+
+> GOLD (≥900) is the target for most team skills. PLATINUM (≥950) is for widely-shared or
+> production-critical skills. Don't optimize past GOLD unless you have a specific quality goal.
+
 #### Triggers (EN/ZH)
 - "optimize this skill" / "优化这个技能"
 - "improve my skill" / "改进我的技能"
@@ -334,6 +446,14 @@ Optimization stops when:
 - "enhance this skill" / "增强这个技能"
 
 ### INSTALL Mode
+
+> **INSTALL vs. SHARE — which do you want?**
+> - **INSTALL** = deploys the *skill-writer framework* to your AI platform. Use this once, when setting up.
+>   Trigger: `"install skill-writer"` / `"install skill-writer to claude"`
+> - **SHARE** = packages a skill *you created* and distributes it to your team.
+>   Trigger: `"share this skill"` / `"export my skill"` / `"install my skill to claude"`
+>
+> Rule of thumb: if the object is **skill-writer** → INSTALL. If the object is **your skill** → SHARE.
 
 Installs skill-writer itself to one or all supported platforms from a URL or local clone.
 
@@ -353,24 +473,236 @@ Installs skill-writer itself to one or all supported platforms from a URL or loc
 | OpenClaw | `~/.openclaw/skills/` | Markdown |
 | Cursor | `~/.cursor/skills/` | Markdown |
 | Gemini | `~/.gemini/skills/` | Markdown |
-| OpenAI | `~/.openai/skills/` | JSON |
+| OpenAI | via platform dashboard | JSON |
 | MCP | `~/.mcp/servers/skill-writer/` | JSON manifest |
+
+#### OpenAI Custom GPT Setup
+
+OpenAI requires manual setup through the platform dashboard — there is no local file path.
+
+**Step-by-step**:
+1. Generate the skill-writer JSON file:
+   ```bash
+   # If you have the local clone:
+   ./install.sh --platform openai
+   # Output: platforms/skill-writer-openai.json
+   
+   # Or download directly:
+   curl -fsSL https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer-openai.json -o skill-writer-openai.json
+   ```
+2. Go to [platform.openai.com](https://platform.openai.com) → **My GPTs** → **Create a GPT** → **Configure** → **Actions**
+3. Upload `skill-writer-openai.json` as an Action schema
+4. Save the GPT configuration
+
+**Validating the JSON before upload**:
+```bash
+# Quick validation (checks JSON syntax):
+python3 -m json.tool skill-writer-openai.json > /dev/null && echo "Valid JSON" || echo "Invalid JSON"
+
+# Schema validation (if openapi-spec-validator is installed):
+pip install openapi-spec-validator
+python3 -m openapi_spec_validator skill-writer-openai.json
+```
+
+**Modes available via OpenAI Custom GPT**:
+- ✅ CREATE, LEAN, EVALUATE, OPTIMIZE — all work via natural language
+- ⚠️ INSTALL — limited (Custom GPT cannot write to file system)
+- ⚠️ COLLECT auto-persist — not available (no file system hooks)
+- ✅ COLLECT JSON output — available (output to conversation)
+
+**If OpenAI rejects the JSON**:
+- Check that your GPT account has "Actions" enabled (requires ChatGPT Plus or API access)
+- Validate the JSON schema with `openapi-spec-validator` (see above)
+- Verify there are no special characters in field values
+- Try re-downloading the JSON — the upload file may have been corrupted
 
 ### COLLECT Mode
 
-Records structured session artifacts after each skill invocation (when UTE is enabled). Enables collective skill evolution via the AGGREGATE pipeline.
+COLLECT records a structured **Session Artifact** after each skill invocation — a snapshot of what happened, how well it worked, and what to improve. Accumulate 2+ artifacts, then run AGGREGATE to get a ranked improvement list for `/opt`.
+
+**[CORE]** — COLLECT outputs JSON to the conversation. Copy it to a file manually.  
+**[EXTENDED]** — With UTE hooks configured, COLLECT auto-writes to `~/.skill-artifacts/` after each invocation. No manual step needed.
+
+#### When to run COLLECT
+- After an important or representative skill invocation
+- When a trigger phrase didn't match (helps identify missing keywords)
+- Before running OPTIMIZE (feed artifacts as input for evidence-based improvement)
 
 #### Workflow
 1. **CAPTURE**: Record invocation context, outcome, and PRM signal
 2. **CLASSIFY**: Assign lesson type (`strategic_pattern` / `failure_lesson` / `neutral`)
-3. **STORE**: Append to session artifact log (refs/session-artifact.md schema)
-4. **AGGREGATE** (periodic): Distill N artifacts into ranked improvement signals → OPTIMIZE candidates
+3. **STORE**: Output JSON artifact `[CORE]` or auto-write to `~/.skill-artifacts/` `[EXTENDED]`
+4. **AGGREGATE** (after 2+ artifacts): Distill artifacts into ranked improvement signals → OPTIMIZE candidates
 
 #### Triggers (EN/ZH)
-- Auto-triggered by UTE after each invocation (no user input required)
-- `"collect this session"` / `"收集本次会话"`
-- `"record session artifact"` / `"记录会话数据"`
-- `"export invocation log"` / `"导出调用日志"`
+- `/collect` or `collect session data` / `收集本次会话` — manual trigger
+- `record session artifact` / `记录会话数据`
+- `export invocation log` / `导出调用日志`
+- Auto-triggered by UTE after each invocation `[EXTENDED]`
+
+#### AGGREGATE (multi-session synthesis)
+After collecting 2+ Session Artifacts, type:
+- `"aggregate skill feedback"` / `"聚合技能反馈"`
+
+AGGREGATE groups findings by skill dimension, identifies the "no-skill bucket" (sessions where no skill triggered), and ranks improvement opportunities by evidence count. Output feeds directly into `/opt`.
+
+## Sharing Your Created Skills
+
+Once you have created and evaluated a skill, you can share it with your team or publish it.
+
+### SHARE Mode — Package and Distribute a Skill
+
+Say any of the following to enter SHARE mode:
+- `"share this skill"` / `"分享这个技能"`
+- `"package my skill for distribution"` / `"打包我的技能"`
+- `"install my skill to Claude"` / `"install this skill"`
+- `"deploy my skill"` / `"部署我的技能"`
+
+**SHARE is different from INSTALL**: INSTALL deploys skill-writer itself. SHARE packages a skill *you created* for use by others.
+
+### 5-Step SHARE Workflow
+
+1. **VALIDATE** — Checks that the skill has at minimum a BRONZE LEAN score (≥350/500). Skills below BRONZE are blocked from sharing.
+2. **PACKAGE** — Wraps the skill in the standard format for the target platform (Markdown for most; JSON for OpenAI/MCP).
+3. **STAMP** — Adds certification metadata: tier badge, version, author, publish date.
+4. **DELIVER** — Outputs the packaged skill as:
+   - A copyable code block (all platforms `[CORE]`)
+   - A downloadable file (if file system hooks are configured `[EXTENDED]`)
+5. **GUIDE** — Explains where to place the file on each platform.
+
+### Registry Publishing Thresholds
+
+| Tier | Score | Registry Tag | Can Publish? |
+|------|-------|-------------|--------------|
+| PLATINUM/GOLD | ≥900 | `stable` | ✅ Recommended |
+| SILVER | ≥800 | `beta` | ✅ Allowed |
+| BRONZE | ≥700 | `experimental` | ✅ Allowed |
+| FAIL | <700 | — | ❌ Fix first |
+
+> Skills tagged `experimental` include a notice: "Community use — review before production deployment."
+>
+> **Note**: A public skill registry is planned for v3.2.0. Until then, share via GitHub Gist:
+> 1. Run `/share` → copy the packaged skill file output
+> 2. Create a private GitHub Gist, paste the skill content
+> 3. Share the raw Gist URL with your team: `"read [gist-url] and install to claude"`
+> Team members paste that line into their AI assistant and the skill installs automatically.
+
+### Team Deployment Workflow (step-by-step)
+
+For team leads distributing a skill to team members:
+
+```
+1. Create & evaluate:
+   /create → answer 8 questions → receive skill file
+   /eval   → confirm tier (SILVER+ recommended for team use)
+
+2. Get team lead approval (recommended for BRONZE; required for FAIL):
+   → Share the EVALUATE report with team lead
+   → Team lead reviews: Negative Boundaries + Security section
+   → Team lead gives "approved" signal
+
+3. Package and share:
+   /share  → outputs packaged skill file + installation command
+
+4. Team installs (each team member runs):
+   "read [gist-url] and install to [platform]"
+
+5. Iterate based on team feedback:
+   Team members run /collect after using the skill
+   Share artifacts with skill owner → /aggregate → /opt
+```
+
+---
+
+## How Skills Work After Creation
+
+When skill-writer finishes generating your skill, you have a **Markdown file** (`.md`) with a YAML frontmatter block. Here is what happens next:
+
+### Skill Anatomy
+
+```
+---
+name: my-skill
+version: "1.0.0"
+triggers:
+  en: ["do X", "run X for me"]
+  zh: ["执行X"]
+---
+
+## §1  Identity
+...
+```
+
+The **YAML frontmatter** tells the AI assistant when to activate the skill (via the `triggers` list). The **Markdown body** is the skill's instructions — the AI reads this as its operating procedure.
+
+### Where Your Skill File Goes
+
+Place the `.md` file in the skills directory for your platform:
+
+| Platform | Directory |
+|----------|-----------|
+| Claude | `~/.claude/skills/your-skill.md` |
+| OpenCode | `~/.config/opencode/skills/your-skill.md` |
+| OpenClaw | `~/.openclaw/skills/your-skill.md` |
+| Cursor | `~/.cursor/skills/your-skill.md` |
+| Gemini | `~/.gemini/skills/your-skill.md` |
+
+After placing the file, restart the AI assistant. It will load the skill automatically on startup.
+
+### How Trigger Routing Works
+
+When you type a message, the AI compares it against each loaded skill's `triggers` list:
+- Exact or near-match → skill activates
+- No match → general assistant mode (no skill)
+
+You can also activate skills with `/skill-name` on platforms that support slash commands (Claude, OpenCode). On Cursor, use the keyword trigger phrases since the IDE intercepts `/`.
+
+### Diagnosing False Triggers
+
+A **false trigger** is when your skill activates for the wrong request (e.g., a "code reviewer" skill fires when someone says "review my architecture diagram").
+
+**How to diagnose**:
+1. Open your skill file and read the `triggers` section in the YAML frontmatter
+2. Check the **Skill Summary** (§2) — if it's too broad, nearby skills will also match
+3. Check the **Negative Boundaries** (§3) — add the false-triggering phrase there
+
+**How to fix false triggers**:
+```yaml
+# In your skill's YAML frontmatter — add exclusions:
+triggers:
+  en:
+    - "review my code"         # ← KEEP: your skill's purpose
+    - "check this PR"          # ← KEEP
+  # NOT listed → will not activate on these phrases
+```
+
+```markdown
+## Negative Boundaries
+**Do NOT use this skill for:**
+- "review my architecture diagram" → use a diagram-explainer skill instead
+- "explain this design doc" → use a doc-summarizer skill instead
+```
+
+**Debug by asking the AI**:
+> "Does my skill `pr-reviewer` match the phrase 'review my architecture'? Show me why or why not."
+
+The AI will explain which trigger phrases matched and which Negative Boundaries should have blocked it.
+
+**If a skill isn't triggering when it should**:
+1. Add the missing phrase to `triggers.en` in the YAML frontmatter
+2. Run `/lean` to confirm triggers section has ≥3 EN + ≥2 ZH phrases (required for LEAN PASS)
+
+### Improving Your Skill Over Time
+
+| Situation | Action |
+|-----------|--------|
+| Skill triggered when it shouldn't | Add specific phrase to `Negative Boundaries` section |
+| Skill missed a valid trigger phrase | Add phrase to `triggers.en` / `triggers.zh` in YAML |
+| Output quality degraded | Run `/eval` → `/opt` |
+| Many users gave similar feedback | Run `/collect` → `/aggregate` → `/opt` |
+| Skill version bumped, team not notified | Update `version:` in YAML, reshare via `/share` |
+
+---
 
 ## Security Features
 
@@ -385,18 +717,23 @@ Automatically checks for:
 
 ### OWASP Agentic Skills Top 10 (2026)
 
-| ID | Risk | Severity |
-|----|------|----------|
-| ASI01 | Prompt Injection / Goal Hijack | P1 (−50 pts) |
-| ASI02 | Insecure Tool Use | P1 (−50 pts) |
-| ASI03 | Excessive Agency | P1 (−50 pts) |
-| ASI04 | Uncontrolled Resource Consumption | P1 (−50 pts) |
-| ASI05 | Missing Negative Boundaries | P2 (advisory) |
-| ASI06 | Sensitive Data Exposure | P2 (advisory) |
-| ASI07 | Insufficient Logging | P2 (advisory) |
-| ASI08 | Insecure Deserialization | P2 (advisory) |
-| ASI09 | Executable Script Risk | P2 (advisory) |
-| ASI10 | Broken Access Control | P2 (advisory) |
+| ID | Risk | Severity | What triggers it |
+|----|------|----------|-----------------|
+| ASI01 | Prompt Injection / Goal Hijack | P1 (−50 pts) | Skill instructions say "if user asks X, do Y" where Y ignores the skill's scope |
+| ASI02 | Insecure Tool Use | P1 (−50 pts) | Skill calls external tools (shell, APIs) without validating input first; e.g., `run_command({user_input})` |
+| ASI03 | Excessive Agency | P1 (−50 pts) | Skill takes irreversible actions (delete, send, publish) without explicit user confirmation step |
+| ASI04 | Uncontrolled Resource Consumption | P1 (−50 pts) | No size/rate limits on loops or external calls; skill can run indefinitely |
+| ASI05 | Missing Negative Boundaries | P2 (advisory) | No "Do NOT use for" section, or section uses only generic placeholders |
+| ASI06 | Sensitive Data Exposure | P2 (advisory) | Skill outputs API keys, passwords, or PII in logs/responses |
+| ASI07 | Insufficient Logging | P2 (advisory) | No audit trail or error logging defined |
+| ASI08 | Insecure Deserialization | P2 (advisory) | Skill parses untrusted JSON/YAML without schema validation |
+| ASI09 | Executable Script Risk | P2 (advisory) | Skill generates runnable code from user input without sandboxing note |
+| ASI10 | Broken Access Control | P2 (advisory) | Skill doesn't check caller permissions before taking actions |
+
+**To fix an ASI warning**: Read the "What triggers it" column. Common fixes:
+- ASI02: Add an input validation step before any tool call
+- ASI03: Add "ask user to confirm before proceeding" to any destructive action
+- ASI05: Add a specific "Do NOT use for..." section with 2–3 concrete examples
 
 ### Security Severity Levels
 
@@ -424,8 +761,8 @@ Recommendations:
 ## UTE (Use-to-Evolve)
 
 Self-improvement protocol that enables skills to evolve through usage. Two-tier architecture:
-- **L1 (Single-user)** `[ENFORCED]`: Post-invocation hook runs per session; persists state to `~/.claude/skills/.ute-state/`
-- **L2 (Collective)** `[ASPIRATIONAL]`: Requires external aggregation infrastructure (SkillClaw-compatible)
+- **L1 (Single-user)** `[CORE]`: Post-invocation hook runs per session; persists state to `~/.claude/skills/.ute-state/`
+- **L2 (Collective)** `[EXTENDED]`: Requires external aggregation infrastructure (SkillClaw-compatible). See `refs/use-to-evolve.md §10`.
 
 ### UTE YAML Block
 
@@ -464,7 +801,7 @@ use_to_evolve:
 
 ### Platform Hook Integration (Claude Code / OpenCode)
 
-UTE state tracking upgrades from `[ASPIRATIONAL]` to `[ENFORCED]` when platform hooks are configured:
+UTE state tracking upgrades from `[EXTENDED]` to `[CORE]` when platform hooks are configured:
 
 ```json
 // ~/.claude/settings.json
@@ -491,7 +828,7 @@ npm install
 
 ### Commands
 
-> **Note**: Run `npm run build` from the project root before using `npm run install:*` scripts — they copy files from the `platforms/` directory created by the build step. In CI, lint and test run without `|| true` and will fail the pipeline on errors.
+> **Note**: Pre-built platform files in `platforms/` are committed as distribution assets — no build step is required for installation. Run `npm run build` only when you modify `skill-framework.md` or `refs/` to regenerate them. In CI, lint and tests run without `|| true` and will fail the pipeline on errors.
 
 #### Build
 ```bash
@@ -562,8 +899,8 @@ skill-writer/
 │   │       └── index.js           # Platform registry
 │   ├── templates/                 # Platform-specific output templates
 │   ├── .eslintrc.json             # ESLint configuration
-│   └── tests/                     # Jest test suite (179 tests)
-├── platforms/                     # Generated platform files (7 platforms, gitignored)
+│   └── tests/                     # Jest test suite (250+ tests)
+├── platforms/                     # Pre-built platform files (7 platforms, committed as distribution assets)
 ├── examples/                      # Certified example skills
 │   ├── api-tester/                # GOLD 920/1000
 │   ├── code-reviewer/             # GOLD 947/1000
@@ -702,7 +1039,7 @@ MIT License - See [LICENSE](LICENSE) file for details.
 ### Completed
 
 - [x] Core engine with CREATE, LEAN, EVALUATE, OPTIMIZE, INSTALL, COLLECT modes
-- [x] Builder tool with CLI and Jest test suite (179 tests)
+- [x] Builder tool with CLI and Jest test suite (250+ tests)
 - [x] Support for 7 platforms (OpenCode, OpenClaw, Claude, Cursor, OpenAI, Gemini, MCP)
 - [x] LEAN fast-evaluation mode with [STATIC]/[HEURISTIC] reliability labels
 - [x] UTE 2.0 self-improvement protocol (L1 enforced + L2 collective)

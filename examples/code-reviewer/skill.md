@@ -58,7 +58,7 @@ code-reviewer performs structured code reviews, security audits, and quality ass
 
 ---
 
-## §N  Negative Boundaries
+## §2  Negative Boundaries
 
 **Do NOT use this skill for**:
 

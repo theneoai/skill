@@ -9,10 +9,31 @@
 
 ## How to fill this template
 
-1. Replace all `{{PLACEHOLDER}}` tokens with values gathered from §7 elicitation questions.
-2. Delete any section marked `<!-- OPTIONAL -->` if not applicable.
-3. **Do not skip Skill Summary or Negative Boundaries** — both are required for delivery (v3.1.0).
-4. Run the EVALUATE mode (§8) before delivery — minimum BRONZE (score ≥ 700).
+**推荐做法**: 运行 `/create` — AI 会提问 8 个问题，自动生成填好的技能文件，你只需审查。
+**Recommended**: Run `/create` — AI asks 8 questions and auto-fills this template. Just review the output.
+
+如需手动填写 / Manual fill guide:
+
+**必填占位符 (15个) — REQUIRED placeholders**:
+`{{SKILL_NAME}}`, `{{ONE_LINE_DESCRIPTION}}`, `{{EN_DESCRIPTION}}`, `{{ZH_DESCRIPTION}}`,
+`{{TARGET_USER}}`, `{{TRIGGER_PHRASE_EN_1~3}}`, `{{TRIGGER_PHRASE_ZH_1~2}}`,
+`{{ANTI_CASE_1}}`, `{{CORE_ACTION}}`, `{{OUTPUT_FORMAT}}`, `{{DATE}}`
+
+**自动填充 (其余占位符) — AUTO-FILLED by `/create`**:
+其余所有 `{{PLACEHOLDER}}` 均可由 CREATE 模式根据你的回答自动推断。
+All remaining placeholders are inferred by CREATE mode from your answers.
+如手动填写，`{{PLACEHOLDER}}` 格式说明见各字段注释。
+
+**选模板?** 参见 §5 模板选择逻辑:
+- 调用外部 API → `api-integration` 模板
+- 数据转换/处理 → `data-pipeline` 模板
+- 多步骤工作流 → `workflow-automation` 模板
+- 其他 / 不确定 → 本模板 (base) ← **当前模板**
+
+1. 替换必填占位符 / Replace required `{{PLACEHOLDER}}` tokens.
+2. 删除标有 `<!-- OPTIONAL -->` 的可选节 / Delete optional sections if not applicable.
+3. **不要跳过 Skill Summary 和 Negative Boundaries** — 两者为 v3.1.0 必交付项。
+4. 交付前运行 EVALUATE (`/eval`) — 最低 BRONZE (score ≥ 700)。
 
 ---
 
@@ -116,9 +137,16 @@ use_to_evolve:
 
 **Do NOT use this skill for**:
 
-- **{{ANTI_CASE_1}}**: If the user asks "{{ANTI_TRIGGER_PHRASE_1}}", route to {{ALTERNATIVE_SKILL_1}} instead.
-- **{{ANTI_CASE_2}}**: If the user asks "{{ANTI_TRIGGER_PHRASE_2}}", this skill is not appropriate.
-- **{{ANTI_CASE_3}}**: This skill does not handle {{ANTI_CASE_3_DESCRIPTION}}.
+- **{{ANTI_CASE_1}}**: {{REASON_1}}
+  → Recommended alternative: {{ALTERNATIVE_SKILL_1}}
+- **{{ANTI_CASE_2}}**: {{REASON_2}}
+  → Recommended alternative: {{ALTERNATIVE_SKILL_2}}
+- **{{ANTI_CASE_3}}**: {{REASON_3}}
+  → Recommended alternative: {{ALTERNATIVE_SKILL_3_OR_ESCALATION}}
+
+**The following trigger phrases should NOT activate this skill**:
+- "{{SIMILAR_BUT_DIFFERENT_PHRASE_1}}"
+- "{{SIMILAR_BUT_DIFFERENT_PHRASE_2}}"
 
 ---
 

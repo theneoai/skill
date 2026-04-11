@@ -4,6 +4,8 @@
   "description": "Full lifecycle meta-skill framework: CREATE with Skill Summary + Negative Boundaries + 3-tier hierarchy, LEAN/EVALUATE/OPTIMIZE with co-evolutionary VERIFY, OWASP Agentic Top 10 security, COLLECT mode for collective skill evolution (SkillClaw + SkillRL), and deploy to 7 platforms including MCP",
   "main": "builder/src/index.js",
   "scripts": {
+    "setup": "bash install.sh",
+    "postinstall": "echo '\\n  skill-writer cloned. Run: npm run setup\\n  (installs to your AI platforms)\\n'",
     "build": "cd builder && node bin/skill-writer-builder.js build --platform all --output ../platforms",
     "build:opencode": "cd builder && node bin/skill-writer-builder.js build --platform opencode --output ../platforms",
     "build:openclaw": "cd builder && node bin/skill-writer-builder.js build --platform openclaw --output ../platforms",
@@ -16,12 +18,13 @@
     "validate": "cd builder && node bin/skill-writer-builder.js validate",
     "test": "cd builder && npm test",
     "lint": "cd builder && npm run lint",
-    "install:opencode": "mkdir -p ~/.config/opencode/skills && cp platforms/skill-writer-opencode-dev.md ~/.config/opencode/skills/skill-writer.md",
-    "install:openclaw": "mkdir -p ~/.openclaw/skills && cp platforms/skill-writer-openclaw-dev.md ~/.openclaw/skills/skill-writer.md",
-    "install:claude": "bash install-claude.sh",
-    "install:cursor": "mkdir -p ~/.cursor/skills && cp platforms/skill-writer-cursor-dev.md ~/.cursor/skills/skill-writer.md",
-    "install:gemini": "mkdir -p ~/.gemini/skills && cp platforms/skill-writer-gemini-dev.md ~/.gemini/skills/skill-writer.md",
-    "install:mcp": "mkdir -p ~/.mcp/servers/skill-writer && cp platforms/skill-writer-mcp-dev.json ~/.mcp/servers/skill-writer/mcp-manifest.json"
+    "install:claude": "bash install.sh --platform claude",
+    "install:opencode": "bash install.sh --platform opencode",
+    "install:openclaw": "bash install.sh --platform openclaw",
+    "install:cursor": "bash install.sh --platform cursor",
+    "install:gemini": "bash install.sh --platform gemini",
+    "install:mcp": "bash install.sh --platform mcp",
+    "install:all": "bash install.sh --all"
   },
   "keywords": [
     "skill",
