@@ -300,14 +300,16 @@ for p in "${TARGETS[@]}"; do
         echo "    /create a skill that summarises git diffs"
         echo "    ✓ Full feature set (companion files installed)"
       else
-        echo "    All 6 modes work right now — no companion files needed:"
+        echo "    All 6 modes work right now — full feature set installed:"
         echo "    • create a skill that summarises git diffs"
         echo "    • lean eval [paste skill content]"
         echo "    • evaluate / optimize / install / collect"
         echo ""
-        echo "    ℹ Optional upgrade — richer EVALUATE reports & COLLECT auto-persist:"
+        echo "    ℹ Optionally add richer EVALUATE reports & auto-persist COLLECT:"
+        echo "      (git clone install adds companion files for Claude only)"
         echo "      git clone https://github.com/theneoai/skill-writer.git"
         echo "      cd skill-writer && ./install.sh --platform claude"
+        echo "      This is optional — not required for any core feature."
       fi
       ;;
     opencode)

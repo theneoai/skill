@@ -253,6 +253,7 @@ No confirmation needed. These commands are LLM-evaluated (not platform CLI comma
 | `/install` | INSTALL mode (deploy framework to platforms) | `/安装` |
 | `/share` | SHARE mode (export + package your created skill) | `/分享` |
 | `/collect` | COLLECT mode | `/采集` |
+| `/aggregate` | AGGREGATE mode (multi-session synthesis) | `/聚合` |
 | `/skip` | Accept current result as-is (TEMP_CERT if below BRONZE) | `/跳过` |
 
 > `/skip` is only meaningful when the framework has displayed a "type /skip" prompt
@@ -304,6 +305,9 @@ User Input
 │           deploy.*my.*skill]                                    │
 │ COLLECT  [采集,记录,收集,会话数据 | collect,record,artifact,    │
 │           session-data,session-artifact,export.*log]            │
+│ AGGREGATE[聚合,分析,综合,汇总,聚合反馈 |                        │
+│           aggregate,analyze.*sessions,synthesize.*session,      │
+│           aggregate.*feedback,which.*skill.*optimize]           │
 │                                                                 │
 │ confidence HIGH   → AUTO-ROUTE (no confirmation)                │
 │ confidence MEDIUM → show "I'll run [MODE] — confirm? (yes/no)"  │
@@ -561,6 +565,29 @@ Submit skill file via PR with this EVALUATE report attached as context.
 | 8 | **INJECT UTE** — append `§UTE` section from snippet, fill placeholders (§15) | UTE section present |
 | 9 | **DELIVER** — annotate, certify, write audit entry | CERTIFIED / TEMP_CERT |
 
+> **Phase 9 (DELIVER) — mandatory activation guidance** `[CORE]`:
+> Every DELIVER output MUST include these lines, verbatim, after the skill file:
+> ```
+> ─── Skill ready ───────────────────────────────────────────────────────
+> Your skill "{skill_name}" has been created (LEAN: {N}/500 · est. {N*2} EVALUATE).
+>
+> To activate it:
+>   1. Copy the skill file above to your platform's skills folder:
+>        Claude:    ~/.claude/skills/{skill_name}.md
+>        OpenCode:  ~/.config/opencode/skills/{skill_name}.md
+>        OpenClaw:  ~/.openclaw/skills/{skill_name}.md
+>        Cursor:    ~/.cursor/skills/{skill_name}.md
+>        Gemini:    ~/.gemini/skills/{skill_name}.md
+>   2. Restart your AI assistant.
+>   3. Say one of the trigger phrases in the skill's YAML to test it.
+>
+> Score meaning: {N}/500 → estimated {N*2}/1000 → tier: {TIER}
+>   ≥ 350 (BRONZE+) = ready to use | < 350 = run /opt first
+>
+> Next steps (optional): /lean · /eval · /opt · /share
+> ───────────────────────────────────────────────────────────────────────
+> ```
+
 > **Phase 4 (GENERATE) — Q7/Q8 skip confirmation gate**:
 > If the user skipped Q7 (negative boundaries) or Q8 (trigger phrases) during elicitation,
 > PAUSE before generating and show the auto-filled defaults for review:
@@ -615,6 +642,12 @@ anything else                             → base
 ```
 
 Template files: `claude/templates/<type>.md`
+
+> **Language note**: YAML frontmatter field names (`name`, `version`, `triggers`, etc.) are
+> always in English — this is a technical standard. All skill *content* (descriptions, workflow
+> steps, examples) should be written in the user's preferred language. If the user answered
+> elicitation questions in Chinese, generate skill body content in Chinese.
+> Mixed-language skills (EN keys + ZH values) are correct and expected.
 
 ---
 
@@ -723,10 +756,20 @@ FAIL proxy:     lean < 300  → route to OPTIMIZE
 ```
 lean_score ≥ 350 AND no_placeholders AND security_section_present
     → LEAN PASS — deliver with LEAN_CERT tag
-    → Always append to score output:
-      "ℹ LEAN variance: ±20 pts is normal. If you re-run LEAN and get a different
-       score within ±20 pts, the skill has NOT changed — that's expected variation
-       in the heuristic checks. For a stable score, run /eval (EVALUATE)."
+    → Always output score block in this format:
+      "LEAN Score: [N]/500
+       Estimated EVALUATE:  ~[N×2]/1000  →  tier: [TIER]
+       (LEAN × 2 is a rough proxy. Variance ±60 pts. Use /eval for certified score.)
+
+       Score meaning:
+         ≥ 475/500  →  est. PLATINUM (≥ 950)  — excellent, publish-ready
+         ≥ 450/500  →  est. GOLD    (≥ 900)   — high quality, team-ready
+         ≥ 400/500  →  est. SILVER  (≥ 800)   — good, shareable with beta tag
+         ≥ 350/500  →  est. BRONZE  (≥ 700)   — usable, consider improving
+         300–349    →  UNCERTAIN — running full /eval now
+          < 300     →  FAIL — routing to /opt
+
+       ℹ LEAN variance: ±20 pts is normal across re-runs. Use /eval for a stable certified score."
     → Schedule full EVALUATE within 24 h (recommended, not blocking)
 
 lean_score 300–349 (UNCERTAIN)
@@ -1682,13 +1725,13 @@ no session state, omit `session_id` and always provide `elicitation_answers` in 
 If your team needs automatic tracking (COLLECT auto-persist, AGGREGATE across team members),
 choose a backend based on team size and infrastructure:
 
-| Backend | Best for | Setup complexity | Notes |
-|---------|----------|-----------------|-------|
-| **File system** (`~/.skill-artifacts/`) | Single developer, single host | None | Write JSON to `~/.skill-artifacts/YYYYMMDD_{skill}.jsonl` |
-| **GitHub Gist** (private) | Small team (2–5 people), no ops | Low | POST artifact JSON; share Gist URL for AGGREGATE |
-| **SQLite** | Team on shared server | Low-medium | One DB file; episodic memory schema (see §17) |
-| **PostgreSQL** | Large team, multi-host MCP | Medium | Full query capability; recommended for >20 skills |
-| **Vector DB** (Qdrant/Pinecone) | Semantic search across sessions | High | Required for §17 L4 episodic memory |
+| Backend | Best for | Setup complexity | Scale limit | Notes |
+|---------|----------|-----------------|-------------|-------|
+| **File system** (`~/.skill-artifacts/`) | Single developer, single host | None | Unlimited (local) | Write JSON to `~/.skill-artifacts/YYYYMMDD_{skill}.jsonl` |
+| **GitHub Gist** (private) | Small team (2–5 people), no ops | Low | < 1 artifact/day/user; API rate limit 5000 req/hr | POST artifact JSON; share Gist URL for AGGREGATE |
+| **SQLite** | Team on shared server | Low-medium | Up to ~10K artifacts; single-writer only | One DB file; episodic memory schema (see §17) |
+| **PostgreSQL** | Large team, multi-host MCP | Medium | Unlimited with proper indexing | Full query capability; recommended for >20 developers |
+| **Vector DB** (Qdrant/Pinecone) | Semantic search across sessions | High | Depends on plan | Required for §17 L4 episodic memory |
 
 **Minimum viable team setup** (GitHub Gist, no ops):
 ```
@@ -1700,10 +1743,55 @@ choose a backend based on team size and infrastructure:
 
 ### UTE and COLLECT via MCP
 
-Because MCP operates without a persistent chat context:
+Because MCP operates without a persistent chat context, the COLLECT trigger must be
+**built into your application layer** — it does not fire automatically. Here is the
+complete integration pattern:
+
+```
+MCP UTE/COLLECT Architecture:
+
+  Your application (Slack bot / CI / API gateway)
+       │
+       │  1. Invoke skill via MCP API
+       ▼
+  MCP server (skill-writer)
+       │  executes the skill
+       │
+       │  2. Immediately after skill response, your app calls COLLECT:
+       ▼
+  {"tool": "skill-writer", "mode": "collect",
+   "session_context": {
+     "skill_name": "weather-query",
+     "invocation_id": "uuid",
+     "trigger_phrase": "what's the weather in Tokyo",
+     "outcome": "SUCCESS",
+     "prm_signal": 1.0
+   }}
+       │
+       │  3. skill-writer returns JSON artifact
+       │
+       │  4. Your app POSTs artifact to backend:
+       │     File:  append to ~/.skill-artifacts/YYYYMMDD_weather-query.jsonl
+       │     Gist:  PATCH https://api.github.com/gists/{gist_id}
+       │     DB:    INSERT INTO skill_artifacts (json_data, created_at)
+       │
+       │  5. UTE cadence (your app tracks count):
+       │     every 10 invocations  → call COLLECT with mode: "ute_lightweight"
+       │     every 50 invocations  → call with mode: "ute_full_recompute"
+       │     every 100 invocations → call with mode: "ute_tier_drift_check"
+       ▼
+  AGGREGATE (run on demand):
+  {"tool": "skill-writer", "mode": "aggregate",
+   "artifacts": [artifact1_json, artifact2_json, ...]}
+```
+
+**Who triggers COLLECT?** Your application wrapper (not the end user). Build it as a
+post-hook that fires after every successful skill invocation. If using a Slack bot, call
+COLLECT in the bot's response handler. If using CI, add a COLLECT step after the skill step.
+
 - **UTE auto-trigger** does not fire (no chat to observe). Add `use_to_evolve.enabled: true`
-  to skill YAML and trigger COLLECT explicitly via API call.
-- **COLLECT**: Call COLLECT mode explicitly after each skill invocation via MCP API.
+  to skill YAML; your application handles the cadence (every 10/50/100 invocations above).
+- **COLLECT**: Call explicitly from your application after each skill invocation.
   Output is JSON artifact — store in your chosen backend (see table above).
 - **AGGREGATE**: Call with 2+ artifacts to get ranked improvement priorities.
   Provide artifacts as inline JSON in the call body (Method B) or point to a backend path.

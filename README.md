@@ -8,6 +8,16 @@ A cross-platform meta-skill for creating, evaluating, and optimizing AI assistan
 [![GitHub Actions](https://github.com/theneoai/skill-writer/workflows/Skill%20Writer%20-%20Build%20and%20Release/badge.svg)](https://github.com/theneoai/skill-writer/actions)
 [![Security Scan](https://github.com/theneoai/skill-writer/workflows/Skill%20Writer%20-%20Security%20Scan/badge.svg)](https://github.com/theneoai/skill-writer/actions)
 
+## What is a skill?
+
+A **skill** is a small instruction file (Markdown, `.md`) that you place in your AI assistant's skills folder. It tells the assistant how to handle a specific type of request — like "summarize a git diff", "write a PR description", or "validate API responses". When you say something that matches the skill's trigger phrases, the assistant follows the skill's instructions automatically.
+
+Think of it like a custom command: you define what it does once, and then the assistant does it consistently every time you ask.
+
+After creating a skill, it lives in `~/.claude/skills/` (or your platform's equivalent). Restart the assistant to activate it.
+
+---
+
 ## Overview
 
 Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and optimize other skills through natural language interaction. No CLI commands required - just describe what you need.
@@ -26,6 +36,7 @@ Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and
 - **Continuous Improvement**: Automated optimization with convergence detection + co-evolutionary VERIFY step
 - **Self-Evolution**: UTE (Use-to-Evolve) protocol for automatic skill improvement (L1 enforced + L2 collective)
 - **Multi-Pass Self-Review**: Generate/Review/Reconcile quality protocol
+- **Bilingual**: Full English + Chinese (中文) support for all 6 modes. Framework documentation (refs/ companion files) is in English.
 
 ## Supported Platforms
 
@@ -51,7 +62,8 @@ Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and
 | COLLECT auto-persist `[EXTENDED]` | ✅† | ✅† | ❌ | ❌ | ❌ | — | — |
 | YAML frontmatter | ✅ | ✅ | ✅ | ❌* | ✅ | JSON | JSON |
 
-\* Cursor uses `${KEY}` placeholder syntax instead of `{{KEY}}`  
+\* Cursor uses `${KEY}` placeholder syntax in the IDE — but skill-writer auto-handles conversion.
+  You don't need to manually edit YAML. If you hand-edit a `.md` file in the Cursor IDE, use `${KEY}` syntax.  
 † Requires platform hooks — see `refs/use-to-evolve.md §8` for setup  
 ⚠️ Cursor: IDE command palette intercepts `/` — use keyword phrases instead:
 
@@ -63,6 +75,14 @@ Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and
 | OPTIMIZE | `optimize this skill` |
 | INSTALL | `install skill-writer to cursor` |
 | COLLECT | `collect session data` / `record this session` |
+
+> **Cursor + COLLECT**: COLLECT auto-persist (file hooks) is not available in IDE context.
+> Instead, COLLECT outputs JSON directly to the chat window. To save it:
+> 1. Run `collect session data` → copy the JSON output
+> 2. Save to `~/.skill-artifacts/YYYYMMDD_skillname.json` manually
+> 3. Later: paste 2+ artifacts into a new chat and type `aggregate skill feedback`
+> 
+> This is COLLECT Method B (manual paste) — fully supported in Cursor.
 
 ## Quick Start
 
@@ -226,33 +246,44 @@ cp platforms/skill-writer-mcp.json ~/.mcp/servers/skill-writer/mcp-manifest.json
 Generates new skills from scratch using structured templates and elicitation.
 
 #### Workflow (9-Phase)
-1. **ELICIT**: Ask 6 clarifying questions to understand requirements
-2. **SELECT TEMPLATE**: Choose from 4 built-in templates
+1. **ELICIT**: Ask 8 clarifying questions to understand requirements
+2. **SELECT TEMPLATE**: Choose from 4 built-in templates based on your answers
 3. **PLAN**: Multi-pass self-review for implementation strategy
-4. **GENERATE**: Create skill using template
-5. **SECURITY SCAN**: Check for CWE vulnerabilities
+4. **GENERATE**: Create skill using template — includes **Skill Summary** and **Negative Boundaries** (see below)
+5. **SECURITY SCAN**: Check for CWE vulnerabilities + OWASP ASI01–ASI10
 6. **LEAN EVAL**: Fast 500-point heuristic evaluation
-7. **FULL EVALUATE**: Complete 1000-point evaluation (if LEAN uncertain)
+7. **FULL EVALUATE**: Complete 1000-point evaluation (if LEAN uncertain or score near boundary)
 8. **INJECT UTE**: Add Use-to-Evolve self-improvement hooks
-9. **DELIVER**: Output final skill file
+9. **DELIVER**: Output final skill file with activation instructions
+
+#### What's in the Generated Skill File
+
+Every skill file includes two mandatory sections that new users often wonder about:
+
+**Skill Summary** (§2 in the file) — 5 sentences describing what the skill does, who it's for,
+what the input/output looks like, and what it's NOT for. This is how the AI knows whether to
+activate the skill for a given request.
+
+**Negative Boundaries** (§3 in the file) — A list of "Do NOT use this skill for..." examples.
+This prevents the skill from firing when a user asks something similar but out of scope.
+Example: A "code reviewer" skill should NOT trigger when someone asks "explain this diagram".
+Without this section, skills false-trigger on semantically similar requests.
+
+> Both sections are auto-generated from your elicitation answers (Q6 and Q7). You can edit
+> them after creation to make them more specific — run `/lean` after editing to check score.
 
 #### Available Templates
 
-**Base Template**
-- Use for: Simple skills, proof of concepts
-- Features: Standard sections, minimal boilerplate
+| Template | Use for | Example skill |
+|----------|---------|---------------|
+| **Base** | Simple skills, proof of concepts, text analysis | meeting summarizer, language translator |
+| **API Integration** | REST APIs, webhooks, integrations | weather fetcher, GitHub PR creator |
+| **Data Pipeline** | ETL, data transformation, analysis | CSV validator, log parser |
+| **Workflow Automation** | Multi-step tasks, CI/CD, orchestration | deploy checker, PR review workflow |
 
-**API Integration**
-- Use for: REST API clients, webhooks, integrations
-- Features: Endpoint handling, authentication patterns
-
-**Data Pipeline**
-- Use for: ETL, data transformation, analysis
-- Features: Input validation, processing steps, output formatting
-
-**Workflow Automation**
-- Use for: CI/CD, repetitive tasks, orchestration
-- Features: Step sequencing, error recovery, notifications
+> Not sure which to pick? If your skill makes HTTP calls → API Integration. If it transforms
+> data step-by-step → Data Pipeline. If it coordinates multiple sub-tasks → Workflow Automation.
+> Otherwise → Base.
 
 #### Triggers (EN/ZH)
 - "create a [type] skill" / "创建一个[类型]技能"
@@ -394,6 +425,19 @@ Optimization stops when:
 - Maximum iterations reached (20)
 - DIVERGING detected → HALT → HUMAN_REVIEW
 
+#### When to Stop Optimizing
+
+| Current Tier | Recommendation |
+|-------------|----------------|
+| FAIL (<700) | Keep optimizing — skill is not ready to use |
+| BRONZE (700–799) | Optimize if planning to share; OK to use personally |
+| SILVER (800–899) | Ready for team use with `beta` tag; PLATINUM push optional |
+| GOLD (900–949) | Excellent quality; further PLATINUM optimization is nice-to-have only |
+| PLATINUM (≥950) | Done — publish with `stable` tag |
+
+> GOLD (≥900) is the target for most team skills. PLATINUM (≥950) is for widely-shared or
+> production-critical skills. Don't optimize past GOLD unless you have a specific quality goal.
+
 #### Triggers (EN/ZH)
 - "optimize this skill" / "优化这个技能"
 - "improve my skill" / "改进我的技能"
@@ -402,6 +446,14 @@ Optimization stops when:
 - "enhance this skill" / "增强这个技能"
 
 ### INSTALL Mode
+
+> **INSTALL vs. SHARE — which do you want?**
+> - **INSTALL** = deploys the *skill-writer framework* to your AI platform. Use this once, when setting up.
+>   Trigger: `"install skill-writer"` / `"install skill-writer to claude"`
+> - **SHARE** = packages a skill *you created* and distributes it to your team.
+>   Trigger: `"share this skill"` / `"export my skill"` / `"install my skill to claude"`
+>
+> Rule of thumb: if the object is **skill-writer** → INSTALL. If the object is **your skill** → SHARE.
 
 Installs skill-writer itself to one or all supported platforms from a URL or local clone.
 
@@ -488,6 +540,37 @@ Say any of the following to enter SHARE mode:
 | FAIL | <700 | — | ❌ Fix first |
 
 > Skills tagged `experimental` include a notice: "Community use — review before production deployment."
+>
+> **Note**: A public skill registry is planned for v3.2.0. Until then, share via GitHub Gist:
+> 1. Run `/share` → copy the packaged skill file output
+> 2. Create a private GitHub Gist, paste the skill content
+> 3. Share the raw Gist URL with your team: `"read [gist-url] and install to claude"`
+> Team members paste that line into their AI assistant and the skill installs automatically.
+
+### Team Deployment Workflow (step-by-step)
+
+For team leads distributing a skill to team members:
+
+```
+1. Create & evaluate:
+   /create → answer 8 questions → receive skill file
+   /eval   → confirm tier (SILVER+ recommended for team use)
+
+2. Get team lead approval (recommended for BRONZE; required for FAIL):
+   → Share the EVALUATE report with team lead
+   → Team lead reviews: Negative Boundaries + Security section
+   → Team lead gives "approved" signal
+
+3. Package and share:
+   /share  → outputs packaged skill file + installation command
+
+4. Team installs (each team member runs):
+   "read [gist-url] and install to [platform]"
+
+5. Iterate based on team feedback:
+   Team members run /collect after using the skill
+   Share artifacts with skill owner → /aggregate → /opt
+```
 
 ---
 
@@ -558,18 +641,23 @@ Automatically checks for:
 
 ### OWASP Agentic Skills Top 10 (2026)
 
-| ID | Risk | Severity |
-|----|------|----------|
-| ASI01 | Prompt Injection / Goal Hijack | P1 (−50 pts) |
-| ASI02 | Insecure Tool Use | P1 (−50 pts) |
-| ASI03 | Excessive Agency | P1 (−50 pts) |
-| ASI04 | Uncontrolled Resource Consumption | P1 (−50 pts) |
-| ASI05 | Missing Negative Boundaries | P2 (advisory) |
-| ASI06 | Sensitive Data Exposure | P2 (advisory) |
-| ASI07 | Insufficient Logging | P2 (advisory) |
-| ASI08 | Insecure Deserialization | P2 (advisory) |
-| ASI09 | Executable Script Risk | P2 (advisory) |
-| ASI10 | Broken Access Control | P2 (advisory) |
+| ID | Risk | Severity | What triggers it |
+|----|------|----------|-----------------|
+| ASI01 | Prompt Injection / Goal Hijack | P1 (−50 pts) | Skill instructions say "if user asks X, do Y" where Y ignores the skill's scope |
+| ASI02 | Insecure Tool Use | P1 (−50 pts) | Skill calls external tools (shell, APIs) without validating input first; e.g., `run_command({user_input})` |
+| ASI03 | Excessive Agency | P1 (−50 pts) | Skill takes irreversible actions (delete, send, publish) without explicit user confirmation step |
+| ASI04 | Uncontrolled Resource Consumption | P1 (−50 pts) | No size/rate limits on loops or external calls; skill can run indefinitely |
+| ASI05 | Missing Negative Boundaries | P2 (advisory) | No "Do NOT use for" section, or section uses only generic placeholders |
+| ASI06 | Sensitive Data Exposure | P2 (advisory) | Skill outputs API keys, passwords, or PII in logs/responses |
+| ASI07 | Insufficient Logging | P2 (advisory) | No audit trail or error logging defined |
+| ASI08 | Insecure Deserialization | P2 (advisory) | Skill parses untrusted JSON/YAML without schema validation |
+| ASI09 | Executable Script Risk | P2 (advisory) | Skill generates runnable code from user input without sandboxing note |
+| ASI10 | Broken Access Control | P2 (advisory) | Skill doesn't check caller permissions before taking actions |
+
+**To fix an ASI warning**: Read the "What triggers it" column. Common fixes:
+- ASI02: Add an input validation step before any tool call
+- ASI03: Add "ask user to confirm before proceeding" to any destructive action
+- ASI05: Add a specific "Do NOT use for..." section with 2–3 concrete examples
 
 ### Security Severity Levels
 
