@@ -74,11 +74,12 @@ htmlcov/
 *.min.js
 *.min.css
 
-# Generated platform files (keep directory but not the generated files)
-# Root platforms/ outputs are build artifacts — do not commit them.
-platforms/*.md
-platforms/*.json
-!platforms/.gitkeep
+# Generated platform files
+# Release builds (no -dev suffix) ARE committed as distribution assets
+# so users can clone and install without running the builder.
+# Dev builds (-dev suffix) are local-only artifacts.
+platforms/*-dev.md
+platforms/*-dev.json
 builder/platforms/
 
 # Test installations
