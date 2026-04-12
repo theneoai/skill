@@ -359,8 +359,7 @@ function generateServerCard(manifest) {
  * @returns {string} Full path to the server card file
  */
 function getServerCardPath(skillName = 'skill-writer') {
-  const os = require('os');
-  return require('path').join(os.homedir(), '.mcp', 'servers', skillName, '.well-known', 'mcp-server-card.json');
+  return path.join(os.homedir(), '.mcp', 'servers', skillName, '.well-known', 'mcp-server-card.json');
 }
 
 module.exports = {
