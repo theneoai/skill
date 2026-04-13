@@ -258,22 +258,20 @@ function printSummary(results) {
 function checkVersionCompatibility(builderVersion) {
   if (!builderVersion) return;
 
-  // Try to read skill-framework.md frontmatter version
+  // Try to read skill-framework.md frontmatter version using shared utility (SSoT)
   try {
     const skillFrameworkContent = require('fs').readFileSync(config.PATHS.skillFramework, 'utf-8');
-    const fmMatch = skillFrameworkContent.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-    if (fmMatch) {
-      const yaml = require('js-yaml');
-      const fm = yaml.load(fmMatch[1]);
-      const frameworkVersion = fm && fm.version ? String(fm.version) : null;
-      if (frameworkVersion && semverGt(frameworkVersion, builderVersion)) {
-        console.warn(
-          chalk.yellow(
-            `  ⚠ Version mismatch: skill-framework.md is v${frameworkVersion} but builder is v${builderVersion}.\n` +
-            '    Run `git pull` and rebuild to pick up new framework sections.'
-          )
-        );
-      }
+    const { parseFrontmatter } = require('../utils/frontmatter');
+    const { frontmatterData } = parseFrontmatter(skillFrameworkContent);
+    const frameworkVersion = frontmatterData && frontmatterData.version
+      ? String(frontmatterData.version) : null;
+    if (frameworkVersion && semverGt(frameworkVersion, builderVersion)) {
+      console.warn(
+        chalk.yellow(
+          `  ⚠ Version mismatch: skill-framework.md is v${frameworkVersion} but builder is v${builderVersion}.\n` +
+          '    Run `git pull` and rebuild to pick up new framework sections.'
+        )
+      );
     }
   } catch {
     // skill-framework.md may not exist or lack frontmatter — non-fatal, skip silently
@@ -287,12 +285,16 @@ function checkVersionCompatibility(builderVersion) {
  * @returns {boolean} true if a > b
  */
 function semverGt(a, b) {
+  // Guard against non-version inputs (e.g. 'unknown', '', null)
+  if (!a || !b) return false;
   // Strip pre-release suffixes before comparing (e.g. "3.1.0-rc1" → "3.1.0").
   // Semver strictly says 3.1.0 > 3.1.0-rc1, but for a version-mismatch warning
   // we treat them as equal — the point is to detect a meaningfully newer framework.
   const strip = v => String(v).replace(/-[^.]*$/, '');
-  const pa = strip(a).split('.').map(n => parseInt(n, 10) || 0);
-  const pb = strip(b).split('.').map(n => parseInt(n, 10) || 0);
+  // Reject anything that doesn't look like a version number after stripping
+  if (!/^\d+(\.\d+)*$/.test(strip(a)) || !/^\d+(\.\d+)*$/.test(strip(b))) return false;
+  const pa = strip(a).split('.').map(n => parseInt(n, 10));
+  const pb = strip(b).split('.').map(n => parseInt(n, 10));
   for (let i = 0; i < 3; i++) {
     if ((pa[i] || 0) > (pb[i] || 0)) return true;
     if ((pa[i] || 0) < (pb[i] || 0)) return false;

@@ -102,17 +102,14 @@ function formatFrontmatter(data, platformConfig) {
     return null;
   }
 
-  try {
-    const yamlContent = yaml.dump(data, {
-      lineWidth: -1,   // disable line wrapping so long strings stay on one line
-      noRefs: true,    // avoid YAML anchors/aliases (&ref/*ref) — keep output portable
-      sortKeys: false, // preserve insertion order for readability
-    });
-    return `---\n${yamlContent}---\n`;
-  } catch (error) {
-    console.error('Error formatting frontmatter:', error.message);
-    return null;
-  }
+  // Let yaml.dump errors propagate — callers that require frontmatter (e.g.
+  // generateSkillFile) catch and re-wrap as EINVALID_FRONTMATTER with context.
+  const yamlContent = yaml.dump(data, {
+    lineWidth: -1,   // disable line wrapping so long strings stay on one line
+    noRefs: true,    // avoid YAML anchors/aliases (&ref/*ref) — keep output portable
+    sortKeys: false, // preserve insertion order for readability
+  });
+  return `---\n${yamlContent}---\n`;
 }
 
 /**
@@ -542,10 +539,11 @@ function generateSkillFile(platform, coreData) {
         Object.entries(extra).filter(([k]) => !['skill_tier', 'triggers', 'modes'].includes(k))
       ),
     };
-    frontmatter = formatFrontmatter(fmData, config);
-    if (!frontmatter) {
-      // Frontmatter generation failing for a platform that requires it is a hard error —
-      // the output would be structurally invalid.  Throw with enough context to debug.
+    // formatFrontmatter() now throws on yaml.dump failure (no silent null return).
+    // Catch and re-wrap with EINVALID_FRONTMATTER + actionable context.
+    try {
+      frontmatter = formatFrontmatter(fmData, config);
+    } catch (fmError) {
       let metadataKeys = '(unavailable)';
       try { metadataKeys = Object.keys(fmData).join(', '); } catch {}
       throw new Error(

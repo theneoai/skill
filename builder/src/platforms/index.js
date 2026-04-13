@@ -32,6 +32,20 @@ const platforms = {
   a2a,
 };
 
+// Interface contract: fail fast at startup if any adapter is missing a required method.
+// This prevents silent runtime failures when a new adapter is added without all methods.
+const REQUIRED_ADAPTER_METHODS = ['formatSkill', 'getInstallPath', 'generateMetadata', 'validateSkill'];
+for (const [adapterName, adapter] of Object.entries(platforms)) {
+  for (const method of REQUIRED_ADAPTER_METHODS) {
+    if (typeof adapter[method] !== 'function') {
+      throw new Error(
+        `Platform adapter "${adapterName}" is missing required method "${method}". ` +
+        'All adapters must implement: ' + REQUIRED_ADAPTER_METHODS.join(', ')
+      );
+    }
+  }
+}
+
 /**
  * Get a platform adapter by name
  * @param {string} platformName - Name of the platform

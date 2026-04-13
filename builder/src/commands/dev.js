@@ -110,12 +110,7 @@ async function buildForPlatform(platform) {
         loopConfig: null,
         config: null
       },
-      shared: {
-        security: coreData.shared.security,
-        utils: coreData.shared.utils,
-        helpers: null,
-        config: null
-      }
+      shared: coreData.shared
     };
 
     // Generate skill file

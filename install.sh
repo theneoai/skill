@@ -52,7 +52,7 @@ backup_if_exists() {
   local dest="$1"
   if [[ -f "${dest}" ]]; then
     local backup="${dest}.bak.$(date +%Y%m%d_%H%M%S)"
-    cp "${dest}" "${backup}"
+    cp "${dest}" "${backup}" || { err "Failed to backup ${dest} → ${backup}"; return 1; }
     info "Backed up existing file → ${backup}"
   fi
 }
@@ -119,9 +119,12 @@ resolve_source() {
     if [[ "${VERBOSE}" == "true" ]]; then
       info "Falling back to ${fw_url} ..."
     fi
-    fetch "${fw_url}" "${tmp}"
-    echo "${tmp}"
-    return
+    if fetch "${fw_url}" "${tmp}" 2>/dev/null && [[ -s "${tmp}" ]]; then
+      echo "${tmp}"
+      return
+    fi
+    err "Could not fetch fallback skill-framework.md from ${fw_url}"
+    return 1
   fi
 
   err "Could not find source file for platform '${platform}'."
@@ -162,7 +165,7 @@ if [[ -n "${FETCH_URL}" ]]; then
   trap "rm -f '${CUSTOM_FILE}'" EXIT
   info "Fetching ${FETCH_URL} ..."
   fetch "${FETCH_URL}" "${CUSTOM_FILE}"
-  if ! grep -q 'name: skill-writer' "${CUSTOM_FILE}" 2>/dev/null; then
+  if ! grep -q '^name: skill-writer' "${CUSTOM_FILE}" 2>/dev/null; then
     err "Fetched file does not appear to be skill-writer (missing 'name: skill-writer')."
     exit 1
   fi
