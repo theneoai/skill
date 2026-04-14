@@ -4,9 +4,7 @@ A cross-platform meta-skill for creating, evaluating, and optimizing AI assistan
 
 [![Version](https://img.shields.io/badge/version-3.3.0-blue.svg)](https://github.com/theneoai/skill-writer)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Platforms](https://img.shields.io/badge/platforms-7-orange.svg)](#supported-platforms)
-[![GitHub Actions](https://github.com/theneoai/skill-writer/workflows/Skill%20Writer%20-%20Build%20and%20Release/badge.svg)](https://github.com/theneoai/skill-writer/actions)
-[![Security Scan](https://github.com/theneoai/skill-writer/workflows/Skill%20Writer%20-%20Security%20Scan/badge.svg)](https://github.com/theneoai/skill-writer/actions)
+[![Platforms](https://img.shields.io/badge/platforms-3-orange.svg)](#supported-platforms)
 
 ## What is a skill?
 
@@ -26,8 +24,8 @@ Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and
 
 - **Agent Install**: One-line install via "read [URL] and install" — works in any supported platform
 - **Zero CLI Interface**: Natural language interaction - no commands to memorize
-- **Cross-Platform**: Works on 7 major AI platforms (including MCP)
-- **Seven Powerful Modes**: CREATE, LEAN, EVALUATE, OPTIMIZE, INSTALL, COLLECT, and GRAPH
+- **Cross-Platform**: Works on 8 platforms — Claude, OpenClaw, OpenCode, Cursor, Gemini, OpenAI, Kimi, Hermes
+- **Eight Powerful Modes**: CREATE, LEAN, EVALUATE, OPTIMIZE, INSTALL, COLLECT, SHARE, and GRAPH
 - **Template-Based**: 4 built-in templates for common skill patterns
 - **Quality Assurance**: 1000-point scoring system with certification tiers
 - **Tier-Aware Evaluation**: Tier-adjusted scoring weights for `planning` / `functional` / `atomic` skills (SkillX three-tier hierarchy)
@@ -37,53 +35,34 @@ Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and
 - **Self-Evolution**: UTE (Use-to-Evolve) protocol for automatic skill improvement (L1 enforced + L2 collective)
 - **Multi-Pass Self-Review**: Generate/Review/Reconcile quality protocol
 - **Graph of Skills (GoS)**: Typed dependency graph between skills — bundle retrieval, dependency resolution, D8 Composability dimension (v3.2.0)
-- **Bilingual**: Full English + Chinese (中文) support for all 7 modes. Framework documentation (refs/ companion files) is in English.
+- **Bilingual**: Full English + Chinese (中文) support for all modes. Framework documentation (refs/ companion files) is in English.
 
 ## Supported Platforms
 
-| Platform | Status | Installation Path |
-|----------|--------|-------------------|
-| [OpenCode](https://opencode.ai) | ✅ P0 | `~/.config/opencode/skills/` |
-| [OpenClaw](https://openclaw.ai) | ✅ P0 | `~/.openclaw/skills/` |
-| [Claude](https://claude.ai) | ✅ P0 | `~/.claude/skills/` |
-| [Cursor](https://cursor.sh) | ✅ P1 | `~/.cursor/skills/` |
-| [OpenAI](https://openai.com) | ✅ P1 | Manual setup via platform dashboard (JSON) |
-| [Gemini](https://gemini.google.com) | ✅ P2 | `~/.gemini/skills/` |
-| [MCP](https://modelcontextprotocol.io) | ✅ P2 | `~/.mcp/servers/skill-writer/` (JSON manifest) |
+| Platform | Installation Path | Routing File | Format |
+|----------|-------------------|--------------|--------|
+| [Claude](https://claude.ai) | `~/.claude/skills/` | `~/.claude/CLAUDE.md` | Markdown |
+| [OpenClaw](https://openclaw.ai) | `~/.openclaw/skills/` | `~/.openclaw/AGENTS.md` | Markdown |
+| [OpenCode](https://opencode.ai) | `~/.config/opencode/skills/` | `~/.config/opencode/AGENTS.md` | Markdown |
+| [Cursor](https://cursor.com) | `.cursor/rules/` (project) | Built-in rules | MDC |
+| [Gemini](https://gemini.google.com) | `~/.gemini/skills/` | `~/.gemini/GEMINI.md` | Markdown |
+| [OpenAI](https://openai.com) | `{project}/skills/` | `{project}/AGENTS.md` | Markdown |
+| [Kimi](https://kimi.moonshot.cn) | `~/.config/kimi/skills/` | `~/.config/kimi/AGENTS.md` | Markdown |
+| [Hermes](https://hermes.ai) | `~/.hermes/skills/` | `~/.hermes/AGENTS.md` | Markdown |
+
+All platforms receive the same skill file, companion files (refs/, templates/, eval/, optimize/), routing rules, and install script — full feature parity.
 
 ### Platform Feature Matrix
 
-| Feature | Claude | OpenCode | OpenClaw | Cursor | Gemini | OpenAI | MCP |
-|---------|--------|----------|----------|--------|--------|--------|-----|
-| `/command` syntax | ✅ | ✅ | ✅ | ⚠️ Use keywords | ✅ | — | — |
-| Keyword triggers | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| All 7 modes (CREATE/LEAN/EVALUATE/OPTIMIZE/INSTALL/COLLECT/GRAPH) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Companion files (refs/, templates/, eval/) `[CORE]` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| UTE Hook persistence `[EXTENDED]` | ✅ | ✅ | ❌ | ❌ | ❌ | — | — |
-| COLLECT auto-persist `[EXTENDED]` | ✅† | ✅† | ❌ | ❌ | ❌ | — | — |
-| YAML frontmatter | ✅ | ✅ | ✅ | ❌* | ✅ | JSON | JSON |
-
-\* Cursor uses `${KEY}` placeholder syntax in the IDE — but skill-writer auto-handles conversion.
-  You don't need to manually edit YAML. If you hand-edit a `.md` file in the Cursor IDE, use `${KEY}` syntax.  
-† Requires platform hooks — see `refs/use-to-evolve.md §8` for setup  
-⚠️ Cursor: IDE command palette intercepts `/` — use keyword phrases instead:
-
-| Mode | Use this keyword phrase (not `/command`) |
-|------|------------------------------------------|
-| CREATE | `create a skill that …` |
-| LEAN | `lean eval` / `fast check this skill` |
-| EVALUATE | `evaluate this skill` / `full eval` |
-| OPTIMIZE | `optimize this skill` |
-| INSTALL | `install skill-writer to cursor` |
-| COLLECT | `collect session data` / `record this session` |
-
-> **Cursor + COLLECT**: COLLECT auto-persist (file hooks) is not available in IDE context.
-> Instead, COLLECT outputs JSON directly to the chat window. To save it:
-> 1. Run `collect session data` → copy the JSON output
-> 2. Save to `~/.skill-artifacts/YYYYMMDD_skillname.json` manually
-> 3. Later: paste 2+ artifacts into a new chat and type `aggregate skill feedback`
-> 
-> This is COLLECT Method B (manual paste) — fully supported in Cursor.
+| Feature | Claude | OpenClaw | OpenCode | Cursor | Gemini | OpenAI | Kimi | Hermes |
+|---------|--------|----------|----------|--------|--------|--------|------|--------|
+| All 8 modes | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Companion files | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| UTE self-evolution | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Routing file | CLAUDE.md | AGENTS.md | AGENTS.md | .mdc rules | GEMINI.md | AGENTS.md | AGENTS.md | AGENTS.md |
+| Platform metadata | — | openclaw block | triggers footer | alwaysApply | — | — | bilingual | — |
+| Hook injection | ✅ settings.json | — | — | — | — | — | — | — |
+| Keyword-only triggers | — | — | — | ✅ (IDE intercepts /) | — | — | — | — |
 
 ## Quick Start
 
@@ -98,114 +77,51 @@ Skill Writer is a meta-skill that enables AI assistants to create, evaluate, and
 > ```
 > Each step feeds the next. Skip ahead only if you already have a skill file.
 
-### What You Get After Installing
-
-| Feature | curl install `[CORE]` | git clone install `[EXTENDED]` |
-|---------|----------------------|-------------------------------|
-| All 7 modes (CREATE, LEAN, EVALUATE, OPTIMIZE, INSTALL, COLLECT, GRAPH) | ✅ | ✅ |
-| LEAN scoring (17-check, 500 pts) | ✅ | ✅ |
-| EVALUATE scoring (4-phase, 1000 pts) | ✅ same scoring logic | ✅ + per-dimension breakdown in report |
-| OPTIMIZE loop | ✅ | ✅ |
-| COLLECT manual (JSON output to conversation) | ✅ | ✅ |
-| Companion files (refs/, templates/, eval/) for Claude | ❌ | ✅ |
-| COLLECT auto-persist to `~/.skill-artifacts/` | ❌ | ✅ (requires hooks) |
-| UTE Hook-based auto-evolution | ❌ | ✅ |
-
-> **EVALUATE scoring is identical in both installs** — the 1000-point algorithm is fully inline.
-> The difference is output richness: git clone adds companion files that enable per-dimension
-> breakdowns, historical comparisons, and richer advisory text in the report.
-
-**tl;dr**: The curl one-liner gives you everything you need to create, evaluate, and optimize skills. The git clone adds richer evaluation reports and automatic persistence.
-
 ### Installation
 
-#### Option 1 — curl one-liner (no git clone required)
-
-Auto-detects your installed AI platforms and installs to all of them:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/install.sh | bash
-```
-
-Install to a specific platform:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/install.sh | bash -s -- --platform claude
-curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/install.sh | bash -s -- --platform opencode
-curl -fsSL https://raw.githubusercontent.com/theneoai/skill-writer/main/install.sh | bash -s -- --all
-```
-
-#### Option 2 — Agent Install from Latest Release
-
-Paste one command into your AI agent to install the latest stable release:
-
-| Platform | Agent command |
-|----------|--------------|
-| All platforms | `read https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer.md and install` |
-| Claude only | `read https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer-claude.md and install to claude` |
-| OpenCode only | `read https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer-opencode.md and install to opencode` |
-| OpenClaw only | `read https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer-openclaw.md and install to openclaw` |
-| Cursor only | `read https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer-cursor.md and install to cursor` |
-| Gemini only | `read https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer-gemini.md and install to gemini` |
-| OpenAI only | `read https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer-openai.json and install to openai` |
-| MCP only | `read https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer-mcp.json and install to mcp` |
-
-Each [GitHub Release](https://github.com/theneoai/skill-writer/releases) includes per-platform assets and ready-to-paste agent commands for that version.
-
-#### Option 3 — Shell Script (from git clone)
+#### Option 1 — Shell Script (from git clone, recommended)
 
 ```bash
 git clone https://github.com/theneoai/skill-writer.git
 cd skill-writer
 
-# Install to all supported platforms
+# Auto-detect installed platforms and install
 ./install.sh
 
-# Install to a single platform
+# Install to a specific platform
 ./install.sh --platform claude
+./install.sh --platform openclaw
 ./install.sh --platform opencode
-./install.sh --platform cursor
-./install.sh --platform gemini
-./install.sh --platform openai
-./install.sh --platform mcp
 
-# Install directly from a release asset
-./install.sh --url https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer.md
+# Install to all 8 platforms
+./install.sh --all
+
+# Preview without making changes
+./install.sh --dry-run
 ```
 
-#### Option 4 — Manual Copy
+Each platform's install script copies:
+- `{platform}/skill-writer.md` → `~/{platform-home}/skills/`
+- `refs/ templates/ eval/ optimize/` → `~/{platform-home}/`
+- Routing rules (CLAUDE.md / AGENTS.md) → merged idempotently
 
-Pre-built platform files are committed to the repository — no builder step required:
+#### Option 2 — Manual Copy (no script needed)
 
 ```bash
 # Claude
-cp platforms/skill-writer-claude.md ~/.claude/skills/skill-writer.md
-
-# OpenCode
-mkdir -p ~/.config/opencode/skills
-cp platforms/skill-writer-opencode.md ~/.config/opencode/skills/skill-writer.md
+mkdir -p ~/.claude/skills
+cp claude/skill-writer.md ~/.claude/skills/skill-writer.md
+# Then restart Claude
 
 # OpenClaw
 mkdir -p ~/.openclaw/skills
-cp platforms/skill-writer-openclaw.md ~/.openclaw/skills/skill-writer.md
+cp openclaw/skill-writer.md ~/.openclaw/skills/skill-writer.md
+# Then restart OpenClaw
 
-# Cursor
-mkdir -p ~/.cursor/skills
-cp platforms/skill-writer-cursor.md ~/.cursor/skills/skill-writer.md
-# ⚠️  Cursor: IDE command palette intercepts /commands — use keywords instead:
-#     "create a skill that ..." (not /create)   "lean eval" (not /lean)
-
-# Gemini
-mkdir -p ~/.gemini/skills
-cp platforms/skill-writer-gemini.md ~/.gemini/skills/skill-writer.md
-
-# OpenAI (JSON format — requires manual setup via platform dashboard)
-# The JSON file is at: platforms/skill-writer-openai.json
-# Upload it via https://platform.openai.com (see platform docs for custom GPT setup)
-
-# MCP (JSON manifest)
-mkdir -p ~/.mcp/servers/skill-writer
-cp platforms/skill-writer-mcp.json ~/.mcp/servers/skill-writer/mcp-manifest.json
+# OpenCode
+mkdir -p ~/.config/opencode/skills
+cp opencode/skill-writer.md ~/.config/opencode/skills/skill-writer.md
+# Then restart OpenCode
 ```
 
 ### Usage Examples
@@ -473,8 +389,8 @@ Installs skill-writer itself to one or all supported platforms from a URL or loc
 2a. **RESOLVE DEPENDENCIES** *(v3.2.0)*: If the skill has a `graph:` block, read `depends_on` edges, build the dependency tree, and display the full manifest before proceeding. Install order follows topological sort (deepest dependency first).
 3. **CONFIRM**: Show install plan (including dependency list if any), ask user to confirm
 4. **INSTALL**: Write skill file(s) to each platform's skills directory in dependency order
-4e. **AGENTS.md GENERATION** *(v3.3.0)*: After writing skill files, generate or update the platform's agent context file with skill registry routing rules. Target files: `~/.claude/CLAUDE.md` (Claude), `~/.config/opencode/AGENTS.md` (OpenCode), `~/.cursor/rules/skill-writer.mdc` (Cursor, `alwaysApply: true`), etc. Uses idempotent `<!-- skill-writer:start/end -->` markers — safe to re-run.
-4f. **HOOK INJECTION** *(v3.3.0)*: Merge a `UserPromptSubmit` hook entry into `~/.claude/settings.json` (Claude/OpenCode only). The hook fires before the LLM sees each user message and injects a ≤50-token skill-awareness reminder. Appends to existing hook arrays; never overwrites. Skipped with a note for platforms without hook support (Cursor, Gemini, OpenAI, MCP).
+4e. **AGENTS.md GENERATION** *(v3.3.0)*: After writing skill files, generate or update the platform's agent context file with skill registry routing rules. Target files: `~/.claude/CLAUDE.md` (Claude), `~/.config/opencode/AGENTS.md` (OpenCode), `~/.openclaw/AGENTS.md` (OpenClaw). Uses idempotent `<!-- skill-writer:start/end -->` markers — safe to re-run.
+4f. **HOOK INJECTION** *(v3.3.0)*: Merge a `UserPromptSubmit` hook entry into `~/.claude/settings.json` (Claude only). The hook fires before the LLM sees each user message and injects a ≤50-token skill-awareness reminder. Appends to existing hook arrays; never overwrites.
 5. **REPORT**: List installed paths, AGENTS.md path (created/updated), dependency results, and next steps
 
 > **Three-Tier Routing Model** (v3.3.0): INSTALL now establishes all three routing layers in one pass:
@@ -484,55 +400,11 @@ Installs skill-writer itself to one or all supported platforms from a URL or loc
 
 #### Platform Paths
 
-| Platform | Skills Directory | Format |
-|----------|-----------------|--------|
-| Claude | `~/.claude/skills/` | Markdown |
-| OpenCode | `~/.config/opencode/skills/` | Markdown |
-| OpenClaw | `~/.openclaw/skills/` | Markdown |
-| Cursor | `~/.cursor/skills/` | Markdown |
-| Gemini | `~/.gemini/skills/` | Markdown |
-| OpenAI | via platform dashboard | JSON |
-| MCP | `~/.mcp/servers/skill-writer/` | JSON manifest |
-
-#### OpenAI Custom GPT Setup
-
-OpenAI requires manual setup through the platform dashboard — there is no local file path.
-
-**Step-by-step**:
-1. Generate the skill-writer JSON file:
-   ```bash
-   # If you have the local clone:
-   ./install.sh --platform openai
-   # Output: platforms/skill-writer-openai.json
-   
-   # Or download directly:
-   curl -fsSL https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer-openai.json -o skill-writer-openai.json
-   ```
-2. Go to [platform.openai.com](https://platform.openai.com) → **My GPTs** → **Create a GPT** → **Configure** → **Actions**
-3. Upload `skill-writer-openai.json` as an Action schema
-4. Save the GPT configuration
-
-**Validating the JSON before upload**:
-```bash
-# Quick validation (checks JSON syntax):
-python3 -m json.tool skill-writer-openai.json > /dev/null && echo "Valid JSON" || echo "Invalid JSON"
-
-# Schema validation (if openapi-spec-validator is installed):
-pip install openapi-spec-validator
-python3 -m openapi_spec_validator skill-writer-openai.json
-```
-
-**Modes available via OpenAI Custom GPT**:
-- ✅ CREATE, LEAN, EVALUATE, OPTIMIZE — all work via natural language
-- ⚠️ INSTALL — limited (Custom GPT cannot write to file system)
-- ⚠️ COLLECT auto-persist — not available (no file system hooks)
-- ✅ COLLECT JSON output — available (output to conversation)
-
-**If OpenAI rejects the JSON**:
-- Check that your GPT account has "Actions" enabled (requires ChatGPT Plus or API access)
-- Validate the JSON schema with `openapi-spec-validator` (see above)
-- Verify there are no special characters in field values
-- Try re-downloading the JSON — the upload file may have been corrupted
+| Platform | Skills Directory | Routing File |
+|----------|-----------------|--------------|
+| Claude | `~/.claude/skills/` | `~/.claude/CLAUDE.md` |
+| OpenCode | `~/.config/opencode/skills/` | `~/.config/opencode/AGENTS.md` |
+| OpenClaw | `~/.openclaw/skills/` | `~/.openclaw/AGENTS.md` |
 
 ### COLLECT Mode
 
@@ -666,7 +538,7 @@ Say any of the following to enter SHARE mode:
 ### 5-Step SHARE Workflow
 
 1. **VALIDATE** — Checks that the skill has at minimum a BRONZE LEAN score (≥350/500). Skills below BRONZE are blocked from sharing.
-2. **PACKAGE** — Wraps the skill in the standard format for the target platform (Markdown for most; JSON for OpenAI/MCP).
+2. **PACKAGE** — Wraps the skill in standard Markdown format for all 8 supported platforms.
 3. **STAMP** — Adds certification metadata: tier badge, version, author, publish date.
 4. **DELIVER** — Outputs the packaged skill as:
    - A copyable code block (all platforms `[CORE]`)
@@ -749,9 +621,6 @@ Place the `.md` file in the skills directory for your platform:
 | Claude | `~/.claude/skills/your-skill.md` |
 | OpenCode | `~/.config/opencode/skills/your-skill.md` |
 | OpenClaw | `~/.openclaw/skills/your-skill.md` |
-| Cursor | `~/.cursor/skills/your-skill.md` |
-| Gemini | `~/.gemini/skills/your-skill.md` |
-
 After placing the file, restart the AI assistant. It will load the skill automatically on startup.
 
 ### How Trigger Routing Works
@@ -760,7 +629,7 @@ When you type a message, the AI compares it against each loaded skill's `trigger
 - Exact or near-match → skill activates
 - No match → general assistant mode (no skill)
 
-You can also activate skills with `/skill-name` on platforms that support slash commands (Claude, OpenCode). On Cursor, use the keyword trigger phrases since the IDE intercepts `/`.
+You can also activate skills with `/skill-name` on platforms that support slash commands (Claude, OpenCode, OpenClaw).
 
 ### Diagnosing False Triggers
 
@@ -912,93 +781,31 @@ UTE state tracking upgrades from `[EXTENDED]` to `[CORE]` when platform hooks ar
 // ~/.claude/settings.json
 {
   "hooks": {
-    "PostToolUse": [{"command": "node ~/.claude/skills/ute-tracker.js post-tool"}],
-    "Stop": [{"command": "node ~/.claude/skills/ute-tracker.js stop"}]
+    "PostToolUse": [{"command": "bash ~/.claude/skills/ute-hook.sh post-tool"}],
+    "Stop": [{"command": "bash ~/.claude/skills/ute-hook.sh stop"}]
   }
 }
 ```
 
-See `refs/use-to-evolve.md §8` for full hook setup and `ute-tracker.js` implementation.
-
-## Builder Tool
-
-The `skill-writer-builder` CLI tool generates platform-specific skills from the core engine.
-
-### Installation
-
-```bash
-cd builder
-npm install
-```
-
-### Commands
-
-> **Note**: Pre-built platform files in `platforms/` are committed as distribution assets — no build step is required for installation. Run `npm run build` only when you modify `skill-framework.md` or `refs/` to regenerate them. In CI, lint and tests run without `|| true` and will fail the pipeline on errors.
-
-#### Build
-```bash
-# Build for all platforms
-node bin/skill-writer-builder.js build --platform all --output ./platforms
-
-# Build for specific platform
-node bin/skill-writer-builder.js build --platform opencode --output ./platforms
-
-# Release build
-node bin/skill-writer-builder.js build --platform all --release
-```
-
-#### Development Mode
-```bash
-# Watch for changes and auto-rebuild
-node bin/skill-writer-builder.js dev --platform opencode
-```
-
-#### Validate
-```bash
-# Validate core engine structure
-node bin/skill-writer-builder.js validate
-```
-
-#### Inspect
-```bash
-# Inspect built skill
-node bin/skill-writer-builder.js inspect --platform opencode
-```
-
-#### Incremental Build Cache *(v3.3.0)*
-
-The builder skips unchanged platforms to reduce multi-platform rebuild time:
-
-```bash
-# First build — all 7 platforms built from scratch
-npm run build
-
-# Second build (nothing changed) — all platforms skipped, ~instant
-npm run build
-#   ℹ Source files unchanged since last build (cache hit)
-#   ⏭ claude — skipped (no source changes since last build)
-#   ⏭ opencode — skipped ...
-
-# After editing refs/skill-registry.md — all platforms rebuild (source changed)
-npm run build
-
-# Release builds always bypass the cache (reproducible output)
-node bin/skill-writer-builder.js build --all --release
-```
-
-**How it works**: During the read phase, each source file (skill-framework.md, refs/\*.md, templates/\*.md, eval/\*.md, optimize/\*.md) is hashed with SHA-256 (first 16 chars). The hashes are stored in `.build-cache.json` at the project root. On the next run, if the hash map is identical and the target platform was already built in the last run, the platform build is skipped. Any source change invalidates the cache for all platforms.
-
-**Cache behaviour**:
-- `.build-cache.json` is gitignored — each developer has their own local cache
-- Release builds (`--release`) always bypass the cache
-- Delete `.build-cache.json` to force a full rebuild
+See `refs/use-to-evolve.md §8` for full hook setup instructions. The hook script is a plain bash file — no Node.js required.
 
 ## Project Structure
 
 ```
 skill-writer/
-├── skill-framework.md             # Main skill definition (entry point)
-├── refs/                          # Reference documentation
+├── claude/                        # Claude platform (direct-use files)
+│   ├── skill-writer.md            # SKILL.md v3.3.0 compliant skill file
+│   ├── CLAUDE.md                  # Routing rules (merged into ~/.claude/CLAUDE.md)
+│   └── install.sh                 # Installs to ~/.claude/
+├── openclaw/                      # OpenClaw platform
+│   ├── skill-writer.md            # Same skill + metadata.openclaw YAML block
+│   ├── AGENTS.md                  # Routing rules
+│   └── install.sh                 # Installs to ~/.openclaw/
+├── opencode/                      # OpenCode platform
+│   ├── skill-writer.md            # Same skill + Triggers footer
+│   ├── AGENTS.md                  # Routing rules
+│   └── install.sh                 # Installs to ~/.config/opencode/
+├── refs/                          # Companion reference files (all platforms)
 │   ├── self-review.md             # Multi-pass self-review protocol
 │   ├── use-to-evolve.md           # UTE 2.0 self-improvement spec (L1/L2 architecture)
 │   ├── evolution.md               # 3-trigger evolution system
@@ -1007,9 +814,8 @@ skill-writer/
 │   ├── session-artifact.md        # Session artifact schema (COLLECT mode)
 │   ├── edit-audit.md              # Edit Audit Guard (MICRO/MINOR/MAJOR/REWRITE)
 │   ├── skill-registry.md          # Skill Registry spec (SHA-256 IDs, push/pull/sync)
-│   ├── skill-graph.md             # Graph of Skills spec (v3.2.0): typed edges, bundles, health checks
-│   ├── progressive-disclosure.md  # Five-layer loading pattern (v3.3.0): Layer -1 Hook + Layer 0 GoS bundle context
-│   └── skill-registry.md          # Skill Registry v2.0 + SkillRouter weighted ranking §11 (v3.3.0)
+│   ├── skill-graph.md             # Graph of Skills spec (v3.2.0)
+│   └── progressive-disclosure.md  # Five-layer loading pattern
 ├── templates/                     # Skill templates (4 types + UTE snippet)
 │   ├── base.md
 │   ├── api-integration.md
@@ -1020,31 +826,16 @@ skill-writer/
 │   ├── rubrics.md                 # 1000-point scoring rubric
 │   └── benchmarks.md              # Benchmark test cases
 ├── optimize/                      # Optimization resources
-│   ├── strategies.md              # 8-dimension strategy catalog (S1–S12, incl. S10/S11/S12 GoS)
+│   ├── strategies.md              # 8-dimension strategy catalog (S1–S12)
 │   └── anti-patterns.md           # Common pitfalls
-├── builder/                       # Multi-platform builder tool
-│   ├── bin/
-│   │   └── skill-writer-builder.js
-│   ├── src/
-│   │   ├── commands/              # CLI commands (build, dev, validate, inspect)
-│   │   ├── core/                  # Reader, embedder, and graph modules
-│   │   │   ├── reader.js          # Skill file reader
-│   │   │   ├── embedder.js        # Platform content embedder
-│   │   │   └── graph.js           # GoS algorithm library (v3.2.0): buildGraph, detectCycles, resolveBundle
-│   │   ├── metadata.js            # SSoT for builder metadata (version, platforms)
-│   │   └── platforms/             # 7 platform adapters
-│   │       ├── MarkdownAdapter.js # Shared base class for markdown platforms
-│   │       ├── sections/          # Externalized section templates (openclaw)
-│   │       └── index.js           # Platform registry
-│   ├── templates/                 # Platform-specific output templates
-│   ├── .eslintrc.json             # ESLint configuration
-│   └── tests/                     # Jest test suite (250+ tests)
-├── platforms/                     # Pre-built platform files (7 platforms, committed as distribution assets)
 ├── examples/                      # Certified example skills
 │   ├── api-tester/                # GOLD 920/1000
 │   ├── code-reviewer/             # GOLD 947/1000
 │   └── doc-generator/             # GOLD 895/1000
-└── docs/                          # GitHub Pages documentation
+├── docs/                          # Documentation
+│   └── skill-creator-analysis.md  # Architecture analysis and design decisions
+├── skill-framework.md             # Complete specification (source of truth)
+└── install.sh                     # Top-level dispatcher → delegates to platform scripts
 ```
 
 ## Architecture
@@ -1068,7 +859,7 @@ skill-writer/
 │  ┌─────────────┐  ┌─────────────┐  ┌──────────────────────────┐  │
 │  │OPTIMIZE Mode│  │INSTALL Mode │  │      COLLECT Mode        │  │
 │  │             │  │             │  │                          │  │
-│  │ • 8-dim     │  │ • 7-platform│  │ • Session artifact log   │  │
+│  │ • 8-dim     │  │ • 8-platform│  │ • Session artifact log   │  │
 │  │   analysis  │  │   support   │  │ • Lesson classification  │  │
 │  │ • 10-step   │  │ • Dep tree  │  │ • Bundle context (GoS)   │  │
 │  │   loop      │  │   resolution│  │ • trigger_signals (v3.3) │  │
@@ -1105,11 +896,11 @@ skill-writer/
 │                    Platform-Specific Builder                      │
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                    │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌───────────┐  │
-│  │OpenCode │ │OpenClaw │ │ Claude  │ │ Cursor  │ │ OpenAI /  │  │
-│  │ Adapter │ │ Adapter │ │ Adapter │ │ Adapter │ │ Gemini /  │  │
-│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ │   MCP     │  │
-│                                                    └───────────┘  │
+│  ┌─────────┐ ┌─────────┐ ┌─────────────────────────────────────┐  │
+│  │ Claude  │ │OpenClaw │ │              OpenCode               │  │
+│  │install  │ │install  │ │             install.sh              │  │
+│  │  .sh    │ │  .sh    │ │                                     │  │
+│  └─────────┘ └─────────┘ └─────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -1137,16 +928,12 @@ All example skills are certified with detailed evaluation reports.
 
 ### Adding Platform Support
 
-1. Create adapter in `builder/src/platforms/`
-2. Implement required functions:
-   - `formatSkill()`
-   - `getInstallPath()`
-   - `generateMetadata()`
-   - `validateSkill()`
-3. Add to platform registry in `index.js`
-4. Create platform template in `builder/templates/`
-5. Test build command
-6. Update documentation
+1. Create `{platform}/` directory with three files: `skill-writer.md`, `AGENTS.md` (or `CLAUDE.md`), `install.sh`
+2. Copy `claude/skill-writer.md` as base; update PATH CONVENTION comment and add platform-specific metadata
+3. Copy `claude/install.sh` as base; update `PLATFORM_HOME` and routing file handling
+4. Add platform to `detect_platforms()` and `--all` list in top-level `install.sh`
+5. Update README.md platform table
+6. See CONTRIBUTING.md for full platform guide
 
 ## Troubleshooting
 
@@ -1167,8 +954,8 @@ All example skills are certified with detailed evaluation reports.
 **Issue**: Security warnings
 - **Solution**: P0 violations (CWE-798, CWE-89) trigger ABORT — fix before continuing. P1 (ASI01–ASI04) deduct 50 pts. See Security Features section.
 
-**Issue**: Build fails
-- **Solution**: Run `validate` command to check core engine structure. Ensure `npm ci` completes without errors before building.
+**Issue**: Skill not loading after install
+- **Solution**: Verify the skill file was copied to the correct path (`~/.claude/skills/`, `~/.openclaw/skills/`, or `~/.config/opencode/skills/`). Restart the AI assistant after installing.
 
 ### Debug Mode
 
@@ -1191,9 +978,9 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ### Completed
 
-- [x] Core engine with CREATE, LEAN, EVALUATE, OPTIMIZE, INSTALL, COLLECT modes
-- [x] Builder tool with CLI and Jest test suite (250+ tests)
-- [x] Support for 7 platforms (OpenCode, OpenClaw, Claude, Cursor, OpenAI, Gemini, MCP)
+- [x] Core engine with CREATE, LEAN, EVALUATE, OPTIMIZE, INSTALL, COLLECT, SHARE, GRAPH modes
+- [x] 3-platform direct-file architecture (Claude, OpenClaw, OpenCode) — no build pipeline
+- [x] SKILL.md v3.3.0 compliance: skill_tier, triggers, 11-field use_to_evolve, Skill Summary, Negative Boundaries
 - [x] LEAN fast-evaluation mode with [STATIC]/[HEURISTIC] reliability labels
 - [x] UTE 2.0 self-improvement protocol (L1 enforced + L2 collective)
 - [x] Multi-pass self-review protocol (Generate/Review/Reconcile)
@@ -1214,12 +1001,12 @@ MIT License - See [LICENSE](LICENSE) file for details.
 - [x] **v3.2.0** — COLLECT bundle context: `bundle_context` + `graph_signals` fields; AGGREGATE auto-infers edges
 - [x] **v3.2.0** — Registry schema v2.0: top-level `graph:` section with `edges[]` + `bundles[]`
 - [x] **v3.2.0** — Progressive Disclosure Layer 0: ≤200-token bundle context prefix (pre-ADVERTISE)
-- [x] **v3.2.0** — `builder/src/core/graph.js`: GoS algorithm library (buildGraph, detectCycles, topologicalSort, resolveBundle, checkGraphHealth, scoreD8Composability)
-- [x] **v3.3.0** — Three-Tier Hook Routing: AGENTS.md (session-constant) + UserPromptSubmit Hook (per-message) + trigger phrases; INSTALL steps 4e + 4f auto-generate routing config
+- [x] **v3.2.0** — Graph of Skills (GoS) algorithm: buildGraph, detectCycles, topologicalSort, resolveBundle, checkGraphHealth, scoreD8Composability
+- [x] **v3.3.0** — Three-Tier Hook Routing: AGENTS.md (session-constant) + UserPromptSubmit Hook (per-message) + trigger phrases
 - [x] **v3.3.0** — Progressive Disclosure Layer -1 (Hook Injection): ≤50-token per-message skill-awareness nudge; five-layer architecture
-- [x] **v3.3.0** — SkillRouter Weighted Ranking: multi-factor rank formula (trigger×0.4 + lean×0.3 + usage×0.2 + quality×0.1); quality threshold gate (0.35); `usage_stats` field
-- [x] **v3.3.0** — Trigger Discovery Pipeline: `trigger_signals` in session artifact; AGGREGATE Rule 4 promotes observed user language to canonical triggers (≥5 count, ≥70% confidence)
-- [x] **v3.3.0** — Incremental Build Cache: `source_hash` per file; `.build-cache.json`; skips unchanged platforms; release builds always bypass cache
+- [x] **v3.3.0** — SkillRouter Weighted Ranking: multi-factor rank formula (trigger×0.4 + lean×0.3 + usage×0.2 + quality×0.1); quality threshold gate (0.35)
+- [x] **v3.3.0** — Trigger Discovery Pipeline: `trigger_signals` in session artifact; AGGREGATE Rule 4 promotes observed user language to canonical triggers
+- [x] **v3.3.0** — Simplified 3-platform direct-file architecture; removed Node.js build pipeline
 
 ### Planned
 
