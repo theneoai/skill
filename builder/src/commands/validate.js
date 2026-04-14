@@ -117,7 +117,7 @@ async function validateTemplates(result) {
         continue;
       }
 
-      const placeholders = content.match(PLACEHOLDERS.standard);
+      const placeholders = content.match(PLACEHOLDERS.extended);
 
       if (!placeholders || placeholders.length === 0) {
         // use-to-evolve-snippet.md legitimately has placeholders, others may not
@@ -231,6 +231,44 @@ async function validateGeneratedSkills(result) {
     if (uniqueBuildTime.length > 0) {
       addIssue(result, 'error', `${fileName}: ${uniqueBuildTime.length} unreplaced build-time placeholder(s): ${uniqueBuildTime.slice(0, 5).join(', ')}`);
       fileOk = false;
+    }
+
+    // Secondary check — warn when known author placeholders appear in PROSE text
+    // (outside code blocks).  Author placeholders are intentional inside fenced code
+    // examples but suspicious in prose — they indicate template content bleeding into
+    // documentation sections rather than example blocks.
+    // Single-pass: track fenced blocks, strip inline code, collect hits with line numbers.
+    // Note: may produce false positives if documentation deliberately uses placeholder
+    // examples in prose (e.g. "use {{SKILL_NAME}} in your config").  Treat as info-level.
+    {
+      const lines = content.split('\n');
+      let inFenced = false;
+      const hitLines = [];
+      const foundAuthorPh = new Set();
+
+      lines.forEach((line, idx) => {
+        if (/^```/.test(line)) { inFenced = !inFenced; return; }
+        if (inFenced) return;
+        // Strip inline code spans before checking so e.g. `{{SKILL_NAME}}` is ignored
+        const linePlain = line.replace(/`[^`\n]+`/g, '');
+        const matches = (linePlain.match(/\{\{[\w.-]+\}\}/g) || [])
+          .filter(m => AUTHOR_PLACEHOLDERS.has(m.slice(2, -2)));
+        if (matches.length > 0) {
+          hitLines.push(idx + 1);
+          matches.forEach(m => foundAuthorPh.add(m));
+        }
+      });
+
+      if (foundAuthorPh.size > 0) {
+        const unique = [...foundAuthorPh];
+        const lineRef = hitLines.length > 0
+          ? ` (line${hitLines.length > 1 ? 's' : ''} ${hitLines.slice(0, 5).join(', ')})`
+          : '';
+        addIssue(result, 'warning',
+          `${fileName}: ${unique.length} author placeholder(s) found in prose text${lineRef} ` +
+          `(expected only inside code blocks): ${unique.slice(0, 3).join(', ')}`
+        );
+      }
     }
 
     if (fileOk) {

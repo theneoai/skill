@@ -219,7 +219,7 @@ function formatSkill(skillContent) {
  * @returns {string} Installation directory path
  */
 function getInstallPath() {
-  return path.join(os.homedir(), '.a2a', 'agents');
+  return path.join(os.homedir(), '.a2a', 'agents', 'skill-writer');
 }
 
 /**
@@ -274,6 +274,8 @@ function validateSkill(skillContent) {
     }
     if (!card.url) {
       warnings.push('Missing agent URL — replace placeholder before deployment');
+    } else if (card.url.includes('example.com')) {
+      warnings.push('Agent URL contains example.com placeholder — replace with actual deployment endpoint before using in production');
     }
     if (!card.capabilities) {
       warnings.push('Missing capabilities block (streaming, pushNotifications, stateTransitionHistory)');

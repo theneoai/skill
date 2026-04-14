@@ -82,12 +82,13 @@ const REQUIRED_UTE_FIELDS = [
  * Placeholder patterns for template processing
  */
 const PLACEHOLDERS = {
-  // Standard pattern: {{KEY}}
-  standard: /\{\{([A-Z_0-9]+)\}\}/g,
-  // Extended pattern: supports dots and hyphens {{outer.key}} or {{OUTER-KEY}}
+  // Extended pattern: supports uppercase, digits, dots, hyphens — {{KEY}}, {{outer.key}}, {{OUTER-KEY}}
+  // This is the single canonical pattern used everywhere (replaces the old narrower 'standard' variant).
   extended: /\{\{([\w.-]+)\}\}/g,
-  // Cursor pattern: ${KEY}
-  cursor: /\$\{([A-Z_0-9]+)\}/g,
+  // Cursor pattern: ${KEY} — supports lowercase, digits, underscores, dots, hyphens
+  // Must be consistent with cursor.js formatSkill() which converts {{...}} → ${...}
+  // using /\{\{([\w.-]+)\}\}/g (extended charset), so the reverse lookup must match.
+  cursor: /\$\{([\w.-]+)\}/g,
 };
 
 /**

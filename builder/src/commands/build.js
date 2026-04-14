@@ -85,7 +85,13 @@ async function build(options) {
     // Step 1: Read core data
     console.log(chalk.cyan('📖 Reading core engine data...'));
     const coreData = await readAllCoreData();
-    console.log(chalk.green('  ✓ Core data loaded successfully\n'));
+    console.log(chalk.green('  ✓ Core data loaded successfully'));
+
+    // P2-2: Version compatibility check — warn if skill-framework.md is newer than the builder.
+    // This catches the case where skill-framework.md was updated but the builder was not,
+    // which could cause the generated skill files to be missing newly-added sections.
+    checkVersionCompatibility(coreData.metadata.version);
+    console.log();
 
     // Step 2: Determine target platforms
     const targetPlatforms = buildOptions.platform === 'all'
@@ -255,6 +261,61 @@ function printSummary(results) {
   } else {
     console.log(chalk.bold.yellow('⚠ Build completed with warnings\n'));
   }
+}
+
+/**
+ * P2-2: Compare builder version against the version stored in coreData.metadata.
+ * The metadata version is the builder package.json version baked in by reader.js.
+ * We also compare it against skill-framework.md's frontmatter version when readable.
+ *
+ * Emits a console warning (not an error) so builds are never blocked by this check.
+ * @param {string} builderVersion - builder package.json version (from coreData.metadata.version)
+ */
+function checkVersionCompatibility(builderVersion) {
+  if (!builderVersion) return;
+
+  // Try to read skill-framework.md frontmatter version using shared utility (SSoT)
+  try {
+    const skillFrameworkContent = require('fs').readFileSync(config.PATHS.skillFramework, 'utf-8');
+    const { parseFrontmatter } = require('../utils/frontmatter');
+    const { frontmatterData } = parseFrontmatter(skillFrameworkContent);
+    const frameworkVersion = frontmatterData && frontmatterData.version
+      ? String(frontmatterData.version) : null;
+    if (frameworkVersion && semverGt(frameworkVersion, builderVersion)) {
+      console.warn(
+        chalk.yellow(
+          `  ⚠ Version mismatch: skill-framework.md is v${frameworkVersion} but builder is v${builderVersion}.\n` +
+          '    Run `git pull` and rebuild to pick up new framework sections.'
+        )
+      );
+    }
+  } catch {
+    // skill-framework.md may not exist or lack frontmatter — non-fatal, skip silently
+  }
+}
+
+/**
+ * Simple semver "greater-than" comparison (no pre-release support needed here).
+ * @param {string} a - version to test
+ * @param {string} b - version to compare against
+ * @returns {boolean} true if a > b
+ */
+function semverGt(a, b) {
+  // Guard against non-version inputs (e.g. 'unknown', '', null)
+  if (!a || !b) return false;
+  // Strip pre-release suffixes before comparing (e.g. "3.1.0-rc1" → "3.1.0").
+  // Semver strictly says 3.1.0 > 3.1.0-rc1, but for a version-mismatch warning
+  // we treat them as equal — the point is to detect a meaningfully newer framework.
+  const strip = v => String(v).replace(/-[^.]*$/, '');
+  // Reject anything that doesn't look like a version number after stripping
+  if (!/^\d+(\.\d+)*$/.test(strip(a)) || !/^\d+(\.\d+)*$/.test(strip(b))) return false;
+  const pa = strip(a).split('.').map(n => parseInt(n, 10));
+  const pb = strip(b).split('.').map(n => parseInt(n, 10));
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] || 0) > (pb[i] || 0)) return true;
+    if ((pa[i] || 0) < (pb[i] || 0)) return false;
+  }
+  return false;
 }
 
 /**
