@@ -90,19 +90,17 @@ metadata:
       checkpointInterval: 10
 ---
 
-<!-- PATH CONVENTION
-  Throughout this document, `claude/` is a path prefix relative to the Claude
-  configuration root (~/.claude/). Companion files are installed there by
-  `npm run install:claude` (which runs install-claude.sh):
+<!-- PATH CONVENTION (OpenClaw)
+  Companion files are installed to ~/.openclaw/ by running: ./openclaw/install.sh
 
-    refs/security-patterns.md  →  ~/.refs/security-patterns.md
-    refs/use-to-evolve.md      →  ~/.refs/use-to-evolve.md
-    refs/convergence.md        →  ~/.refs/convergence.md
-    refs/self-review.md        →  ~/.refs/self-review.md
-    refs/evolution.md          →  ~/.refs/evolution.md
-    templates/                 →  ~/.templates/
-    eval/                      →  ~/.eval/
-    optimize/                  →  ~/.optimize/
+    refs/security-patterns.md  →  ~/.openclaw/refs/security-patterns.md
+    refs/use-to-evolve.md      →  ~/.openclaw/refs/use-to-evolve.md
+    refs/convergence.md        →  ~/.openclaw/refs/convergence.md
+    refs/self-review.md        →  ~/.openclaw/refs/self-review.md
+    refs/evolution.md          →  ~/.openclaw/refs/evolution.md
+    templates/                 →  ~/.openclaw/templates/
+    eval/                      →  ~/.openclaw/eval/
+    optimize/                  →  ~/.openclaw/optimize/
 
   Source files in this repository:  refs/  templates/  eval/  optimize/
 -->

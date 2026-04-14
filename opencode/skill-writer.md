@@ -79,19 +79,17 @@ use_to_evolve:
   cumulative_invocations: 0
 ---
 
-<!-- PATH CONVENTION
-  Throughout this document, `claude/` is a path prefix relative to the Claude
-  configuration root (~/.claude/). Companion files are installed there by
-  `npm run install:claude` (which runs install-claude.sh):
+<!-- PATH CONVENTION (OpenCode)
+  Companion files are installed to ~/.config/opencode/ by running: ./opencode/install.sh
 
-    refs/security-patterns.md  →  ~/.refs/security-patterns.md
-    refs/use-to-evolve.md      →  ~/.refs/use-to-evolve.md
-    refs/convergence.md        →  ~/.refs/convergence.md
-    refs/self-review.md        →  ~/.refs/self-review.md
-    refs/evolution.md          →  ~/.refs/evolution.md
-    templates/                 →  ~/.templates/
-    eval/                      →  ~/.eval/
-    optimize/                  →  ~/.optimize/
+    refs/security-patterns.md  →  ~/.config/opencode/refs/security-patterns.md
+    refs/use-to-evolve.md      →  ~/.config/opencode/refs/use-to-evolve.md
+    refs/convergence.md        →  ~/.config/opencode/refs/convergence.md
+    refs/self-review.md        →  ~/.config/opencode/refs/self-review.md
+    refs/evolution.md          →  ~/.config/opencode/refs/evolution.md
+    templates/                 →  ~/.config/opencode/templates/
+    eval/                      →  ~/.config/opencode/eval/
+    optimize/                  →  ~/.config/opencode/optimize/
 
   Source files in this repository:  refs/  templates/  eval/  optimize/
 -->

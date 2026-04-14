@@ -79,19 +79,17 @@ use_to_evolve:
   cumulative_invocations: 0
 ---
 
-<!-- PATH CONVENTION
-  Throughout this document, `claude/` is a path prefix relative to the Claude
-  configuration root (~/.claude/). Companion files are installed there by
-  `npm run install:claude` (which runs install-claude.sh):
+<!-- PATH CONVENTION (Claude)
+  Companion files are installed to ~/.claude/ by running: ./claude/install.sh
 
-    refs/security-patterns.md  →  ~/.refs/security-patterns.md
-    refs/use-to-evolve.md      →  ~/.refs/use-to-evolve.md
-    refs/convergence.md        →  ~/.refs/convergence.md
-    refs/self-review.md        →  ~/.refs/self-review.md
-    refs/evolution.md          →  ~/.refs/evolution.md
-    templates/                 →  ~/.templates/
-    eval/                      →  ~/.eval/
-    optimize/                  →  ~/.optimize/
+    refs/security-patterns.md  →  ~/.claude/refs/security-patterns.md
+    refs/use-to-evolve.md      →  ~/.claude/refs/use-to-evolve.md
+    refs/convergence.md        →  ~/.claude/refs/convergence.md
+    refs/self-review.md        →  ~/.claude/refs/self-review.md
+    refs/evolution.md          →  ~/.claude/refs/evolution.md
+    templates/                 →  ~/.claude/templates/
+    eval/                      →  ~/.claude/eval/
+    optimize/                  →  ~/.claude/optimize/
 
   Source files in this repository:  refs/  templates/  eval/  optimize/
 -->

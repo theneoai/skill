@@ -383,8 +383,8 @@ Installs skill-writer itself to one or all supported platforms from a URL or loc
 2a. **RESOLVE DEPENDENCIES** *(v3.2.0)*: If the skill has a `graph:` block, read `depends_on` edges, build the dependency tree, and display the full manifest before proceeding. Install order follows topological sort (deepest dependency first).
 3. **CONFIRM**: Show install plan (including dependency list if any), ask user to confirm
 4. **INSTALL**: Write skill file(s) to each platform's skills directory in dependency order
-4e. **AGENTS.md GENERATION** *(v3.3.0)*: After writing skill files, generate or update the platform's agent context file with skill registry routing rules. Target files: `~/.claude/CLAUDE.md` (Claude), `~/.config/opencode/AGENTS.md` (OpenCode), `~/.cursor/rules/skill-writer.mdc` (Cursor, `alwaysApply: true`), etc. Uses idempotent `<!-- skill-writer:start/end -->` markers — safe to re-run.
-4f. **HOOK INJECTION** *(v3.3.0)*: Merge a `UserPromptSubmit` hook entry into `~/.claude/settings.json` (Claude/OpenCode only). The hook fires before the LLM sees each user message and injects a ≤50-token skill-awareness reminder. Appends to existing hook arrays; never overwrites. Skipped with a note for platforms without hook support (Cursor, Gemini, OpenAI, MCP).
+4e. **AGENTS.md GENERATION** *(v3.3.0)*: After writing skill files, generate or update the platform's agent context file with skill registry routing rules. Target files: `~/.claude/CLAUDE.md` (Claude), `~/.config/opencode/AGENTS.md` (OpenCode), `~/.openclaw/AGENTS.md` (OpenClaw). Uses idempotent `<!-- skill-writer:start/end -->` markers — safe to re-run.
+4f. **HOOK INJECTION** *(v3.3.0)*: Merge a `UserPromptSubmit` hook entry into `~/.claude/settings.json` (Claude only). The hook fires before the LLM sees each user message and injects a ≤50-token skill-awareness reminder. Appends to existing hook arrays; never overwrites.
 5. **REPORT**: List installed paths, AGENTS.md path (created/updated), dependency results, and next steps
 
 > **Three-Tier Routing Model** (v3.3.0): INSTALL now establishes all three routing layers in one pass:
@@ -394,55 +394,11 @@ Installs skill-writer itself to one or all supported platforms from a URL or loc
 
 #### Platform Paths
 
-| Platform | Skills Directory | Format |
-|----------|-----------------|--------|
-| Claude | `~/.claude/skills/` | Markdown |
-| OpenCode | `~/.config/opencode/skills/` | Markdown |
-| OpenClaw | `~/.openclaw/skills/` | Markdown |
-| Cursor | `~/.cursor/skills/` | Markdown |
-| Gemini | `~/.gemini/skills/` | Markdown |
-| OpenAI | via platform dashboard | JSON |
-| MCP | `~/.mcp/servers/skill-writer/` | JSON manifest |
-
-#### OpenAI Custom GPT Setup
-
-OpenAI requires manual setup through the platform dashboard — there is no local file path.
-
-**Step-by-step**:
-1. Generate the skill-writer JSON file:
-   ```bash
-   # If you have the local clone:
-   ./install.sh --platform openai
-   # Output: platforms/skill-writer-openai.json
-   
-   # Or download directly:
-   curl -fsSL https://github.com/theneoai/skill-writer/releases/latest/download/skill-writer-openai.json -o skill-writer-openai.json
-   ```
-2. Go to [platform.openai.com](https://platform.openai.com) → **My GPTs** → **Create a GPT** → **Configure** → **Actions**
-3. Upload `skill-writer-openai.json` as an Action schema
-4. Save the GPT configuration
-
-**Validating the JSON before upload**:
-```bash
-# Quick validation (checks JSON syntax):
-python3 -m json.tool skill-writer-openai.json > /dev/null && echo "Valid JSON" || echo "Invalid JSON"
-
-# Schema validation (if openapi-spec-validator is installed):
-pip install openapi-spec-validator
-python3 -m openapi_spec_validator skill-writer-openai.json
-```
-
-**Modes available via OpenAI Custom GPT**:
-- ✅ CREATE, LEAN, EVALUATE, OPTIMIZE — all work via natural language
-- ⚠️ INSTALL — limited (Custom GPT cannot write to file system)
-- ⚠️ COLLECT auto-persist — not available (no file system hooks)
-- ✅ COLLECT JSON output — available (output to conversation)
-
-**If OpenAI rejects the JSON**:
-- Check that your GPT account has "Actions" enabled (requires ChatGPT Plus or API access)
-- Validate the JSON schema with `openapi-spec-validator` (see above)
-- Verify there are no special characters in field values
-- Try re-downloading the JSON — the upload file may have been corrupted
+| Platform | Skills Directory | Routing File |
+|----------|-----------------|--------------|
+| Claude | `~/.claude/skills/` | `~/.claude/CLAUDE.md` |
+| OpenCode | `~/.config/opencode/skills/` | `~/.config/opencode/AGENTS.md` |
+| OpenClaw | `~/.openclaw/skills/` | `~/.openclaw/AGENTS.md` |
 
 ### COLLECT Mode
 
@@ -659,9 +615,6 @@ Place the `.md` file in the skills directory for your platform:
 | Claude | `~/.claude/skills/your-skill.md` |
 | OpenCode | `~/.config/opencode/skills/your-skill.md` |
 | OpenClaw | `~/.openclaw/skills/your-skill.md` |
-| Cursor | `~/.cursor/skills/your-skill.md` |
-| Gemini | `~/.gemini/skills/your-skill.md` |
-
 After placing the file, restart the AI assistant. It will load the skill automatically on startup.
 
 ### How Trigger Routing Works
@@ -670,7 +623,7 @@ When you type a message, the AI compares it against each loaded skill's `trigger
 - Exact or near-match → skill activates
 - No match → general assistant mode (no skill)
 
-You can also activate skills with `/skill-name` on platforms that support slash commands (Claude, OpenCode). On Cursor, use the keyword trigger phrases since the IDE intercepts `/`.
+You can also activate skills with `/skill-name` on platforms that support slash commands (Claude, OpenCode, OpenClaw).
 
 ### Diagnosing False Triggers
 
@@ -830,85 +783,23 @@ UTE state tracking upgrades from `[EXTENDED]` to `[CORE]` when platform hooks ar
 
 See `refs/use-to-evolve.md §8` for full hook setup and `ute-tracker.js` implementation.
 
-## Builder Tool
-
-The `skill-writer-builder` CLI tool generates platform-specific skills from the core engine.
-
-### Installation
-
-```bash
-cd builder
-npm install
-```
-
-### Commands
-
-> **Note**: Pre-built platform files in `platforms/` are committed as distribution assets — no build step is required for installation. Run `npm run build` only when you modify `skill-framework.md` or `refs/` to regenerate them. In CI, lint and tests run without `|| true` and will fail the pipeline on errors.
-
-#### Build
-```bash
-# Build for all platforms
-node bin/skill-writer-builder.js build --platform all --output ./platforms
-
-# Build for specific platform
-node bin/skill-writer-builder.js build --platform opencode --output ./platforms
-
-# Release build
-node bin/skill-writer-builder.js build --platform all --release
-```
-
-#### Development Mode
-```bash
-# Watch for changes and auto-rebuild
-node bin/skill-writer-builder.js dev --platform opencode
-```
-
-#### Validate
-```bash
-# Validate core engine structure
-node bin/skill-writer-builder.js validate
-```
-
-#### Inspect
-```bash
-# Inspect built skill
-node bin/skill-writer-builder.js inspect --platform opencode
-```
-
-#### Incremental Build Cache *(v3.3.0)*
-
-The builder skips unchanged platforms to reduce multi-platform rebuild time:
-
-```bash
-# First build — all 7 platforms built from scratch
-npm run build
-
-# Second build (nothing changed) — all platforms skipped, ~instant
-npm run build
-#   ℹ Source files unchanged since last build (cache hit)
-#   ⏭ claude — skipped (no source changes since last build)
-#   ⏭ opencode — skipped ...
-
-# After editing refs/skill-registry.md — all platforms rebuild (source changed)
-npm run build
-
-# Release builds always bypass the cache (reproducible output)
-node bin/skill-writer-builder.js build --all --release
-```
-
-**How it works**: During the read phase, each source file (skill-framework.md, refs/\*.md, templates/\*.md, eval/\*.md, optimize/\*.md) is hashed with SHA-256 (first 16 chars). The hashes are stored in `.build-cache.json` at the project root. On the next run, if the hash map is identical and the target platform was already built in the last run, the platform build is skipped. Any source change invalidates the cache for all platforms.
-
-**Cache behaviour**:
-- `.build-cache.json` is gitignored — each developer has their own local cache
-- Release builds (`--release`) always bypass the cache
-- Delete `.build-cache.json` to force a full rebuild
-
 ## Project Structure
 
 ```
 skill-writer/
-├── skill-framework.md             # Main skill definition (entry point)
-├── refs/                          # Reference documentation
+├── claude/                        # Claude platform (direct-use files)
+│   ├── skill-writer.md            # SKILL.md v3.3.0 compliant skill file
+│   ├── CLAUDE.md                  # Routing rules (merged into ~/.claude/CLAUDE.md)
+│   └── install.sh                 # Installs to ~/.claude/
+├── openclaw/                      # OpenClaw platform
+│   ├── skill-writer.md            # Same skill + metadata.openclaw YAML block
+│   ├── AGENTS.md                  # Routing rules
+│   └── install.sh                 # Installs to ~/.openclaw/
+├── opencode/                      # OpenCode platform
+│   ├── skill-writer.md            # Same skill + Triggers footer
+│   ├── AGENTS.md                  # Routing rules
+│   └── install.sh                 # Installs to ~/.config/opencode/
+├── refs/                          # Companion reference files (all platforms)
 │   ├── self-review.md             # Multi-pass self-review protocol
 │   ├── use-to-evolve.md           # UTE 2.0 self-improvement spec (L1/L2 architecture)
 │   ├── evolution.md               # 3-trigger evolution system
@@ -917,9 +808,8 @@ skill-writer/
 │   ├── session-artifact.md        # Session artifact schema (COLLECT mode)
 │   ├── edit-audit.md              # Edit Audit Guard (MICRO/MINOR/MAJOR/REWRITE)
 │   ├── skill-registry.md          # Skill Registry spec (SHA-256 IDs, push/pull/sync)
-│   ├── skill-graph.md             # Graph of Skills spec (v3.2.0): typed edges, bundles, health checks
-│   ├── progressive-disclosure.md  # Five-layer loading pattern (v3.3.0): Layer -1 Hook + Layer 0 GoS bundle context
-│   └── skill-registry.md          # Skill Registry v2.0 + SkillRouter weighted ranking §11 (v3.3.0)
+│   ├── skill-graph.md             # Graph of Skills spec (v3.2.0)
+│   └── progressive-disclosure.md  # Five-layer loading pattern
 ├── templates/                     # Skill templates (4 types + UTE snippet)
 │   ├── base.md
 │   ├── api-integration.md
@@ -930,31 +820,16 @@ skill-writer/
 │   ├── rubrics.md                 # 1000-point scoring rubric
 │   └── benchmarks.md              # Benchmark test cases
 ├── optimize/                      # Optimization resources
-│   ├── strategies.md              # 8-dimension strategy catalog (S1–S12, incl. S10/S11/S12 GoS)
+│   ├── strategies.md              # 8-dimension strategy catalog (S1–S12)
 │   └── anti-patterns.md           # Common pitfalls
-├── builder/                       # Multi-platform builder tool
-│   ├── bin/
-│   │   └── skill-writer-builder.js
-│   ├── src/
-│   │   ├── commands/              # CLI commands (build, dev, validate, inspect)
-│   │   ├── core/                  # Reader, embedder, and graph modules
-│   │   │   ├── reader.js          # Skill file reader
-│   │   │   ├── embedder.js        # Platform content embedder
-│   │   │   └── graph.js           # GoS algorithm library (v3.2.0): buildGraph, detectCycles, resolveBundle
-│   │   ├── metadata.js            # SSoT for builder metadata (version, platforms)
-│   │   └── platforms/             # 7 platform adapters
-│   │       ├── MarkdownAdapter.js # Shared base class for markdown platforms
-│   │       ├── sections/          # Externalized section templates (openclaw)
-│   │       └── index.js           # Platform registry
-│   ├── templates/                 # Platform-specific output templates
-│   ├── .eslintrc.json             # ESLint configuration
-│   └── tests/                     # Jest test suite (250+ tests)
-├── platforms/                     # Pre-built platform files (7 platforms, committed as distribution assets)
 ├── examples/                      # Certified example skills
 │   ├── api-tester/                # GOLD 920/1000
 │   ├── code-reviewer/             # GOLD 947/1000
 │   └── doc-generator/             # GOLD 895/1000
-└── docs/                          # GitHub Pages documentation
+├── docs/                          # Documentation
+│   └── skill-creator-analysis.md  # Architecture analysis and design decisions
+├── skill-framework.md             # Complete specification (source of truth)
+└── install.sh                     # Top-level dispatcher → delegates to platform scripts
 ```
 
 ## Architecture
@@ -1015,11 +890,11 @@ skill-writer/
 │                    Platform-Specific Builder                      │
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                    │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌───────────┐  │
-│  │OpenCode │ │OpenClaw │ │ Claude  │ │ Cursor  │ │ OpenAI /  │  │
-│  │ Adapter │ │ Adapter │ │ Adapter │ │ Adapter │ │ Gemini /  │  │
-│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ │   MCP     │  │
-│                                                    └───────────┘  │
+│  ┌─────────┐ ┌─────────┐ ┌─────────────────────────────────────┐  │
+│  │ Claude  │ │OpenClaw │ │              OpenCode               │  │
+│  │install  │ │install  │ │             install.sh              │  │
+│  │  .sh    │ │  .sh    │ │                                     │  │
+│  └─────────┘ └─────────┘ └─────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -1047,16 +922,12 @@ All example skills are certified with detailed evaluation reports.
 
 ### Adding Platform Support
 
-1. Create adapter in `builder/src/platforms/`
-2. Implement required functions:
-   - `formatSkill()`
-   - `getInstallPath()`
-   - `generateMetadata()`
-   - `validateSkill()`
-3. Add to platform registry in `index.js`
-4. Create platform template in `builder/templates/`
-5. Test build command
-6. Update documentation
+1. Create `{platform}/` directory with three files: `skill-writer.md`, `AGENTS.md` (or `CLAUDE.md`), `install.sh`
+2. Copy `claude/skill-writer.md` as base; update PATH CONVENTION comment and add platform-specific metadata
+3. Copy `claude/install.sh` as base; update `PLATFORM_HOME` and routing file handling
+4. Add platform to `detect_platforms()` and `--all` list in top-level `install.sh`
+5. Update README.md platform table
+6. See CONTRIBUTING.md for full platform guide
 
 ## Troubleshooting
 
@@ -1077,8 +948,8 @@ All example skills are certified with detailed evaluation reports.
 **Issue**: Security warnings
 - **Solution**: P0 violations (CWE-798, CWE-89) trigger ABORT — fix before continuing. P1 (ASI01–ASI04) deduct 50 pts. See Security Features section.
 
-**Issue**: Build fails
-- **Solution**: Run `validate` command to check core engine structure. Ensure `npm ci` completes without errors before building.
+**Issue**: Skill not loading after install
+- **Solution**: Verify the skill file was copied to the correct path (`~/.claude/skills/`, `~/.openclaw/skills/`, or `~/.config/opencode/skills/`). Restart the AI assistant after installing.
 
 ### Debug Mode
 
@@ -1101,9 +972,9 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ### Completed
 
-- [x] Core engine with CREATE, LEAN, EVALUATE, OPTIMIZE, INSTALL, COLLECT modes
-- [x] Builder tool with CLI and Jest test suite (250+ tests)
-- [x] Support for 7 platforms (OpenCode, OpenClaw, Claude, Cursor, OpenAI, Gemini, MCP)
+- [x] Core engine with CREATE, LEAN, EVALUATE, OPTIMIZE, INSTALL, COLLECT, SHARE, GRAPH modes
+- [x] 3-platform direct-file architecture (Claude, OpenClaw, OpenCode) — no build pipeline
+- [x] SKILL.md v3.3.0 compliance: skill_tier, triggers, 11-field use_to_evolve, Skill Summary, Negative Boundaries
 - [x] LEAN fast-evaluation mode with [STATIC]/[HEURISTIC] reliability labels
 - [x] UTE 2.0 self-improvement protocol (L1 enforced + L2 collective)
 - [x] Multi-pass self-review protocol (Generate/Review/Reconcile)
@@ -1124,12 +995,12 @@ MIT License - See [LICENSE](LICENSE) file for details.
 - [x] **v3.2.0** — COLLECT bundle context: `bundle_context` + `graph_signals` fields; AGGREGATE auto-infers edges
 - [x] **v3.2.0** — Registry schema v2.0: top-level `graph:` section with `edges[]` + `bundles[]`
 - [x] **v3.2.0** — Progressive Disclosure Layer 0: ≤200-token bundle context prefix (pre-ADVERTISE)
-- [x] **v3.2.0** — `builder/src/core/graph.js`: GoS algorithm library (buildGraph, detectCycles, topologicalSort, resolveBundle, checkGraphHealth, scoreD8Composability)
-- [x] **v3.3.0** — Three-Tier Hook Routing: AGENTS.md (session-constant) + UserPromptSubmit Hook (per-message) + trigger phrases; INSTALL steps 4e + 4f auto-generate routing config
+- [x] **v3.2.0** — Graph of Skills (GoS) algorithm: buildGraph, detectCycles, topologicalSort, resolveBundle, checkGraphHealth, scoreD8Composability
+- [x] **v3.3.0** — Three-Tier Hook Routing: AGENTS.md (session-constant) + UserPromptSubmit Hook (per-message) + trigger phrases
 - [x] **v3.3.0** — Progressive Disclosure Layer -1 (Hook Injection): ≤50-token per-message skill-awareness nudge; five-layer architecture
-- [x] **v3.3.0** — SkillRouter Weighted Ranking: multi-factor rank formula (trigger×0.4 + lean×0.3 + usage×0.2 + quality×0.1); quality threshold gate (0.35); `usage_stats` field
-- [x] **v3.3.0** — Trigger Discovery Pipeline: `trigger_signals` in session artifact; AGGREGATE Rule 4 promotes observed user language to canonical triggers (≥5 count, ≥70% confidence)
-- [x] **v3.3.0** — Incremental Build Cache: `source_hash` per file; `.build-cache.json`; skips unchanged platforms; release builds always bypass cache
+- [x] **v3.3.0** — SkillRouter Weighted Ranking: multi-factor rank formula (trigger×0.4 + lean×0.3 + usage×0.2 + quality×0.1); quality threshold gate (0.35)
+- [x] **v3.3.0** — Trigger Discovery Pipeline: `trigger_signals` in session artifact; AGGREGATE Rule 4 promotes observed user language to canonical triggers
+- [x] **v3.3.0** — Simplified 3-platform direct-file architecture; removed Node.js build pipeline
 
 ### Planned
 

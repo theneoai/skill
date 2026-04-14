@@ -1,17 +1,16 @@
 # Contributing to Skill Writer
 
-Thank you for your interest in contributing to Skill Writer! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to Skill Writer!
 
 ## Table of Contents
 
 1. [Code of Conduct](#code-of-conduct)
 2. [Getting Started](#getting-started)
-3. [Development Workflow](#development-workflow)
-4. [Project Structure](#project-structure)
-5. [Adding New Features](#adding-new-features)
-6. [Adding Platform Support](#adding-platform-support)
-7. [Testing](#testing)
-8. [Submitting Changes](#submitting-changes)
+3. [Project Structure](#project-structure)
+4. [Adding New Features](#adding-new-features)
+5. [Adding Platform Support](#adding-platform-support)
+6. [Testing](#testing)
+7. [Submitting Changes](#submitting-changes)
 
 ## Code of Conduct
 
@@ -26,9 +25,9 @@ This project adheres to a code of conduct. By participating, you are expected to
 
 ### Prerequisites
 
-- Node.js 16+ 
-- npm or yarn
 - Git
+- bash (macOS/Linux/WSL)
+- A supported AI platform (Claude, OpenClaw, or OpenCode)
 
 ### Setup
 
@@ -39,68 +38,55 @@ This project adheres to a code of conduct. By participating, you are expected to
    cd skill-writer
    ```
 
-3. Install dependencies:
+3. Install to your platform (no build step required):
    ```bash
-   cd builder
-   npm install
+   ./install.sh                   # auto-detect
+   ./install.sh --platform claude # specific platform
+   ./install.sh --dry-run         # preview only
    ```
-
-4. Verify setup:
-   ```bash
-   npm run validate
-   ```
-
-## Development Workflow
-
-### Branch Naming
-
-- `feature/description` - New features
-- `bugfix/description` - Bug fixes
-- `docs/description` - Documentation updates
-- `platform/platform-name` - Platform-specific changes
-
-### Making Changes
-
-1. Create a new branch:
-   ```bash
-   git checkout -b feature/my-feature
-   ```
-
-2. Make your changes
-
-3. Test your changes:
-   ```bash
-   npm run validate
-   npm run build
-   ```
-
-4. Commit with clear messages:
-   ```bash
-   git commit -m "Add feature: description"
-   ```
-
-5. Push and create a Pull Request
 
 ## Project Structure
 
 ```
 skill-writer/
-├── skill-framework.md # Main skill definition
-├── refs/              # Reference documentation (self-review, UTE, security, etc.)
-├── templates/         # 4 skill templates + UTE snippet
+├── claude/            # Claude platform
+│   ├── skill-writer.md    ← SKILL.md v3.3.0 compliant skill file
+│   ├── CLAUDE.md          ← Routing rules (merged into ~/.claude/CLAUDE.md)
+│   └── install.sh         ← Installs to ~/.claude/
+│
+├── openclaw/          # OpenClaw platform
+│   ├── skill-writer.md    ← Same skill + metadata.openclaw YAML block
+│   ├── AGENTS.md          ← Routing rules
+│   └── install.sh         ← Installs to ~/.openclaw/
+│
+├── opencode/          # OpenCode platform
+│   ├── skill-writer.md    ← Same skill + Triggers footer
+│   ├── AGENTS.md          ← Routing rules
+│   └── install.sh         ← Installs to ~/.config/opencode/
+│
+├── refs/              # Companion reference files (all platforms)
+├── templates/         # 4 skill creation templates
 ├── eval/              # Evaluation rubrics and benchmarks
 ├── optimize/          # Optimization strategies and anti-patterns
-├── builder/           # Builder tool
-│   ├── src/
-│   │   ├── commands/  # CLI commands
-│   │   ├── core/      # Reader and embedder modules
-│   │   └── platforms/ # Platform adapters
-│   └── templates/     # Platform-specific output templates
 ├── examples/          # Certified example skills
-└── platforms/         # Generated platform-specific files
+├── skill-framework.md # Complete specification (source of truth)
+└── install.sh         # Top-level dispatcher → delegates to platform scripts
 ```
 
+**No build pipeline** — all platform files are direct Markdown, hand-maintained. Changes to a platform's skill file are made by editing `{platform}/skill-writer.md` directly.
+
 ## Adding New Features
+
+### Updating the Skill Framework
+
+Most features live in `skill-framework.md` (the master specification) and are mirrored to each platform skill file.
+
+Workflow:
+1. Edit `skill-framework.md` first (source of truth)
+2. Copy changes to `claude/skill-writer.md`, `openclaw/skill-writer.md`, `opencode/skill-writer.md`
+3. For platform-specific content (e.g., `metadata.openclaw`), edit only that platform's file
+4. Update companion files in `refs/`, `eval/`, or `optimize/` as needed
+5. Test with `./install.sh --dry-run`
 
 ### Adding a New Template
 
@@ -109,153 +95,114 @@ skill-writer/
    touch templates/my-template.md
    ```
 
-2. Add template structure:
-   ```markdown
-   ---
-   name: my-template
-   description: Description of template
-   ---
-   
-   # {{PROJECT_NAME}}
-   
-   ## Overview
-   {{DESCRIPTION}}
-   
-   ## Usage
-   {{USAGE}}
-   ```
+2. Follow the pattern from `templates/base.md` — fill required placeholders:
+   `{{SKILL_NAME}}`, `{{ONE_LINE_DESCRIPTION}}`, `{{TARGET_USER}}`, etc.
 
-3. Document placeholders in template
+3. Test with CREATE mode in your AI assistant
 
-4. Test with CREATE mode
-
-5. Update documentation
+4. Update the template selection table in `skill-framework.md §6 CREATE Mode`
 
 ### Adding a New Mode
 
-1. Add mode-specific companion files under the appropriate directory (`refs/`, `eval/`, or `optimize/`).
-
-2. Create companion `.md` files for the mode's data (no YAML config files needed since v2.1.0)
-
-3. Update embedder to support new mode
-
-4. Add tests
-
-5. Update documentation
+1. Add a new `## §N Mode-Name Mode` section to `skill-framework.md`
+2. Add the mode trigger to the YAML frontmatter `modes:` list and `triggers.en/zh` arrays
+3. Add the mode to the routing table in `claude/CLAUDE.md`, `openclaw/AGENTS.md`, `opencode/AGENTS.md`
+4. Mirror the section to all three platform skill files
+5. Update README.md mode documentation
 
 ## Adding Platform Support
 
-### Creating a Platform Adapter
+### Creating a New Platform Directory
 
-1. Create adapter file:
-   ```bash
-   touch builder/src/platforms/myplatform.js
-   ```
+Each platform is a self-contained directory with three files:
 
-2. Implement required functions:
-   ```javascript
-   const name = 'myplatform';
-   
-   function formatSkill(skillContent) {
-     // Transform content for platform
-     return transformedContent;
-   }
-   
-   function getInstallPath() {
-     return '/path/to/skills';
-   }
-   
-   function validateSkill(skillContent) {
-     // Return validation result
-     return { valid: true, errors: [], warnings: [] };
-   }
-   
-   module.exports = {
-     name,
-     formatSkill,
-     getInstallPath,
-     validateSkill
-   };
-   ```
-
-3. Register in `builder/src/platforms/index.js`
-
-4. Create platform template in `builder/templates/`
-
-5. Test build command
-
-6. Update documentation
-
-### Platform Configuration
-
-Add platform config to embedder:
-
-```javascript
-myplatform: {
-  placeholderPattern: /\{\{(\w+)\}\}/g,
-  sectionPrefix: '##',
-  codeBlockLang: 'yaml',
-  supportsFrontmatter: true,
-  triggerFormat: 'markdown',
-}
+```bash
+mkdir newplatform/
 ```
+
+1. **`newplatform/skill-writer.md`** — copy from `claude/skill-writer.md` as base, then:
+   - Update PATH CONVENTION comment to reference `~/.newplatform/` paths
+   - Add any platform-specific YAML metadata block
+   - Add any platform-specific sections (if the platform has unique capabilities)
+
+2. **`newplatform/AGENTS.md`** — routing rules file:
+   ```markdown
+   <!-- skill-writer:start -->
+   ## Skill Registry — Active Skills
+   **skill-writer** is installed and active.
+   ...routing table for all 8 modes...
+   <!-- skill-writer:end -->
+   ```
+
+3. **`newplatform/install.sh`** — install script (copy from `claude/install.sh` as base):
+   - Set `PLATFORM_HOME="${HOME}/.newplatform"` (or platform-specific path)
+   - Install skill, companion files, routing file
+   - Handle idempotent routing file merge with `<!-- skill-writer:start/end -->` markers
+   - Support `--dry-run` flag
+
+4. Update top-level `install.sh`:
+   - Add platform to `detect_platforms()` function
+   - Add platform to `--all` target list
+
+5. Update README.md platform table
 
 ## Testing
 
-### Running Tests
-
-```bash
-# Run all tests
-npm test
-
-# Run specific test file
-npm test -- test/builder.test.js
-
-# Run with coverage
-npm run test:coverage
-```
-
-### Writing Tests
-
-Place tests in `builder/tests/`:
-
-```javascript
-describe('Feature', () => {
-  test('should do something', () => {
-    expect(result).toBe(expected);
-  });
-});
-```
-
 ### Manual Testing
 
-1. Build for your platform:
-   ```bash
-   npm run build:opencode
-   ```
+```bash
+# Preview install (no changes made)
+./install.sh --platform claude --dry-run
 
-2. Install locally:
-   ```bash
-   npm run install:opencode
-   ```
+# Install and verify
+./install.sh --platform claude
+ls ~/.claude/skills/
+ls ~/.claude/refs/
 
-3. Test with AI assistant
+# Verify routing rules merged
+grep -n "skill-writer:start" ~/.claude/CLAUDE.md
+
+# Test idempotency (run twice, should produce same result)
+./install.sh --platform claude
+./install.sh --platform claude
+```
+
+### Skill Quality Check
+
+After editing any skill file, verify quality:
+
+1. Install to Claude: `./install.sh --platform claude`
+2. In Claude: type `lean eval` and paste the skill content
+3. Score should be ≥ 350/500 (LEAN threshold)
+4. For certification: type `evaluate this skill` — score ≥ 700/1000 (BRONZE)
+
+### Platform-Specific Testing
+
+```bash
+# OpenClaw
+./install.sh --platform openclaw --dry-run
+# Then: restart OpenClaw → type "create a skill" to verify routing
+
+# OpenCode
+./install.sh --platform opencode --dry-run
+# Then: restart OpenCode → type "create a skill" to verify routing
+```
 
 ## Submitting Changes
 
 ### Pull Request Process
 
 1. **Before Submitting:**
-   - Run all tests
-   - Update documentation
-   - Add changelog entry
-   - Ensure code follows style guide
+   - Run `./install.sh --dry-run` for all 3 platforms
+   - Test routing with your AI assistant
+   - Update documentation in the platform files you changed
+   - Add a changelog entry
 
 2. **PR Description Should Include:**
    - What changed and why
-   - How to test the changes
-   - Any breaking changes
-   - Screenshots (if applicable)
+   - Which platforms are affected
+   - How to verify the change
+   - LEAN/EVALUATE score if you modified a skill file
 
 3. **Review Process:**
    - Maintainers will review within 48 hours
@@ -268,49 +215,39 @@ describe('Feature', () => {
 type(scope): subject
 
 body (optional)
-
-footer (optional)
 ```
 
-Types:
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation
-- `style`: Formatting
-- `refactor`: Code restructuring
-- `test`: Tests
-- `chore`: Maintenance
+Types: `feat` | `fix` | `docs` | `refactor` | `chore`
+
+Scope examples: `claude`, `openclaw`, `opencode`, `refs`, `templates`, `eval`, `optimize`
 
 Examples:
 ```
 feat(templates): add ML model template
 
-fix(security): resolve CWE-78 pattern detection
+fix(openclaw): correct path references in install.sh
 
-docs(readme): update installation instructions
+docs(refs): update security-patterns.md with ASI09/ASI10
+
+refactor(install): simplify idempotent AGENTS.md merge
 ```
 
 ## Style Guide
 
-### JavaScript
+### Markdown Skill Files
 
-- Use ES6+ features
-- 2 spaces indentation
-- Single quotes for strings
-- Semicolons required
-- Max line length: 100
+- YAML frontmatter: 2-space indentation
+- Sections: `## §N Section-Name` pattern
+- Required sections: Skill Summary, §2 Negative Boundaries, §3 Mode Router
+- Line wrap: 80–120 chars for prose, no wrap for tables/code
+- Placeholders: `{{UPPER_SNAKE_CASE}}`
 
-### YAML
+### Install Scripts
 
-- 2 spaces indentation
-- Use quotes for strings with special characters
-- Document all fields
-
-### Markdown
-
-- Use ATX-style headers (`#`)
-- Wrap lines at 80 characters
-- Use fenced code blocks with language
+- Use `set -euo pipefail`
+- Support `--dry-run` flag on all write operations
+- Idempotent: safe to run multiple times
+- Backup existing files before overwriting (`.bak.YYYYMMDD_HHMMSS`)
 
 ## Questions?
 
@@ -320,9 +257,4 @@ docs(readme): update installation instructions
 
 ## Recognition
 
-Contributors will be:
-- Listed in CONTRIBUTORS.md
-- Mentioned in release notes
-- Credited in documentation
-
-Thank you for contributing! 🎉
+Contributors will be listed in release notes and credited in documentation.
