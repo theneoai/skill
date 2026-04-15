@@ -123,7 +123,7 @@ questions, direct API calls, or non-skill automation tasks — see Negative Boun
 | Deploy to platforms | `/install [platform]` | `/安装 [平台]` | <30s |
 | Record session data | `/collect` | `/采集` | ~10s |
 
-> **双语支持 / Bilingual**: All 6 modes work in English and Chinese. The router auto-detects
+> **双语支持 / Bilingual**: All 8 modes work in English and Chinese. The router auto-detects
 > your language — use `/eval` or `评测`, `create a skill` or `创建新技能`, interchangeably.
 > Cursor exception: use keyword phrases, not `/commands` (IDE intercepts `/` key).
 > See §3 Mode Router for the full keyword list in both languages.
@@ -189,8 +189,8 @@ questions, direct API calls, or non-skill automation tasks — see Negative Boun
 │               Requires file system access, hooks, or external store. │
 │               框架不依赖此类功能——它们增加持久化能力，但非必要。      │
 │                                                                     │
-│  不确定有没有后端？→ 假设只有 [CORE]，全部 6 个模式仍可正常使用。    │
-│  Unsure? → Assume [CORE] only. All 6 modes work fully.             │
+│  不确定有没有后端？→ 假设只有 [CORE]，全部 8 个模式均可正常使用（AGGREGATE 需要 [EXTENDED]）。    │
+│  Unsure? → Assume [CORE] only. All 8 modes work; AGGREGATE requires [EXTENDED].             │
 └─────────────────────────────────────────────────────────────────────┘
 
 ```
@@ -452,7 +452,7 @@ Not sure which mode to use. Please choose:
                Time: 2–5 min
 
   2. /lean    — Quick quality check on an existing skill (5 seconds)
-               Runs 17 structural checks. Tells you if the skill is well-formed.
+               Runs 16 structural checks. Tells you if the skill is well-formed.
                Best for: After writing a draft, before running full eval
                Time: ~5s
 

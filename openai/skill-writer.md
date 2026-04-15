@@ -624,12 +624,12 @@ Submit skill file via PR with this EVALUATE report attached as context.
 
 | # | Phase | Gate |
 |---|-------|------|
-| 1 | **ELICIT** — Inversion pattern, one question at a time (§7) | All Qs answered |
+| 1 | **ELICIT** — Inversion pattern, one question at a time (§8) | All Qs answered |
 | 2 | **SELECT TEMPLATE** — match skill type → `templates/<type>.md` | Template chosen |
 | 3 | **PLAN** — multi-pass self-review (`refs/self-review.md §2`) | Plan reviewed |
 | 4 | **GENERATE** — fill template; write Skill Summary (¶1), Negative Boundaries section. If Q7 or Q8 was skipped, pause and show auto-filled content for user confirmation before proceeding. | Draft complete, no placeholders |
 | 5 | **SECURITY SCAN** — CWE + OWASP Agentic Top 10 (`refs/security-patterns.md`) | No P0 violations; ASI01 CLEAR |
-| 6 | **LEAN EVAL** — fast heuristic check (§6) | Score ≥ 350; negative boundaries present |
+| 6 | **LEAN EVAL** — fast heuristic check (§7) | Score ≥ 350; negative boundaries present |
 | 7 | **FULL EVALUATE** — 4-phase pipeline if LEAN uncertain (§8) | Score ≥ 700 BRONZE |
 | 8 | **INJECT UTE** — append `§UTE` section from snippet, fill placeholders (§15) | UTE section present |
 | 9 | **DELIVER** — annotate, certify, inject honest labels, write audit entry | CERTIFIED / TEMP_CERT |
