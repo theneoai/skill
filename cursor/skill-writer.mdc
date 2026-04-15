@@ -1,6 +1,6 @@
 ---
 description: skill-writer meta-skill — CREATE, LEAN, EVALUATE, OPTIMIZE, INSTALL, COLLECT, SHARE, GRAPH modes for AI skill lifecycle management
-globs:
+globs: ["**/*.md", "**/*.mdc"]
 alwaysApply: true
 ---
 

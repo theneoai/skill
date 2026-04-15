@@ -106,6 +106,44 @@ All platforms receive the same skill file, companion files (refs/, templates/, e
 > ```
 > Each step feeds the next. Skip ahead only if you already have a skill file.
 
+### System Requirements
+
+| Requirement | Version | Purpose | Install |
+|-------------|---------|---------|---------|
+| **Bash** | 4.0+ | Install scripts | Pre-installed on macOS/Linux |
+| **Python 3** | 3.8+ | Routing-file merge (CLAUDE.md / AGENTS.md) | See below |
+| **Node.js** | 16+ | Optional — UTE cross-session hooks only | See below |
+| **Git** | any | Clone repository | Pre-installed or [git-scm.com](https://git-scm.com) |
+
+**macOS (Homebrew):**
+```bash
+brew install python3          # required
+brew install node             # optional — only if you want UTE cross-session hooks
+```
+
+**Ubuntu / Debian:**
+```bash
+sudo apt update && sudo apt install python3   # required
+sudo apt install nodejs npm                   # optional
+```
+
+**Windows (Git Bash + WSL2 recommended):**
+```bash
+# Option A — Git Bash (for Cursor install only; no python3 needed):
+#   Download: https://git-scm.com/download/win
+#   Run cursor/install.sh inside Git Bash — no Python required for Cursor
+
+# Option B — WSL2 (full support, all platforms):
+wsl --install                 # enable WSL2
+# then follow Ubuntu instructions above inside WSL2
+
+# Option C — PowerShell (Cursor only):
+#   See cursor/install.ps1 for a PowerShell-native installer
+```
+
+> **Cursor users on Windows**: Python 3 is NOT required for Cursor installation
+> (the Cursor installer only copies files; no routing-file merge is needed).
+
 ### Installation
 
 #### Option 1 — Shell Script (from git clone, recommended)
@@ -133,6 +171,18 @@ Each platform's install script copies:
 - `{platform}/skill-writer.md` → `~/{platform-home}/skills/`
 - `refs/ templates/ eval/ optimize/` → `~/{platform-home}/`
 - Routing rules (CLAUDE.md / AGENTS.md) → merged idempotently
+
+**After installation → restart your AI platform, then try:**
+```
+"create a skill that summarizes git diffs"
+```
+That's it. The AI will ask 8 questions and generate a complete skill file.
+
+> **Cursor users**: Use keyword phrases — NOT slash commands.
+> The IDE intercepts `/` for its own command palette.
+> ✓ `create a skill`  ✗ `/create`
+> ✓ `lean eval`       ✗ `/lean`
+> ✓ `evaluate this skill`  ✗ `/eval`
 
 #### Option 2 — Manual Copy (no script needed)
 

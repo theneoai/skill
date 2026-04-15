@@ -77,6 +77,8 @@ use_to_evolve:
   pending_patches: 0
   total_micro_patches_applied: 0
   cumulative_invocations: 0
+  generation_method: "human-authored"   # auto-generated | human-authored | hybrid
+  validation_status: "full-eval"        # unvalidated | lean-only | full-eval | pragmatic-verified
 ---
 
 <!-- PATH CONVENTION

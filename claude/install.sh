@@ -35,6 +35,17 @@ if $DRY_RUN; then
   info "[DRY RUN] No files will be written."
 fi
 
+# ── Dependency check ──────────────────────────────────────────────────────────
+if ! $DRY_RUN; then
+  if ! command -v python3 &>/dev/null; then
+    err "python3 is required for routing-file merge (CLAUDE.md)."
+    err "  macOS:  brew install python3"
+    err "  Ubuntu: sudo apt install python3"
+    err "  Other:  https://www.python.org/downloads/"
+    exit 1
+  fi
+fi
+
 CLAUDE_HOME="${HOME}/.claude"
 SKILLS_DIR="${CLAUDE_HOME}/skills"
 

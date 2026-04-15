@@ -33,6 +33,16 @@ if $DRY_RUN; then
   info "[DRY RUN] No files will be written."
 fi
 
+# ── Dependency check ──────────────────────────────────────────────────────────
+if ! $DRY_RUN; then
+  if ! command -v python3 &>/dev/null; then
+    err "python3 is required for routing-file merge (AGENTS.md)."
+    err "  macOS:  brew install python3"
+    err "  Ubuntu: sudo apt install python3"
+    exit 1
+  fi
+fi
+
 KIMI_HOME="${HOME}/.config/kimi"
 SKILLS_DIR="${KIMI_HOME}/skills"
 
