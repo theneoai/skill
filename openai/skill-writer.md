@@ -792,30 +792,12 @@ Template files: `templates/<type>.md`
 
 ### Score Variance Reference
 
-LEAN and EVALUATE scores are **estimates**, not exact measurements. Treat scores as ranges:
-
-| Score Type | Typical Variance | Decision Guidance |
-|-----------|-----------------|-------------------|
-| LEAN `[STATIC]` checks | ±0 pts | Fully reliable — safe for binary pass/fail |
-| LEAN `[HEURISTIC]` checks | ±5–15 pts per dimension | Treat as estimate; ±20 total is noise |
-| EVALUATE Phase 2 (Text Quality) | ±15–30 pts total | Don't obsess over ±20 pt swings |
-| EVALUATE Phase 3 (Runtime) | ±20–40 pts | Highest variance — interpreter-dependent |
-| EVALUATE Total | ±30–60 pts | A 750 score means "somewhere 690–810" |
-
-**Practical rules**:
-- Two LEAN scores within ±20 pts → treat as identical
-- Score within ±30 pts of a tier boundary → run full EVALUATE, ideally twice
-- Never claim a specific tier from a single LEAN score if within 30 pts of boundary
-- OPTIMIZE rollback threshold is **20 pts** (not 5 pts) to account for variance floor
+**Score Reliability**: LEAN produces ±20 pt variance across runs (LLM heuristic scoring).
+- Scores within ±20 pts = equivalent; don't over-optimize for small deltas
+- Score ≥350 confirmed across 2 runs = confident BRONZE+ signal
+- Single run within 20 pts of a tier boundary → run full EVALUATE to confirm
 
 ### Check Reliability Tiers
-
-> **Quick glossary** (shown inline when LEAN score is delivered):
-> - `[STATIC]` = **deterministic** — regex/structural checks, ±0 variance, always the same result.
->   Trust these scores 100%. Example: "YAML frontmatter present" — either it is or it isn't.
-> - `[HEURISTIC]` = **LLM-judged** — quality assessments, ±5–15 pts per dimension.
->   If two LEAN runs differ by ≤20 pts, treat them as equivalent — that's just noise.
->   Use EVALUATE for an authoritative score when you need to certify a tier.
 
 Each LEAN check is labeled by its execution method:
 
@@ -823,10 +805,6 @@ Each LEAN check is labeled by its execution method:
   Score variance: ±0 pts. These checks are fully trustworthy.
 - **`[HEURISTIC]`** — Requires LLM judgment to assess adequacy or quality.
   Score variance: ±5–15 pts per dimension. Treat as an estimate, not a precise score.
-
-> **Practical implication**: If two LEAN runs produce scores within ±20 pts, consider them
-> equivalent. Differences beyond ±30 pts indicate a genuinely borderline skill — escalate to
-> full EVALUATE for authoritative scoring.
 
 ### Scoring (500-point heuristic → maps to 1000-point scale)
 
@@ -892,7 +870,7 @@ lean_score ≥ 350 AND no_placeholders AND security_section_present
          300–349    →  UNCERTAIN — running full /eval now
           < 300     →  FAIL — routing to /opt
 
-       ℹ LEAN variance: ±20 pts is normal across re-runs. Use /eval for a stable certified score."
+       ℹ LEAN variance: ±20 pts is normal across re-runs — see Score Reliability above."
     → Schedule full EVALUATE within 24 h (recommended, not blocking)
 
 lean_score 300–349 (UNCERTAIN)
@@ -954,60 +932,28 @@ lean_score < 300 (FAIL)
 **Rule**: Phase 3 (PLAN) MUST NOT begin until all answers are received.
 Ask **one question at a time**. Wait for answer before next question.
 
-### CREATE questions (ask all, one at a time):
-1. "这个skill要解决什么核心问题？ / What core problem does this skill solve?"
-2. "主要用户是谁，技术水平如何？ / Who are the target users and their technical level?"
-3. "输入是什么形式？ / What form does the input take?"
-4. "期望的输出是什么？ / What is the expected output?"
-5. "有哪些安全或技术约束？ / What security or technical constraints apply?"
-6. "验收标准是什么？ / What are the acceptance criteria?"
-7. "这个skill在哪些场景下**不**应该触发？ / In which scenarios should this skill NOT trigger? (List 2–5 anti-cases)"
-   > 💡 **What are negative boundaries?** Rules that prevent false triggering. Example: a "code reviewer" skill should NOT trigger when someone asks "explain this architecture diagram" — that's for a different skill.
-   > 💡 **English examples**: "Do NOT use for production database writes" / "Do NOT process files > 1 GB" / "Do NOT use when real-time data is required" / "Do NOT trigger for 'explain this code' — use code-explainer instead"
-   > 💡 **Chinese examples (中文示例)**: "不用于生产数据库操作" / "不适用于超过1000条记录的批量处理" / "不用于需要实时数据的场景"
-   > 💡 **卡住了？** 输入 `skip` — 将自动填充通用边界: "Avoid irreversible actions without explicit confirmation"
-   > [Answer validation: SKIP accepted → auto-fill default boundary + WARNING note]
-   > ⚠️ **跳过后自动填充的内容 / Auto-filled content on skip**:
-   >   `**Do NOT use this skill for**: Irreversible actions without explicit confirmation.`
-   >   `**触发词排除 / Exclude trigger phrases**: None specified (review before publishing).`
-   >   注意: 这只是占位符，发布技能前务必替换为实际边界描述。
+### CREATE questions — ask one at a time, wait for answer before next
 
-8. "用户会用什么词或短语来触发这个skill？ / What phrases or keywords would a user say to trigger this skill? (List 3–8 examples)"
-   > 💡 **示例 / Examples**: "检查我的代码" / "review this PR" / "code review" / "审查代码" / "scan for issues"
-   > 💡 **卡住了？** 输入 `skip` — 将从技能名称和描述中自动推断触发词
-   > [Answer validation: SKIP accepted → auto-generate triggers from skill name + description]
-   > ⚠️ **跳过后自动填充的内容 / Auto-filled content on skip**:
-   >   Triggers derived from skill name + description keywords (EN + ZH equivalents).
-   >   注意: 自动推断的触发词覆盖率约60%，建议添加用户实际使用的自然短语。
+| Q | Question | → Shapes |
+|---|----------|---------|
+| 1 | What's the one-sentence purpose? | Skill Summary + triggers |
+| 2 | Who uses it? (persona) | Examples + language choice |
+| 3 | What skill tier? (planning/functional/atomic) | EVALUATE Phase 2 weights |
+| 4 | What are the 3–5 main workflow steps? | Workflow section |
+| 5 | What should it NEVER do? (negative boundaries) | §N Negative Boundaries |
+| 6 | Trigger phrases the user would say? | YAML triggers block |
+| 7 | Any reference files / tools it needs? | Dependencies section |
+| 8 | Example input → expected output? | §Usage Examples |
 
-> **Questions 7 & 8 are new (v3.1.0)**. Research basis:
-> - Q7 (Negative Boundaries): SKILL.md Pattern — without explicit negation, semantically
->   adjacent requests mis-trigger the skill. Required before GENERATE phase.
-> - Q8 (Trigger Phrases): SkillRouter (arxiv:2603.22455) — trigger phrase coverage in the
->   skill body is the decisive routing signal (29–44pp accuracy difference).
+**Skip handling** (Q5 and Q6 are mandatory; others have defaults):
+- Q5 vague/skip → auto-fill: "Avoid irreversible actions without explicit confirmation." + WARNING
+- Q6 vague/skip → auto-generate triggers from skill name + description keywords (EN + ZH). Note: ~60% coverage — add natural phrases before publishing.
+- Vague-answer probe (Q1–Q4, Q7–Q8): if answer ≤3 words or domain-only (e.g. "git stuff"), ask ONE follow-up probe (a/b/c options). Accept after one probe regardless.
 
-> **Answer validation**: Minimal — user must provide at least one example for Q7 and Q8.
-> If user types `skip` for Q7 or Q8: auto-fill defaults, flag with WARNING in output,
-> add a reminder: "Review Negative Boundaries before publishing this skill."
-
-> **Vague-answer probe rule** (apply to Q1–Q6):
-> If a user's answer is ≤3 words OR contains only a domain name with no specifics
-> (e.g., "git stuff", "some data", "I want a skill"), do NOT proceed to the next question.
-> Instead, ask ONE targeted follow-up probe:
-> ```
-> Q3 vague answer: "the input is git stuff"
-> → Probe: "Got it — can you be a bit more specific about the format?
->   (a) Git command output (text from git diff / git log)?
->   (b) Git repository files (code files, commit objects)?
->   (c) Git API responses (JSON from GitHub API)?
->   Just pick a, b, or c — or describe in your own words."
-> ```
-> Probe rule: one probe per question maximum. If still vague after probe, accept and continue.
-
-> **Template-specific follow-up** (ask after Q6 if applicable):
-> - `api-integration`: "Which HTTP methods / authentication mechanism?"
-> - `data-pipeline`: "What is the data schema / transformation rules?"
-> - `workflow-automation`: "What is the maximum acceptable latency / retry policy?"
+**Template-specific follow-up** (ask after Q4 if applicable):
+- `api-integration`: "Which HTTP methods / authentication mechanism?"
+- `data-pipeline`: "What is the data schema / transformation rules?"
+- `workflow-automation`: "What is the maximum acceptable latency / retry policy?"
 
 ### EVALUATE questions (ask all):
 1. "请提供skill文件路径或内容。 / Provide the skill file path or content."
@@ -1386,19 +1332,10 @@ Detection heuristics for each ASI: `refs/security-patterns.md §5`
 
 ---
 
-## §13  Self-Review Protocol (Summary)
+## §13  Self-Review Protocol
 
-| Pass | Focus |
-|------|-------|
-| Pass 1 — Generate | Produce initial draft / score / fix proposal |
-| Pass 2 — Review | Security audit (CWE) + quality audit; severity-tagged issues (ERROR/WARNING/INFO) |
-| Pass 3 — Reconcile | Address all ERRORs, improve on WARNINGs, produce final artifact |
-
-Timeouts: 60 s per phase, 180 s total.
-Outcomes: CLEAR → proceed; REVISED → proceed with note;
-UNRESOLVED → HUMAN_REVIEW.
-
-Full spec: `refs/self-review.md`
+Before DELIVER, run the pre-delivery checklist from `refs/self-review.md §1`.
+Key gates: no placeholders, negative boundaries present, LEAN ≥ 350, security scan CLEAR.
 
 ---
 
