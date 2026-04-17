@@ -114,7 +114,7 @@ CURATE:
 
 > **Research basis**: Agrawal et al. 2025, *"GEPA: Reflective Prompt Evolution
 > Can Outperform Reinforcement Learning"* (arXiv 2507.19457).
-> **Status**: Design ready; skeleton at `scripts/gepa-optimize.py`; end-to-end
+> **Status**: Design ready; skeleton at `experimental/gepa-optimize.py`; end-to-end
 > integration pending v3.6.0.
 > **Why add GEPA**: The in-session 10-step loop (§2) is a local hill climber.
 > GEPA is a *reflective evolutionary* optimizer that leverages the LM's ability
@@ -161,7 +161,7 @@ estimate — each rollout yields a detailed reason-trace that the LM consumes.
 | v3.5.1   | DSPy + gepa-ai/gepa optional dependency; `--dry-run` produces plan |
 | v3.6.0   | Full integration; S15 default for skills in FAIL tier on first OPTIMIZE |
 
-**Reference implementation**: `scripts/gepa-optimize.py` (skeleton; requires
+**Reference implementation**: `experimental/gepa-optimize.py` (skeleton; requires
 `pip install dspy gepa` at runtime — NOT a hard dep of skill-writer).
 
 ---

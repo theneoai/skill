@@ -376,7 +376,7 @@ User: "read https://raw.githubusercontent.com/.../skill-framework.md and install
 ## §17b  MCP Integration Guide
 
 > MCP (Model Context Protocol) requires structured JSON calls instead of chat keywords.
-> **Full spec**: `docs/mcp-integration.md`
+> **Full spec**: `experimental/mcp-integration.md`
 
 **Quick install**:
 ```bash
@@ -390,7 +390,7 @@ User: "read https://raw.githubusercontent.com/.../skill-framework.md and install
 
 **Key difference from chat platforms**: MCP is stateless — all 8 elicitation answers must be
 provided in a single call (`elicitation_answers` field). UTE auto-trigger does not fire;
-call explicitly from your application. Full protocol: `docs/mcp-integration.md §3`.
+call explicitly from your application. Full protocol: `experimental/mcp-integration.md §3`.
 
 ---
 
