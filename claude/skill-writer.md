@@ -36,6 +36,9 @@ triggers:
     - "benchmark"
     - "run benchmark"
     - "A/B test this skill"
+    - "compose skills"
+    - "grasp plan"
+    - "build skill graph"
   zh:
     - "创建技能"
     - "评测技能"
@@ -44,11 +47,13 @@ triggers:
     - "技能图"
     - "基准测试"
     - "对比测试"
+    - "技能合成"
+    - "组合技能"
 
 interface:
   input: user-natural-language
   output: structured-skill
-  modes: [create, lean, evaluate, optimize, install, share, collect, graph, benchmark]
+  modes: [create, lean, evaluate, optimize, install, share, collect, graph, benchmark, compose]
   platforms: [claude, opencode, openclaw]
 
 extends:
@@ -108,6 +113,8 @@ replacement_skill: null
     scripts/run_gepa_optimize.py      — GEPA reflective evolutionary optimizer (S17) [NEW v3.5.1]
     scripts/run_multi_eval.py         — statistical multi-run EVALUATE w/ CI (S18) [NEW v3.5.1]
     scripts/ute_gist_backend.py       — GitHub Gist zero-infra UTE L2 backend [NEW v3.5.1]
+    scripts/skill_graph.py            — GoS typed DAG model + gRaSP precondition-effect layer [NEW v3.5.1]
+    scripts/run_grasp_compose.py      — gRaSP 4-stage skill composition pipeline [NEW v3.5.1]
     scripts/emit_spec_pure.py         — emit agentskills.io v1.0 spec-pure frontmatter
     agents/grader.md                  — independent-grader prompt (spawn as subagent)
 -->
@@ -140,6 +147,7 @@ questions, direct API calls, or non-skill automation tasks — see Negative Boun
 | Deploy to platforms | `/install [platform]` | `/安装 [平台]` | <30s |
 | Record session data | `/collect` | `/采集` | ~10s |
 | **UTE cross-session tracking** | **`ute_gist_backend.py record`** | **跨会话追踪** | **<5s** |
+| **gRaSP skill composition** | **`run_grasp_compose.py --objective "..."`** | **技能合成** | **~30s** |
 
 > **双语支持 / Bilingual**: All 8 modes work in English and Chinese. The router auto-detects
 > your language — use `/eval` or `评测`, `create a skill` or `创建新技能`, interchangeably.

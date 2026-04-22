@@ -153,6 +153,24 @@ drift-check:
 	@echo "==> skill health drift check"
 	@python3 scripts/monitor_skill_drift.py $(ARGS)
 
+# ── gRaSP skill composition pipeline ─────────────────────────────────────────
+
+grasp-compose:
+	@echo "==> gRaSP 4-stage skill composition pipeline"
+	@if [ -z "$(OBJECTIVE)" ]; then \
+		echo "usage: make grasp-compose OBJECTIVE=\"<task>\" [SKILLS_DIR=<dir>] [SKILLS=<file...>] [ARGS=...]"; \
+		echo "  OBJECTIVE   task description for skill selection (required)"; \
+		echo "  SKILLS_DIR  directory of SKILL.md files (default: ~/.claude/skills/)"; \
+		echo "  SKILLS      space-separated list of specific skill files"; \
+		echo "  ARGS        extra flags: --dry-run, --json, --out DIR, --model MODEL"; \
+		exit 1; \
+	fi
+	@python3 scripts/run_grasp_compose.py \
+		$(if $(SKILLS_DIR),--skills-dir "$(SKILLS_DIR)",) \
+		$(if $(SKILLS),--skills $(SKILLS),) \
+		--objective "$(OBJECTIVE)" \
+		$(ARGS)
+
 # ── UTE GitHub Gist backend ──────────────────────────────────────────────────
 
 ute-init:
