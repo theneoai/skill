@@ -57,19 +57,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
-import time
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-try:
-    import anthropic  # type: ignore
-except ImportError:
-    anthropic = None
+from common import ApiClient, build_api_client, extract_json, DEFAULT_MODEL
 
-MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 3000
 
 DIMENSIONS = [
@@ -222,7 +216,6 @@ def analyze_artifacts(artifacts: list[dict]) -> dict[str, Any]:
         "top_hints": top_hints,
         "top_patterns": top_patterns,
         "lessons": lessons,
-        "failure_rate": round(failure_rate, 2),
         "trigger_candidates": trigger_candidates,
         "trigger_phrases_seen": dict(trigger_counter.most_common(20)),
     }
@@ -264,7 +257,7 @@ Rules:
 - next_action: if artifacts show clear failure pattern → OPTIMIZE; if unclear → COLLECT_MORE"""
 
 
-def synthesize(client, stats: dict, lessons: list[str]) -> dict:
+def synthesize(api: ApiClient, stats: dict, lessons: list[str]) -> dict:
     """Use Claude to synthesize patterns into ranked recommendations."""
     dim_health_summary = "\n".join(
         f"  {d}: score={stats['dim_scores'][d]:.2f} — {stats['dim_health_counts'].get(d, {})}"
@@ -308,25 +301,15 @@ SESSION LESSONS:
 
 Based on this data, produce ranked improvement recommendations as JSON."""
 
-    for attempt in range(3):
-        try:
-            resp = client.messages.create(
-                model=MODEL,
-                max_tokens=MAX_TOKENS,
-                system=SYNTHESIZE_SYSTEM,
-                messages=[{"role": "user", "content": user_msg}],
-            )
-            raw = resp.content[0].text.strip()
-            import re
-            json_match = re.search(r"\{[\s\S]*\}", raw)
-            if json_match:
-                return json.loads(json_match.group())
-            return {"error": "no JSON in response", "raw": raw[:500]}
-        except Exception as e:
-            if attempt == 2:
-                return {"error": str(e)}
-            time.sleep(2 ** attempt)
-    return {"error": "max retries exceeded"}
+    try:
+        raw = api.call(SYNTHESIZE_SYSTEM, user_msg, MAX_TOKENS)
+    except Exception as e:
+        return {"error": str(e)}
+
+    data = extract_json(raw)
+    if data is None:
+        return {"error": "no JSON in response", "raw": raw[:500]}
+    return data
 
 
 # ── Report generation ─────────────────────────────────────────────────────────
@@ -423,7 +406,7 @@ def build_report(stats: dict, synthesis: dict, dry_run: bool = False) -> tuple[d
         "",
         f"1. Run `/opt` with the top recommendation: strategy `{recs[0].get('target_strategy', 'Auto') if recs else 'Auto'}`",
         f"2. After optimization → run `/eval` for authoritative score",
-        f"3. If {next_action == 'COLLECT_MORE': 'collecting more data'}{'collecting more data' if next_action == 'COLLECT_MORE' else 'benchmarking'} → continue `/collect` sessions",
+        f"3. {'Collect more sessions' if next_action == 'COLLECT_MORE' else 'Benchmark'} → continue `/collect` sessions",
         f"4. Add trigger candidates to YAML: {[p['phrase'] for p in stats['trigger_candidates'][:3]]}",
     ]
 
@@ -434,6 +417,7 @@ def run_aggregate(
     artifact_paths: list[Path],
     out_dir: Path,
     dry_run: bool = False,
+    model: str = DEFAULT_MODEL,
 ) -> int:
     print(f"\nAGGREGATE Pipeline — skill-writer collective evolution")
     print(f"  artifacts : {len(artifact_paths)} files")
@@ -469,18 +453,14 @@ def run_aggregate(
             "next_action": "OPTIMIZE" if stats["failure_rate"] > 0.2 else "COLLECT_MORE",
         }
     else:
-        if anthropic is None:
-            print("✗ anthropic package required for synthesis. Install: pip install anthropic", file=sys.stderr)
+        api = build_api_client(model=model)
+        if api is None:
             return 1
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
-        if not api_key:
-            print("✗ ANTHROPIC_API_KEY not set", file=sys.stderr)
-            return 1
-        client = anthropic.Anthropic(api_key=api_key)
         print("\n  Synthesizing recommendations via Claude API…")
-        synthesis = synthesize(client, stats, stats["lessons"])
+        synthesis = synthesize(api, stats, stats["lessons"])
         if "error" in synthesis:
             print(f"  ⚠ Synthesis error: {synthesis['error']}", file=sys.stderr)
+            return 1
 
     report, md = build_report(stats, synthesis, dry_run)
 
@@ -525,12 +505,9 @@ def main() -> int:
                     help="Output directory (default: aggregate-out/)")
     ap.add_argument("--dry-run", action="store_true",
                     help="Analyze only; skip LLM synthesis API call")
-    ap.add_argument("--model", default=MODEL,
-                    help=f"Claude model to use (default: {MODEL})")
+    ap.add_argument("--model", default=DEFAULT_MODEL,
+                    help=f"Claude model to use (default: {DEFAULT_MODEL})")
     args = ap.parse_args()
-
-    global MODEL
-    MODEL = args.model
 
     if args.artifacts_dir:
         paths = discover_artifact_paths(args.artifacts_dir)
@@ -541,7 +518,7 @@ def main() -> int:
     else:
         paths = args.artifacts
 
-    return run_aggregate(paths, args.out, args.dry_run)
+    return run_aggregate(paths, args.out, args.dry_run, model=args.model)
 
 
 if __name__ == "__main__":

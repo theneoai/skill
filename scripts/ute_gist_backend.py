@@ -118,7 +118,8 @@ class GistClient:
         for attempt in range(3):
             try:
                 with urllib.request.urlopen(req, timeout=15) as resp:
-                    return json.loads(resp.read().decode()) if resp.read() else {}
+                    body = resp.read()
+                    return json.loads(body.decode()) if body else {}
             except urllib.error.HTTPError as e:
                 if e.code == 429:
                     time.sleep(10 * (attempt + 1))

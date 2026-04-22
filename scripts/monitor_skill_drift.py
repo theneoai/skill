@@ -47,18 +47,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
-import time
 from pathlib import Path
 
-try:
-    import anthropic  # type: ignore
-except ImportError:
-    anthropic = None
+from common import ApiClient, build_api_client, extract_json, DEFAULT_MODEL
 
-MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 1024
 
 DRIFT_WARNING_THRESHOLD = -20
@@ -111,24 +105,20 @@ def parse_frontmatter(text: str) -> dict:
     return result
 
 
-def _call_lean(client, skill_content: str) -> dict:
-    for attempt in range(3):
-        try:
-            resp = client.messages.create(
-                model=MODEL,
-                max_tokens=MAX_TOKENS,
-                system=LEAN_SYSTEM,
-                messages=[{"role": "user", "content": f"SKILL.md:\n```\n{skill_content}\n```"}],
-            )
-            raw = resp.content[0].text.strip()
-            json_match = re.search(r"\{[\s\S]*\}", raw)
-            if json_match:
-                return json.loads(json_match.group())
-        except Exception as e:
-            if attempt == 2:
-                return {"error": str(e)}
-            time.sleep(2 ** attempt)
-    return {"error": "max retries"}
+def _call_lean(api: ApiClient, skill_content: str) -> dict:
+    # cache_system=True: LEAN_SYSTEM is identical for every skill in a batch check.
+    try:
+        raw = api.call(
+            LEAN_SYSTEM,
+            f"SKILL.md:\n```\n{skill_content}\n```",
+            MAX_TOKENS,
+            cache_system=True,
+        )
+    except Exception as e:
+        return {"error": str(e)}
+
+    data = extract_json(raw)
+    return data if data is not None else {"error": "no JSON in response"}
 
 
 # ── GitHub Gist state reader ──────────────────────────────────────────────────
@@ -162,8 +152,8 @@ def _read_gist_state(skill_name: str, token: str) -> dict | None:
                 filename = f"{skill_name}-ute-state.json"
                 content = full_gist.get("files", {}).get(filename, {}).get("content", "{}")
                 return json.loads(content)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"  ⚠ Gist state fetch failed: {e}", file=sys.stderr)
     return None
 
 
@@ -171,7 +161,7 @@ def _read_gist_state(skill_name: str, token: str) -> dict | None:
 
 def check_skill(
     skill_path: Path,
-    client,
+    api: "ApiClient | None",
     gist_state: dict | None = None,
     dry_run: bool = False,
     as_json: bool = False,
@@ -211,7 +201,7 @@ def check_skill(
         "cumulative_invocations": cumulative_inv,
     }
 
-    if dry_run or client is None:
+    if dry_run or api is None:
         result["status"] = "DRY_RUN"
         result["current_lean"] = None
         result["drift"] = None
@@ -219,7 +209,7 @@ def check_skill(
         return result
 
     # Run LEAN evaluation
-    lean_result = _call_lean(client, text)
+    lean_result = _call_lean(api, text)
     if "error" in lean_result:
         result["status"] = "ERROR"
         result["error"] = lean_result["error"]
@@ -308,23 +298,10 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="Output JSON (machine-readable)")
     ap.add_argument("--dry-run", action="store_true",
                     help="Parse YAML only; skip LEAN API call")
-    ap.add_argument("--model", default=MODEL, help=f"Claude model (default: {MODEL})")
+    ap.add_argument("--model", default=DEFAULT_MODEL, help=f"Claude model (default: {DEFAULT_MODEL})")
     args = ap.parse_args()
 
-    global MODEL
-    MODEL = args.model
-
-    # Build client
-    client = None
-    if not args.dry_run:
-        if anthropic is None:
-            print("✗ anthropic package required. Install: pip install anthropic", file=sys.stderr)
-            return 1
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
-        if not api_key:
-            print("✗ ANTHROPIC_API_KEY not set", file=sys.stderr)
-            return 1
-        client = anthropic.Anthropic(api_key=api_key)
+    api = build_api_client(model=args.model, dry_run=args.dry_run)
 
     # Gist state (optional)
     gist_state = None
@@ -351,7 +328,7 @@ def main() -> int:
     worst_exit = 0
 
     for path in paths:
-        r = check_skill(path, client, gist_state, args.dry_run, args.json)
+        r = check_skill(path, api, gist_state, args.dry_run, args.json)
         results.append(r)
         print_result(r, as_json=args.json)
 

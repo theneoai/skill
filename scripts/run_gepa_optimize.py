@@ -51,23 +51,17 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
-import time
 import uuid
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Optional
 
-try:
-    import anthropic  # type: ignore
-except ImportError:
-    anthropic = None
+from common import ApiClient, build_api_client, extract_json, extract_json_array, DEFAULT_MODEL
 
-# ── Model + scoring constants ─────────────────────────────────────────────────
+# ── Scoring constants ──────────────────────────────────────────────────────────
 
-MODEL = "claude-sonnet-4-6"
 MAX_TOKENS_EVAL = 1024
 MAX_TOKENS_REFLECT = 2048
 MAX_TOKENS_APPLY = 8192
@@ -121,28 +115,6 @@ class SkillVariant:
         return at_least_as_good and strictly_better
 
 
-# ── Claude API helpers ────────────────────────────────────────────────────────
-
-def _call(client, system: str, user: str, max_tokens: int = 1024) -> str:
-    """Single Claude API call with simple retry on overload."""
-    for attempt in range(3):
-        try:
-            resp = client.messages.create(
-                model=MODEL,
-                max_tokens=max_tokens,
-                system=system,
-                messages=[{"role": "user", "content": user}],
-            )
-            return resp.content[0].text.strip()
-        except Exception as e:
-            if attempt == 2:
-                raise
-            wait = 2 ** attempt
-            print(f"    ↺ API error ({e}); retrying in {wait}s…", file=sys.stderr)
-            time.sleep(wait)
-    return ""  # unreachable
-
-
 # ── Stage 1: Seed ─────────────────────────────────────────────────────────────
 
 SEED_SYSTEM = """You are a skill quality improver applying a single targeted strategy.
@@ -168,7 +140,7 @@ SEED_STRATEGIES = {
 }
 
 
-def seed_population(client, base: SkillVariant, n_perturbations: int) -> list[SkillVariant]:
+def seed_population(api: ApiClient, base: SkillVariant, n_perturbations: int) -> list[SkillVariant]:
     """Generate base + N strategy-specific perturbations."""
     population = [base]
     strategies = list(SEED_STRATEGIES.items())[:n_perturbations]
@@ -181,7 +153,7 @@ def seed_population(client, base: SkillVariant, n_perturbations: int) -> list[Sk
             "Return the full improved skill.md with NO commentary."
         )
         try:
-            new_content = _call(client, SEED_SYSTEM, user_msg, MAX_TOKENS_APPLY)
+            new_content = api.call(SEED_SYSTEM, user_msg, MAX_TOKENS_APPLY)
             # Strip possible markdown fences
             new_content = re.sub(r"^```[a-z]*\n?", "", new_content, flags=re.MULTILINE)
             new_content = re.sub(r"\n?```$", "", new_content, flags=re.MULTILINE)
@@ -224,26 +196,19 @@ Scoring guide (0–100 per dimension):
 - d7 metadata:        YAML frontmatter complete, ≥3 trigger phrases, negative boundaries"""
 
 
-def evaluate_variant(client, variant: SkillVariant) -> SkillVariant:
+def evaluate_variant(api: ApiClient, variant: SkillVariant) -> SkillVariant:
     """Score all 7 LEAN dimensions and capture textual feedback."""
     user_msg = f"SKILL.md to evaluate:\n\n```\n{variant.content}\n```"
-    raw = _call(client, EVAL_SYSTEM, user_msg, MAX_TOKENS_EVAL)
+    # cache_system=True: EVAL_SYSTEM is identical on every call in the loop —
+    # ephemeral cache cuts input-token cost on repeated evaluations.
+    raw = api.call(EVAL_SYSTEM, user_msg, MAX_TOKENS_EVAL, cache_system=True)
 
-    # Extract JSON (may be wrapped in a code fence)
-    json_match = re.search(r"\{[\s\S]*\}", raw)
-    if not json_match:
+    data = extract_json(raw)
+    if data is None:
         print(f"    ⚠ No JSON in eval response for {variant.variant_id}", file=sys.stderr)
         variant.dim_scores = {d: 50 for d in DIMENSIONS}
         variant.total_score = 350
         variant.feedback = "Evaluation parse error — using default scores."
-        return variant
-
-    try:
-        data = json.loads(json_match.group())
-    except json.JSONDecodeError:
-        variant.dim_scores = {d: 50 for d in DIMENSIONS}
-        variant.total_score = 350
-        variant.feedback = "JSON parse error — using default scores."
         return variant
 
     variant.dim_scores = {d: int(data.get(d, 50)) for d in DIMENSIONS}
@@ -252,12 +217,12 @@ def evaluate_variant(client, variant: SkillVariant) -> SkillVariant:
     return variant
 
 
-def evaluate_population(client, population: list[SkillVariant]) -> list[SkillVariant]:
+def evaluate_population(api: ApiClient, population: list[SkillVariant]) -> list[SkillVariant]:
     """Evaluate all unevaluated variants in the population."""
     for i, v in enumerate(population):
         if not v.dim_scores:
             print(f"  ↳ Evaluating variant {v.variant_id} ({i+1}/{len(population)})…")
-            evaluate_variant(client, v)
+            evaluate_variant(api, v)
             print(f"    score: {v.total_score}/700  weakest: {v.weakest_dim}")
     return population
 
@@ -286,7 +251,7 @@ Rules:
 - All 3 edits should target different root causes"""
 
 
-def reflect(client, top_variants: list[SkillVariant]) -> list[dict]:
+def reflect(api: ApiClient, top_variants: list[SkillVariant]) -> list[dict]:
     """LM reflection: turn evaluation trajectories into edit proposals."""
     trajectories = []
     for v in top_variants:
@@ -304,16 +269,12 @@ def reflect(client, top_variants: list[SkillVariant]) -> list[dict]:
         + "\n\n---\n\n".join(trajectories)
         + "\n\nPropose 3 concrete edit candidates as JSON."
     )
-    raw = _call(client, REFLECT_SYSTEM, user_msg, MAX_TOKENS_REFLECT)
+    raw = api.call(REFLECT_SYSTEM, user_msg, MAX_TOKENS_REFLECT)
 
-    json_match = re.search(r"\[[\s\S]*\]", raw)
-    if not json_match:
+    edits = extract_json_array(raw)
+    if edits is None:
         return []
-    try:
-        edits = json.loads(json_match.group())
-        return [e for e in edits if isinstance(e, dict) and "patch" in e]
-    except json.JSONDecodeError:
-        return []
+    return [e for e in edits if isinstance(e, dict) and "patch" in e]
 
 
 # ── Stage 4: Crossover ────────────────────────────────────────────────────────
@@ -323,7 +284,7 @@ Make ONLY the described change—do not rewrite other sections. Return the COMPL
 with NO commentary before or after."""
 
 
-def apply_edit(client, parent: SkillVariant, edit: dict, generation: int) -> Optional[SkillVariant]:
+def apply_edit(api: ApiClient, parent: SkillVariant, edit: dict, generation: int) -> Optional[SkillVariant]:
     """Apply a single edit proposal to a parent variant."""
     user_msg = (
         f"Edit to apply: {edit['description']}\n\n"
@@ -332,7 +293,7 @@ def apply_edit(client, parent: SkillVariant, edit: dict, generation: int) -> Opt
         "Return the complete updated skill file."
     )
     try:
-        new_content = _call(client, APPLY_SYSTEM, user_msg, MAX_TOKENS_APPLY)
+        new_content = api.call(APPLY_SYSTEM, user_msg, MAX_TOKENS_APPLY)
         new_content = re.sub(r"^```[a-z]*\n?", "", new_content, flags=re.MULTILINE)
         new_content = re.sub(r"\n?```$", "", new_content, flags=re.MULTILINE)
         child = SkillVariant(
@@ -348,7 +309,7 @@ def apply_edit(client, parent: SkillVariant, edit: dict, generation: int) -> Opt
 
 
 def crossover(
-    client,
+    api: ApiClient,
     top_parents: list[SkillVariant],
     edits: list[dict],
     generation: int,
@@ -358,7 +319,7 @@ def crossover(
     offspring = []
     for parent in top_parents[:2]:
         for edit in edits[:3]:
-            child = apply_edit(client, parent, edit, generation)
+            child = apply_edit(api, parent, edit, generation)
             if child:
                 offspring.append(child)
             if len(offspring) >= k:
@@ -435,19 +396,14 @@ Return ONLY valid JSON:
 }"""
 
 
-def verify(client, best: SkillVariant) -> dict:
+def verify(api: ApiClient, best: SkillVariant) -> dict:
     """Context-reset independent VERIFY pass (identical to optimize.md Step 10)."""
     print("\n  ── VERIFY (context-reset independent pass) ─────────────")
     user_msg = f"SKILL.md to evaluate independently:\n\n```\n{best.content}\n```"
-    raw = _call(client, VERIFY_SYSTEM, user_msg, MAX_TOKENS_EVAL)
+    raw = api.call(VERIFY_SYSTEM, user_msg, MAX_TOKENS_EVAL)
 
-    json_match = re.search(r"\{[\s\S]*\}", raw)
-    if not json_match:
-        return {"total": best.total_score, "status": "PARSE_ERROR"}
-
-    try:
-        data = json.loads(json_match.group())
-    except json.JSONDecodeError:
+    data = extract_json(raw)
+    if data is None:
         return {"total": best.total_score, "status": "PARSE_ERROR"}
 
     scores = {d: int(data.get(d, 50)) for d in DIMENSIONS}
@@ -487,9 +443,10 @@ def run_gepa(
     rounds: int = 10,
     population_size: int = 5,
     dry_run: bool = False,
+    model: str = DEFAULT_MODEL,
 ) -> int:
     """Main GEPA optimization loop. Returns exit code."""
-    print(f"\nGEPA Reflective Optimizer — skill-writer S15")
+    print(f"\nGEPA Reflective Optimizer — skill-writer S17")
     print(f"  skill      : {skill_path}")
     print(f"  rounds     : {rounds}")
     print(f"  population : {population_size}")
@@ -511,16 +468,10 @@ def run_gepa(
         print("\n  [dry-run] exiting without API calls")
         return 0
 
-    if anthropic is None:
-        print("✗ anthropic package not found. Install with: pip install anthropic", file=sys.stderr)
+    api = build_api_client(model=model)
+    if api is None:
         return 1
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        print("✗ ANTHROPIC_API_KEY not set", file=sys.stderr)
-        return 1
-
-    client = anthropic.Anthropic(api_key=api_key)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     base_content = skill_path.read_text()
@@ -529,11 +480,11 @@ def run_gepa(
     # ── Stage 1: Seed ──────────────────────────────────────────────────────────
     print(f"\n[Stage 1] Seeding population (base + {population_size - 1} perturbations)…")
     n_perturbations = min(population_size - 1, len(SEED_STRATEGIES))
-    population = seed_population(client, base, n_perturbations)
+    population = seed_population(api, base, n_perturbations)
 
     # ── Stage 2: Initial evaluation ────────────────────────────────────────────
     print(f"\n[Stage 2] Initial evaluation of {len(population)} variants…")
-    population = evaluate_population(client, population)
+    population = evaluate_population(api, population)
     population.sort(key=lambda v: v.total_score, reverse=True)
 
     elite = population[0]
@@ -551,7 +502,7 @@ def run_gepa(
 
         # Stage 3: Reflect
         top_k = population[:3]
-        edits = reflect(client, top_k)
+        edits = reflect(api, top_k)
         if not edits:
             print("  ⚠ Reflection returned no edits — skipping crossover this round.")
             run_log.append({"gen": gen, "best": elite.total_score, "edits": 0, "offspring": 0})
@@ -572,7 +523,7 @@ def run_gepa(
         if not pareto_parents:
             pareto_parents = population[:2]
 
-        offspring = crossover(client, pareto_parents, edits, gen, k=population_size)
+        offspring = crossover(api, pareto_parents, edits, gen, k=population_size)
         print(f"  ↳ Crossover produced {len(offspring)} offspring")
 
         if not offspring:
@@ -582,7 +533,7 @@ def run_gepa(
 
         # Evaluate offspring
         print(f"  ↳ Evaluating offspring…")
-        offspring = evaluate_population(client, offspring)
+        offspring = evaluate_population(api, offspring)
 
         # Stage 5: Select
         combined = population + offspring
@@ -613,7 +564,7 @@ def run_gepa(
 
     # ── Stage 7: Verify ────────────────────────────────────────────────────────
     print("\n[Stage 7] Independent VERIFY pass…")
-    verify_result = verify(client, elite)
+    verify_result = verify(api, elite)
 
     # ── Output ─────────────────────────────────────────────────────────────────
     best_file = out_dir / "best-skill.md"
@@ -625,7 +576,7 @@ def run_gepa(
 
     report = {
         "skill": str(skill_path),
-        "model": MODEL,
+        "model": api.model,
         "rounds_completed": len(run_log),
         "rounds_max": rounds,
         "population_size": population_size,
@@ -724,7 +675,7 @@ def run_gepa(
 
 def main() -> int:
     ap = argparse.ArgumentParser(
-        description="GEPA reflective evolutionary optimizer for SKILL.md (S15 strategy)"
+        description="GEPA reflective evolutionary optimizer for SKILL.md (S17 strategy)"
     )
     ap.add_argument("--skill", type=Path, required=True, help="Path to input SKILL.md")
     ap.add_argument("--rounds", type=int, default=10,
@@ -735,12 +686,9 @@ def main() -> int:
                     help="Output directory (default: gepa-output/)")
     ap.add_argument("--dry-run", action="store_true",
                     help="Print plan only; no API calls")
-    ap.add_argument("--model", default=MODEL,
-                    help=f"Claude model to use (default: {MODEL})")
+    ap.add_argument("--model", default=DEFAULT_MODEL,
+                    help=f"Claude model to use (default: {DEFAULT_MODEL})")
     args = ap.parse_args()
-
-    global MODEL
-    MODEL = args.model
 
     return run_gepa(
         skill_path=args.skill,
@@ -748,6 +696,7 @@ def main() -> int:
         rounds=args.rounds,
         population_size=args.population,
         dry_run=args.dry_run,
+        model=args.model,
     )
 
 

@@ -51,19 +51,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import re
 import sys
-import time
 from pathlib import Path
 from statistics import median, stdev, mean
 
-try:
-    import anthropic  # type: ignore
-except ImportError:
-    anthropic = None
+from common import ApiClient, build_api_client, extract_json, DEFAULT_MODEL
 
-MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 2048
 
 DIMENSIONS = [
@@ -117,41 +110,21 @@ d6 security:        CWE-798/89/78 CLEAR, ASI01-ASI05 addressed, least-privilege 
 d7 metadata:        YAML complete (name/version/triggers/tags), ≥3 trigger phrases, negative boundaries"""
 
 
-def _call(client, system: str, user: str) -> str:
-    for attempt in range(3):
-        try:
-            resp = client.messages.create(
-                model=MODEL,
-                max_tokens=MAX_TOKENS,
-                system=system,
-                messages=[{"role": "user", "content": user}],
-            )
-            return resp.content[0].text.strip()
-        except Exception as e:
-            if attempt == 2:
-                raise
-            wait = 2 ** attempt
-            print(f"  ↺ API error ({e}); retrying in {wait}s…", file=sys.stderr)
-            time.sleep(wait)
-    return ""
-
-
-def single_eval(client, skill_content: str, run_n: int, total_runs: int) -> dict:
+def single_eval(api: ApiClient, skill_content: str, run_n: int, total_runs: int) -> dict:
     """Run one independent evaluation pass. Returns scored dict."""
     system = EVAL_SYSTEM.format(run_n=run_n, total_runs=total_runs)
     user_msg = f"SKILL.md to evaluate:\n\n```\n{skill_content}\n```"
-    raw = _call(client, system, user_msg)
+    raw = api.call(system, user_msg, MAX_TOKENS)
 
-    json_match = re.search(r"\{[\s\S]*\}", raw)
-    if not json_match:
+    data = extract_json(raw)
+    if data is None:
         return {d: 50 for d in DIMENSIONS} | {"feedback": "parse error", "phase4_security_clear": False}
     try:
-        data = json.loads(json_match.group())
         result = {d: int(data.get(d, 50)) for d in DIMENSIONS}
         result["feedback"] = data.get("feedback", "")
         result["phase4_security_clear"] = bool(data.get("phase4_security_clear", True))
         return result
-    except (json.JSONDecodeError, ValueError):
+    except (TypeError, ValueError):
         return {d: 50 for d in DIMENSIONS} | {"feedback": "json parse error", "phase4_security_clear": False}
 
 
@@ -207,6 +180,7 @@ def run_multi_eval(
     out_dir: Path,
     n_runs: int = 3,
     dry_run: bool = False,
+    model: str = DEFAULT_MODEL,
 ) -> int:
     print(f"\nMulti-Run Statistical EVALUATE — skill-writer")
     print(f"  skill  : {skill_path}")
@@ -223,23 +197,17 @@ def run_multi_eval(
         print(f"  [dry-run] exiting without API calls")
         return 0
 
-    if anthropic is None:
-        print("✗ anthropic package not found. Install: pip install anthropic", file=sys.stderr)
+    api = build_api_client(model=model)
+    if api is None:
         return 1
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        print("✗ ANTHROPIC_API_KEY not set", file=sys.stderr)
-        return 1
-
-    client = anthropic.Anthropic(api_key=api_key)
     skill_content = skill_path.read_text()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     runs = []
     for i in range(1, n_runs + 1):
         print(f"\n  [Run {i}/{n_runs}] Evaluating…")
-        result = single_eval(client, skill_content, i, n_runs)
+        result = single_eval(api, skill_content, i, n_runs)
         total = sum(result[d] for d in DIMENSIONS)
         result["_total"] = total
         runs.append(result)
@@ -294,7 +262,7 @@ def run_multi_eval(
     # Save outputs
     report = {
         "skill": str(skill_path),
-        "model": MODEL,
+        "model": api.model,
         "n_runs": n_runs,
         "run_scores": [r["_total"] for r in runs],
         "median_total_700": median_total,
@@ -318,7 +286,7 @@ def run_multi_eval(
         "",
         f"**Skill**: `{skill_path.name}`  ",
         f"**Runs**: {n_runs}  ",
-        f"**Model**: {MODEL}  ",
+        f"**Model**: {api.model}  ",
         "",
         "## Summary",
         "",
@@ -385,18 +353,16 @@ def main() -> int:
                     help="Output directory (default: eval/out/)")
     ap.add_argument("--dry-run", action="store_true",
                     help="Print plan only; no API calls")
-    ap.add_argument("--model", default=MODEL,
-                    help=f"Claude model to use (default: {MODEL})")
+    ap.add_argument("--model", default=DEFAULT_MODEL,
+                    help=f"Claude model to use (default: {DEFAULT_MODEL})")
     args = ap.parse_args()
-
-    global MODEL
-    MODEL = args.model
 
     return run_multi_eval(
         skill_path=args.skill,
         out_dir=args.out,
         n_runs=args.runs,
         dry_run=args.dry_run,
+        model=args.model,
     )
 
 
